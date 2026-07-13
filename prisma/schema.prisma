@@ -1,0 +1,300 @@
+// ControlForge — data model.
+// Maps §9 of the FRD. SQLite for dev; swap `provider` to postgresql for production.
+// SQLite has no native array/JSON column, so list/JSON fields are stored as JSON strings
+// and (de)serialized in src/lib/serialize.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Content: frameworks & controls ───────────────────────────
+
+model Framework {
+  id                String          @id @default(cuid())
+  name              String // "CIS", "NIST 800-53", "DISA STIG", "ISO 27002", "PCI DSS"
+  owner             String?
+  version           String?
+  // Licensing policy drives what may be reproduced verbatim vs. only mapped (§11, FR-A-01).
+  license           String? // e.g. "Public Domain", "CIS SecureSuite", "ISO Copyright"
+  // "VERBATIM_OK" = public-domain (NIST, DISA STIG), full text may be sold/derived.
+  // "MAP_ONLY"    = copyrighted (CIS w/o agreement, ISO, PCI), only reference/map — §11, FR-A-01.
+  reproductionMode  String          @default("MAP_ONLY")
+  sourceUrl         String?
+  createdAt         DateTime        @default(now())
+
+  families        ControlFamily[]
+  sourceDocuments SourceDocument[]
+  controls        Control[]
+}
+
+model ControlFamily {
+  id          String    @id @default(cuid())
+  frameworkId String
+  code        String // "AC", "AU", "CM"...
+  name        String
+  framework   Framework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  controls    Control[]
+}
+
+model SourceDocument {
+  id          String    @id @default(cuid())
+  frameworkId String
+  format      String // XCCDF | CSV | XLSX | PDF | JSON/OSCAL
+  version     String?
+  fileName    String?
+  importDate  DateTime  @default(now())
+  framework   Framework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  controls    Control[]
+}
+
+model Control {
+  id               String   @id @default(cuid())
+  sourceDocumentId String?
+  frameworkId      String
+  familyId         String?
+  code             String // "1.1.1", "V-230234"...
+  title            String
+  description      String?
+  rationale        String?
+  audit            String?
+  remediation      String?
+  severity         String? // low | medium | high | critical
+  profile          String? // "L1" | "L2" | "L1,L2"
+  references       String   @default("[]") // JSON string[] — provenance/section refs (FR-A-07)
+  createdAt        DateTime @default(now())
+
+  framework      Framework       @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  family         ControlFamily?  @relation(fields: [familyId], references: [id])
+  sourceDocument SourceDocument? @relation(fields: [sourceDocumentId], references: [id])
+  customFields   CustomField[]
+  mappings       Mapping[]
+  productLinks   ProductControl[]
+}
+
+// Per-control customer-fillable parameters (ODP / placeholders) — FR-A-10, FR-C-20.
+model CustomField {
+  id           String  @id @default(cuid())
+  controlId    String
+  name         String // "min_password_length"
+  label        String // "Minimum password length"
+  type         String // text | number | list
+  defaultValue String?
+  options      String  @default("[]") // JSON string[] for type=list
+  help         String?
+  control      Control @relation(fields: [controlId], references: [id], onDelete: Cascade)
+}
+
+// Cross-framework mapping at the control level — FR-A-14, FR-C-06.
+model Mapping {
+  id                String  @id @default(cuid())
+  controlId         String
+  targetFramework   String // "NIST 800-53"
+  targetControlCode String // "AC-2"
+  note              String?
+  control           Control @relation(fields: [controlId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────── Catalog: products, bundles, pricing ───────────────────────────
+
+model Product {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  platform        String? // "Windows Server 2022", "Ubuntu 22.04"...
+  type            String   @default("hardening_guide") // hardening_guide | standard | procedure
+  frameworkTag    String? // "CIS" | "DISA STIG" | "NIST 800-171" — for catalog filtering
+  benchmarkVersion String?
+  profiles        String   @default("[]") // JSON string[] — ["L1","L2"]
+  formats         String   @default("[\"DOCX\",\"PDF\",\"XLSX\"]") // JSON string[]
+  description     String?
+  priceCents      Int      @default(0)
+  currency        String   @default("EUR")
+  estimatedSavingsCents Int? // FR-C-04 / FR-A-24
+  status          String   @default("draft") // draft | published
+  templateId      String?
+  maxGenerations  Int      @default(3) // default per-license generation cap (FR-C-27, FR-G-05)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  template  OutputTemplate?  @relation(fields: [templateId], references: [id])
+  controls  ProductControl[]
+  bundleItems BundleItem[]
+  orderItems OrderItem[]
+  scopeProfiles ScopeProfile[]
+}
+
+model ProductControl {
+  id              String  @id @default(cuid())
+  productId       String
+  controlId       String
+  order           Int     @default(0)
+  // Applicability rule — JSON: {"platforms":[...],"profiles":[...],"environments":[...]} (FR-A-11)
+  applicabilityRule String @default("{}")
+  product         Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  control         Control @relation(fields: [controlId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, controlId])
+}
+
+model OutputTemplate {
+  id        String    @id @default(cuid())
+  name      String
+  format    String // DOCX | PDF | XLSX
+  brand     String?
+  language  String    @default("en")
+  structure String    @default("{}") // JSON describing sections/blocks (FR-A-16/17)
+  products  Product[]
+}
+
+model Bundle {
+  id            String       @id @default(cuid())
+  slug          String       @unique
+  name          String
+  description   String?
+  discountPct   Int          @default(0)
+  items         BundleItem[]
+}
+
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundleId  String
+  productId String
+  bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Coupon {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  type       String // percent | fixed
+  value      Int // percent (0-100) or fixed cents
+  expiresAt  DateTime?
+  usageLimit Int? // null = unlimited
+  usedCount  Int      @default(0)
+  active     Boolean  @default(true)
+}
+
+// ─────────────────────────── Tenancy: orgs, users, orders, licenses ───────────────────────────
+
+model Organization {
+  id          String   @id @default(cuid())
+  legalName   String
+  tradeName   String?
+  sector      String?
+  taxId       String? // VAT / tax number
+  country     String?
+  billingAddress String?
+  createdAt   DateTime @default(now())
+
+  users         User[]
+  orders        Order[]
+  scopeProfiles ScopeProfile[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  orgId        String?
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("customer") // customer | author | admin | owner
+  mfaEnabled   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  organization Organization? @relation(fields: [orgId], references: [id])
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  orgId     String
+  status    String      @default("pending") // pending | paid | po_pending | refunded
+  subtotalCents Int     @default(0)
+  taxCents  Int         @default(0)
+  totalCents Int        @default(0)
+  currency  String      @default("EUR")
+  couponCode String?
+  invoiceId String?
+  stripeSessionId String?
+  createdAt DateTime    @default(now())
+
+  organization Organization @relation(fields: [orgId], references: [id])
+  items        OrderItem[]
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String?
+  bundleId  String?
+  priceCents Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+  license   License?
+}
+
+model License {
+  id             String  @id @default(cuid())
+  orderItemId    String  @unique
+  type           String  @default("single_org") // single_org | multi_user | internal_use
+  maxGenerations Int     @default(3)
+  generationsUsed Int    @default(0)
+  status         String  @default("active") // active | suspended
+  orderItem      OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────── Customization & generation ───────────────────────────
+
+// The customer's saved scope for a product — FR-C-16..21, entity ScopeProfile in §9.
+model ScopeProfile {
+  id          String   @id @default(cuid())
+  orgId       String
+  productId   String
+  name        String   @default("Default scope")
+  // Branding (FR-C-17): {logoDataUrl, color, footer, confidentialityNotice}
+  branding    String   @default("{}")
+  // Org doc details (FR-C-16): {legalName, tradeName, owner, docVersion, docDate, classification}
+  orgDetails  String   @default("{}")
+  platforms   String   @default("[]") // JSON string[]
+  profile     String   @default("L1")
+  environment String   @default("on-prem")
+  included    String   @default("[]") // JSON control id[] (FR-C-18)
+  excluded    String   @default("[]") // JSON [{controlId, reason}] (FR-C-19)
+  odpValues   String   @default("{}") // JSON {controlId: {fieldName: value}} (FR-C-20)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id])
+  jobs         GenerationJob[]
+}
+
+// Async generation job — FR-C-26, FR-G-01..05.
+model GenerationJob {
+  id             String   @id @default(cuid())
+  scopeProfileId String
+  licenseId      String?
+  format         String // DOCX | PDF | XLSX
+  status         String   @default("queued") // queued | processing | done | failed
+  artifactPath   String? // relative path under STORAGE_DIR
+  hash           String? // sha256 of artifact (FR-G-03)
+  error          String?
+  createdAt      DateTime @default(now())
+  finishedAt     DateTime?
+
+  scopeProfile ScopeProfile @relation(fields: [scopeProfileId], references: [id], onDelete: Cascade)
+}
+
+// Immutable audit trail — FR-A-35, NFR-S-06.
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String // user email or "system"
+  action    String // publish | price_change | delete | export | login | generate ...
+  entity    String
+  entityId  String?
+  metadata  String   @default("{}") // JSON
+  createdAt DateTime @default(now())
+}

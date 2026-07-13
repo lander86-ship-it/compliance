@@ -1,0 +1,27 @@
+/* HardenHub — global styles ported from the design (HardenHub.dc.html). */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #1C1917;
+  background: #F7F7F5;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: 'DM Sans', 'Inter', sans-serif; letter-spacing: -.02em; }
+a { color: #C9443A; text-decoration: none; }
+a:hover { color: #A5372F; }
+input, textarea, select, button { font-family: inherit; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #D8D6D3; border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes hh-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes hh-spin { to { transform: rotate(360deg); } }
+
+/* hover helper: elements tagged data-hover get a subtle lift; specific overrides via inline handlers */
+.hh-lift { transition: box-shadow .15s, transform .15s; }
+.hh-lift:hover { box-shadow: 0 8px 24px rgba(20,45,90,.13); transform: translateY(-2px); }
+.hh-primary { transition: background .15s; }
+.hh-primary:hover { background: #1C1917 !important; }
