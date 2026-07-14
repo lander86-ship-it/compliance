@@ -53,6 +53,19 @@ export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platfor
   "stig-chrome": { slug: "stig-chrome", name: "DISA STIG — Google Chrome (Windows)", platform: "Application", version: "V2R11" },
   "stig-juniper-srx-ndm": { slug: "stig-juniper-srx-ndm", name: "DISA STIG — Juniper SRX Services Gateway (NDM)", platform: "Network", version: "V3R2" },
   "stig-juniper-srx-alg": { slug: "stig-juniper-srx-alg", name: "DISA STIG — Juniper SRX Services Gateway (ALG)", platform: "Network", version: "V3R3" },
+  "stig-win2012r2": { slug: "stig-win2012r2", name: "DISA STIG — Microsoft Windows Server 2012 / 2012 R2 (MS)", platform: "Windows Server", version: "V3R7" },
+  "stig-ubuntu2004": { slug: "stig-ubuntu2004", name: "DISA STIG — Canonical Ubuntu 20.04 LTS", platform: "Linux", version: "V2R4" },
+  "stig-sles12": { slug: "stig-sles12", name: "DISA STIG — SUSE Linux Enterprise Server 12", platform: "Linux", version: "V3R2" },
+  "stig-solaris11": { slug: "stig-solaris11", name: "DISA STIG — Oracle Solaris 11 (SPARC)", platform: "Linux", version: "V3R6" },
+  "stig-aix7": { slug: "stig-aix7", name: "DISA STIG — IBM AIX 7.x", platform: "Linux", version: "V3R3" },
+  "stig-postgresql9": { slug: "stig-postgresql9", name: "DISA STIG — PostgreSQL 9.x", platform: "Database", version: "V2R5" },
+  "stig-oracle12c": { slug: "stig-oracle12c", name: "DISA STIG — Oracle Database 12c", platform: "Database", version: "V3R5" },
+  "stig-tomcat9": { slug: "stig-tomcat9", name: "DISA STIG — Apache Tomcat 9", platform: "Web", version: "V3R4" },
+  "stig-cisco-asa-vpn": { slug: "stig-cisco-asa-vpn", name: "DISA STIG — Cisco ASA VPN", platform: "Network", version: "V2R2" },
+  "stig-firefox": { slug: "stig-firefox", name: "DISA STIG — Mozilla Firefox", platform: "Application", version: "V6R8" },
+  "stig-edge": { slug: "stig-edge", name: "DISA STIG — Microsoft Edge", platform: "Application", version: "V2R5" },
+  "stig-adobe-acrobat": { slug: "stig-adobe-acrobat", name: "DISA STIG — Adobe Acrobat Pro DC Continuous", platform: "Application", version: "V1R2" },
+  "stig-vsphere8-photon": { slug: "stig-vsphere8-photon", name: "DISA STIG — VMware vSphere 8.0 vCenter Photon OS 4.0", platform: "Virtualization", version: "V2R2" },
 };
 
 const cache = new Map<string, StigDoc | null>();
