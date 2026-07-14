@@ -1,0 +1,1069 @@
+{
+ "slug": "stig-mcafee-vse",
+ "benchTitle": "McAfee VirusScan Managed Client",
+ "release": "V4R10",
+ "controls": [
+  {
+   "code": "DTAM001",
+   "vulnId": "V-6453",
+   "ruleId": "SV-23670r2_rule",
+   "title": "The McAfee VirusScan Control Panel parameters are not configured as required.",
+   "severity": "high",
+   "cat": "CAT I",
+   "srg": "DTAM001",
+   "rationale": "This parameter controls if the scan is started at startup.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the General tab, locate the \"Enable on-access scanning:\" label. Ensure the \"Enable on-access scanning at system startup\" option is selected.\n\nCriteria: If the \"Enable on-access scanning at startup\" option is selected this is not a finding. \n\n\nProcedure:  Use the Windows Registry Editor to navigate to the following key:\nHKLM\\Software\\McAfee\\VSCore\\On access scanner\\McShield\\Configuration\n\nCriteria: If the value of bStartDisabled is 0, this is not a finding.  If the value is 1, this is a finding",
+   "remediation": "From the ePO server console, select Systems Tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the General tab, locate the \"Enable on-access scanning:\" label. Select the \"Enable on-access scanning at system startup\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM002",
+   "vulnId": "V-6467",
+   "ruleId": "SV-21320r2_rule",
+   "title": "The McAfee VirusScan on access scan parameter for Boot sectors is incorrect.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM002",
+   "rationale": "This parameter controls if boot sectors are scanned at startup.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the General tab, locate the \"Scan:\" label. Ensure the \"Boot Sectors\" option is selected.\n\nCriteria: If the \"Boot Sectors\" option is selected this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the General tab, locate the \"Scan:\" label. Select the \"Boot Sectors\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM003",
+   "vulnId": "V-6468",
+   "ruleId": "SV-21321r2_rule",
+   "title": "The McAfee VirusScan on access scan parameter for floppy disks is incorrect.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM003",
+   "rationale": "This parameter controls the scanning of floppy disks.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the General tab, locate the \"Scan:\" label. Ensure the \"Floppy during shutdown\" option is selected.\n\nCriteria: If the \" Floppy during shutdown \" option is selected this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the General tab, locate the \"Scan:\" label. Select the \" Floppy during shutdown \" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM004",
+   "vulnId": "V-6469",
+   "ruleId": "SV-21322r1_rule",
+   "title": "The McAfee VirusScan message dialog parameters are not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM004",
+   "rationale": "This parameter notifies the user when a virus is detected.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"User message:\" label. Ensure the \"Show the messages dialog box when a threat is detected and display the specified text in the message\" option is selected.\n\nCriteria: If the \"Show the messages dialog box when a threat is detected and display the specified text in the message\" option is selected this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"User message:\" label. Select the \"Show the messages dialog box when a threat is detected and display the specified text in the message\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM005",
+   "vulnId": "V-6470",
+   "ruleId": "SV-25546r2_rule",
+   "title": "The  McAfee VirusScan remove messages parameters are not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM005",
+   "rationale": "This parameter controls if users can remove virus alerts from the display.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"Actions available to user:\" label. Ensure the \"Remove messages from the list\" option is NOT selected.\n\nCriteria: If the \"Remove messages from the list\" option is NOT selected, this is not a finding. \n\nProcedure:  Use the Windows Registry Editor to navigate to the following key:\nHKLM\\Software\\McAfee\\VSCore\\On Access Scanner\\mcshield\\Configuration\n\nCriteria: If the value of Alert_UsersCanRemove is 0, this is not a finding.  If the value is 1, this is a finding",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"Actions available to user:\" label. Ensure the \"Remove messages from the list\" option is NOT selected. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM006",
+   "vulnId": "V-6471",
+   "ruleId": "SV-21323r2_rule",
+   "title": "The McAfee VirusScan Clean Infected file parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM006-McAfee VirusScan Clean Infected file",
+   "rationale": "This parameter determines if infected files are cleaned.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"Actions available to user:\" label. Ensure the \"Clean files\" option is selected.\n\nCriteria: If the \"Clean files\" option is selected this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"Actions available to user:\" label. Select the \"Clean files\" option. Select Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM007",
+   "vulnId": "V-6472",
+   "ruleId": "SV-21324r1_rule",
+   "title": "The McAfee VirusScan delete infected file parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM007-McAfee VirusScan delete infected file",
+   "rationale": "This parameter controls if infected files are deleted.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"Actions available to user:\" label. Ensure the \"Delete files\" option is selected.\n\nCriteria: If the \"Delete files\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Messages tab, locate the \"Actions available to user:\" label. Select the \"Delete files\" option. Select Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM009",
+   "vulnId": "V-6474",
+   "ruleId": "SV-21325r1_rule",
+   "title": "The McAfee VirusScan Control Panel log parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM009",
+   "rationale": "This parameter controls the logging of the scan.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"Log to file:\" label.\n\nCriteria: If the \"Enable activity logging and accept the default location for the log file or specify a new location\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"Log to file:\" label. Select the \"Enable activity logging and accept the default location for the log file or specify a new location\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM010",
+   "vulnId": "V-6475",
+   "ruleId": "SV-21326r1_rule",
+   "title": "The McAfee VirusScan limit log size parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM010",
+   "rationale": "This parameter controls the log size.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"Log file size\" label. \n\nCriteria: If the \"Limit the size of the file\" option is not selected, this is not a finding.\n\nCriteria: If the \"Limit the size of the file\" option is selected and the “Maximum log file size:” is at least 100MB, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"Log file size:\" label. IF the \"Limit the size of the file\" option is not to be used, ensure \"Limit the size of the file\" is not selected. If the \"Limit the size of the file\" option is selected, ensure the “Maximum log file size:” is at least 100MB.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM012",
+   "vulnId": "V-6478",
+   "ruleId": "SV-21328r1_rule",
+   "title": "The McAfee VirusScan log summary parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM012",
+   "rationale": "This parameter controls if the session summary is being logged.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"What to log in addition to scanning activity\" label. Ensure the \"Session summary\" option is selected.\n\nCriteria: If the \"Session summary\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"What to log in addition to scanning activity:\" label. Select the \"Session summary\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM013",
+   "vulnId": "V-6583",
+   "ruleId": "SV-21329r2_rule",
+   "title": "The McAfee VirusScan log encrypted files parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM013",
+   "rationale": "This parameter controls if failure to scan encrypted files is logged.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"What to log in addition to scanning activity\" label. Ensure the \"Failure to scan encrypted files\" option is selected.\n\nCriteria: If the \"Failure to scan encrypted files\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Reports tab, locate the \"What to log in addition to scanning activity:\" label. Select the \"Failure to scan encrypted files\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM016",
+   "vulnId": "V-6585",
+   "ruleId": "SV-21337r2_rule",
+   "title": "The McAfee VirusScan autoupdate parameters are not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM016",
+   "rationale": "This parameter ensure that the product is configured to get autoupdates.System AdministratorECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select Client Tasks tab, select New Task. On the Description page, provide a descriptive Name, select \"Product Update\" from the Type: pull down menu, and select Next. On the Configuration page in the Signatures and engines: section,ensure that Engine and DAT are selected, and select Next. On the Schedule page in the Schedule status: section, ensure Enabled is selected; in the Schedule type: section, ensure that at least Weekly is selected, and select Next. On the Summary page, select Save. Update client machine.\n\nCriteria: If a Product update is Enabled with Engine and DAT selected, and scheduled for at least a weekly update, this is not a finding.\n\nOn the client machine use the Windows Explorer to navigate to the following folder: \n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\n\nMultiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType= line in the [General] section of the file is provided to describe the task type. In this case TaskType=update is expected. Information for this check is determined by examining the contents of this file. \n\nCriteria:If [Settings] Enabled=1 and [Schedule] Type=0 the schedule is daily, this is not a finding.If [Settings] Enabled=1 and [Schedule] Type=1 the schedule is weekly, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select Client Tasks tab, select New Task. On the Description page, provide a descriptive Name, select \"Product Update\" from the Type: pull down menu, and select Next. On the Configuration page in the Signatures and engines: section, ensure that Engine and DAT are selected, and select Next. On the Schedule page in the Schedule status: section, ensure Enabled is selected; in the Schedule type: section, ensure that at least Weekly is selected, and select Next. On the Summary page, select Save. Update client machine.",
+   "ccis": [
+    "CCI-001247"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM021",
+   "vulnId": "V-6586",
+   "ruleId": "SV-21339r1_rule",
+   "title": "The McAfee VirusScan Exchange scanner is not enabled.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM021",
+   "rationale": "This parameter controls if the email client scanner is active.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Scanning of email:\" label. Ensure the \"Enable on-delivery email scanning\" option is selected. \nCriteria: If the \"Enable on-delivery email scanning\" is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Scanning of email:\" label. Select the \"Enable on-delivery email scanning\" option. Select Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM022",
+   "vulnId": "V-6587",
+   "ruleId": "SV-21341r1_rule",
+   "title": "The McAfee VirusScan find unknown programs email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM022",
+   "rationale": "This parameter controls if scanning is performed for unknown program viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Ensure the \"Find unknown program threats and trojans\" option is selected.\n\nCriteria: If the \"Find unknown program threats and trojans\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Select the \"Find unknown program threats and trojans\" option. Select Save.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM023",
+   "vulnId": "V-6588",
+   "ruleId": "SV-21343r1_rule",
+   "title": "The McAfee VirusScan find unknown macro virus email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM023",
+   "rationale": "This parameter controls the scanning for unknown macro viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Ensure the \"Find unknown macro threats\" option is selected.\n\nCriteria: If the \"Find unknown macro threats\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Select the \"Find unknown macro threats\" option. Select Save.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM026",
+   "vulnId": "V-6589",
+   "ruleId": "SV-21344r1_rule",
+   "title": "The McAfee VirusScan scan inside archives email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM026",
+   "rationale": "This parameter controls if the contents of archives are checked for viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Compressed files:\" label. Ensure the \"Scan inside archives (e.g. .ZIP)\" option is selected.\n\nCriteria: If the \"Scan inside archives (e.g. .ZIP)\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Compressed files:\" label. Select the \"Scan inside archives (e.g. .ZIP)\" option. Select Save.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM027",
+   "vulnId": "V-6590",
+   "ruleId": "SV-21345r1_rule",
+   "title": "The McAfee VirusScan decode MIME email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM027",
+   "rationale": "This parameter controls if encoded files should be decoded for virus scans.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Compressed files:\" label. Ensure the \"Decode MIME encoded files\" option is selected.\n\nCriteria: If the \"Decode MIME encoded files\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Compressed files:\" label. Select the \"Decode MIME encoded files\" option. Select Save.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM028",
+   "vulnId": "V-6591",
+   "ruleId": "SV-21346r1_rule",
+   "title": "The McAfee VirusScan scan e-mail message body email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM028",
+   "rationale": "This parameter ensures the email message contents is scanned for viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Email message body (for Microsoft Outlook only):\" label. Ensure the \"Scan email message body\" option is selected.\n\nCriteria: If the option \"Scan email message body\" is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Email message body (for Microsoft Outlook only):\" label. Select the \"Scan email message body” option. Select Save.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM029",
+   "vulnId": "V-6592",
+   "ruleId": "SV-21347r1_rule",
+   "title": "The McAfee VirusScan allowed actions email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM029",
+   "rationale": "This parameter controls what actions should happen when a virus is detected.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Actions tab, locate the \"When a threat is found:\" section. In the “Perform this action first:” pull down menu, select the \"Prompt for action” option. \n\nCriteria: If the option \"Prompt for action\" is selected this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Actions tab, locate the \"When a threat is found:\" section. In the “Perform this action first:” pull down menu, select the \"Prompt for action” option. Select Save.",
+   "ccis": [
+    "CCI-001243"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM030",
+   "vulnId": "V-6593",
+   "ruleId": "SV-21348r2_rule",
+   "title": "The McAfee VirusScan action prompt email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM030-McAfee VirusScan action prompt email ",
+   "rationale": "This parameter ensures appropriate actions are prompted for when a virus is found.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Actions tab, locate the \"Allowed actions in Prompt dialog box:\" section, ensure that Clean attachment, Delete attachment, and Move attachment are selected.\n\nCriteria: If the options \"Clean attachment, Delete attachment, and Move attachment\" are selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Actions tab, locate the \"Allowed actions in Prompt dialog box:\" section. Select the Clean attachment, Delete attachment, and Move attachment options. Select Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM033",
+   "vulnId": "V-6594",
+   "ruleId": "SV-21349r1_rule",
+   "title": "The McAfee VirusScan return reply email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM033-McAfee VirusScan return reply email ",
+   "rationale": "This parameter controls if an email is sent back to the original email sender indicating there was a virus detected.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Alerts tab, locate the \"Email alert for user:\" section and ensure that \"Send alert mail to user\" is selected.\n\nCriteria: If the option \"Send alert mail to user\" is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Alerts tab, locate the \"Email alert for user:\" section. Select the \"Send alert mail to user\" option.\nSelect Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM034",
+   "vulnId": "V-6595",
+   "ruleId": "SV-21350r2_rule",
+   "title": "The McAfee VirusScan prompt message email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM034- McAfee VirusScan prompt message email ",
+   "rationale": "This parameter ensures an appropriate message is displayed for the user to indicate a virus was found within an email.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Alerts tab, locate the \"Prompt for action message:\" section and ensure that \"Specify the message that displays to the user when prompting for action. The Prompt for action option must be selected on the Actions tab. Accept the default message or type a new message.\" is selected.\n\nCriteria: If the option \"Specify the message that displays to the user when prompting for action. The Prompt for action option must be selected on the Actions tab. Accept the default message or type a new message.\" is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Alerts tab, locate the \"Prompt for action message:\" section, select \"Specify the message that displays to the user when prompting for action. The Prompt for action option must be selected on the Actions tab. Accept the default message or type a new message.\" Select Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM035",
+   "vulnId": "V-6596",
+   "ruleId": "SV-21351r2_rule",
+   "title": "The McAfee VirusScan log to file email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM035",
+   "rationale": "This parameter ensures that virus scanning sessions for email are logged.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Reports tab, locate the \"Log to file:\" section and ensure that \"Enable activity logging and accept the default location for the log file or specify a new location.\" is selected. \n\nCriteria: If the option \"Enable activity logging and accept the default location for the log file or specify a new location.\" is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Reports tab, locate the \"Log to file:\" section and select \"Enable activity logging and accept the default location for the log file or specify a new location.\" Select Save.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM036",
+   "vulnId": "V-6597",
+   "ruleId": "SV-21354r2_rule",
+   "title": "The McAfee VirusScan limit log size email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM036",
+   "rationale": "This parameter deteremines the size of the log file to ensure data is available for review.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On delivery Email Scan Policies. Select from the Policy column the policy associated with the On delivery Email Scan Policies. Under the Reports tab, locate the \"Log file size\" label. \n\nCriteria: If the \"Limit the size of the file\" option is not selected, this is not a finding.\n\nCriteria: If the \"Limit the size of the file\" option is selected and the “Maximum log file size:” is at least 100MB this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Reports tab, locate the \"Log file size:\" label. If the \"Limit the size of the file\" option is not to be used, ensure \"Limit the size of the file\" is not selected. If the \"Limit the size of the file\" option is selected, ensure the “Maximum log file size:” is at least 100MB.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM037",
+   "vulnId": "V-6598",
+   "ruleId": "SV-21352r3_rule",
+   "title": "The McAfee VirusScan log content email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM037-McAfee VirusScan log content email",
+   "rationale": "This setting controls the entries that are stored in the virus scanning log.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Policies. Select from the Policy column the policy associated with the On Delivery Email Policies. Under the Reports tab, locate the \"What to log in addition to scanning activity\" label. Ensure the \"Session summary\", and \"Failure to scan encrypted files\", options are selected.\n\nCriteria: If the \"Session summary\", and \"Failure to scan encrypted files\", options are selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Policies. Select from the Policy column the policy associated with the On Delivery Email Policies. Under the Reports tab, locate the \"What to log in addition to scanning activity:\" label. Select the \"Session summary\", and \"Failure to scan encrypted files\", options. Select Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM045",
+   "vulnId": "V-6599",
+   "ruleId": "SV-21353r1_rule",
+   "title": "The McAfee VirusScan fixed disk and running processes are not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM045",
+   "rationale": "This parameter ensures that all fixed disks and running processes are scanned for viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Locations tab in Locations to scan: area, ensure that “All fixed drives” and “Running processes” are displayed.\n\nCriteria: If “All fixed drives” and “Running processes” are displayed in the configuration for the daily or weekly On Demand Scan, this is not a finding.\n\nOn the client machine use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType= line in the [General] section of the file is provided to describe the type of scan. In this case TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [ScanItems] szScanItemX=All fixed disks, and [Settings] scScanItemX=Special Memory are present, this is not a finding. : For the values of szScanItemX, the character X represents some integer =>0. Example: szScanItem0=All fixed disks, szScanItem1=Special Memory,",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the daily or weekly on demand client scan task. In the same row as the on demand client scan task ensure that the Product Name column contains VirusScan Enterprise 8.7.0, in the Status column ensure that the status is Enabled. Select edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Locations tab in Locations to scan: area, from the pull down menus, select “All fixed drives” and “Running processes”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM046",
+   "vulnId": "V-6600",
+   "ruleId": "SV-21355r1_rule",
+   "title": "The McAfee VirusScan include subfolders parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM046",
+   "rationale": "This parameter ensures that subfolders are scanned for viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select edit from the Actions column. In the Description tab ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Locations tab, Scan options area, ensure that “Include subfolders” is displayed.\n\nCriteria: If “Include subfolders” is displayed, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Where] bScanSubDirs=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Locations tab, Scan options area, select “Include subfolders”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM047",
+   "vulnId": "V-6601",
+   "ruleId": "SV-21356r1_rule",
+   "title": "The McAfee VirusScan include boot sectors parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM047",
+   "rationale": "This parameter ensures that the boot sector is scanned for viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0, in the Status column ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Locations tab, Scan options area, ensure that “Scan boot sectors” is displayed.\n\nCriteria: If “Scan boot sectors” is displayed, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Where] bSkipBootScan=0, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Locations tab, Scan options area, select “Scan boot sectors”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM048",
+   "vulnId": "V-6602",
+   "ruleId": "SV-21357r1_rule",
+   "title": "The McAfee VirusScan scan all files parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM048",
+   "rationale": "This parameter ensures all files are scanned.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, File types to scan: area, ensure that “All files” is selected.\n\nCriteria: If “All files” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [What] bScanAllFiles=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, File types to scan: area, select “All files”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM050",
+   "vulnId": "V-6604",
+   "ruleId": "SV-21358r2_rule",
+   "title": "The McAfee VirusScan exclusions parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM050",
+   "rationale": "This parameter ensures that there are no unapproved exclusions from the virus scanning.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Exclusions tab, “What not to scan:” area, ensure that no items are listed in this area.\n\nCriteria: If no items are listed in the “What not to scan:” area, this is not a finding.\n\nCriteria: If items exist, ensure the justification for exclusions have been documented with the IAO/IAM. If exclusions are documented with the IAO/IAM, this is not a finding. If exclusions have not been documented, this is a finding.\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Exclusions] dwExclusionCount=0, this is not a finding.\nCriteria:  If not set to 0, ensure the justification for exclusions found have been documented with the IAO/IAM. If exclusions are documented with the IAO/IAM, this is not a finding. If exclusions have not been documented, this is a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Exclusions tab, “What not to scan:” area, no items should be entered into this area. Select Save. If exclusions do exist, these must be documented and approved by the IAO/IAM.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM052",
+   "vulnId": "V-6611",
+   "ruleId": "SV-21359r1_rule",
+   "title": "The McAfee VirusScan scan archives parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM052",
+   "rationale": "This parameter ensures that archive files are checked for viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Options: area, ensure that “Scan inside archives (e.g. .ZIP)” is selected.\n\nCriteria: If “Scan inside archives (e.g. .ZIP)” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [What] ScanArchives=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Options: area, select “Scan inside archives (e.g. .ZIP)””. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM053",
+   "vulnId": "V-6612",
+   "ruleId": "SV-21360r1_rule",
+   "title": "The McAfee VirusScan decode MIME encoded files parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM053",
+   "rationale": "This file ensures that MIME encoded files are scanned for viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the On Demand Client Scan task under review ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Options: area, ensure that “Decode MIME encoded files” is selected.\n\nCriteria: If “Decode MIME encoded files” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [What] ScanMIME=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the On Demand Client Scan task ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Options: area, select “Decode MIME encoded files”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM054",
+   "vulnId": "V-6614",
+   "ruleId": "SV-21361r1_rule",
+   "title": "The McAfee VirusScan find unknown programs parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM054",
+   "rationale": "This parameter will ensure the virus scanner checks for unknown program viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Heuristics: area, ensure that “Find unknown program threats” is selected.\n\nCriteria: If “Find unknown program threats” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Advanced] dwProgramHeuristicsLevel=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Heuristics: area, select “Find unknown program threats”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM055",
+   "vulnId": "V-6615",
+   "ruleId": "SV-21362r1_rule",
+   "title": "The McAfee VirusScan find unknown macro viruses parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM055",
+   "rationale": "This parameter controls checking for unknown macro viruses.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Heuristics: area, ensure that “Find unknown macro threats” is selected.\n\nCriteria: If “Find unknown macro threats” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Advanced] dwMacroHeuristicsLevel=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Heuristics: area, select “Find unknown macro threats”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM056",
+   "vulnId": "V-6616",
+   "ruleId": "SV-21363r1_rule",
+   "title": "The McAfee VirusScan action for Virus parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM056",
+   "rationale": "This parameter controls the action when a virus is found.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0, in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Actions tab, When a threat is found: area, ensure that for the “Perform this action first:” pull down menu, “Clean files” is selected.\n\nCriteria: If “Clean files” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Actions] uAction=5, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Actions tab, When a threat is found: area, Perform this action first:, select “Clean files”. Select Save.",
+   "ccis": [
+    "CCI-001243"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM057",
+   "vulnId": "V-6617",
+   "ruleId": "SV-21364r1_rule",
+   "title": "The McAfee VirusScan secondary action for virus parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM057",
+   "rationale": "This parameter controls the secondary action that is performed when a virus is found.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Actions tab, When a threat is found: area, ensure that for the “If the first action fails, then perform this action:” pull down menu, “Delete files” is selected.\n\nCriteria: If “Delete files” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Actions] uSecAction=4, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Actions tab, When a threat is found: area, If the first action fails, then perform this action:, select “Delete files”. Select Save.",
+   "ccis": [
+    "CCI-001243"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM059",
+   "vulnId": "V-6618",
+   "ruleId": "SV-21365r1_rule",
+   "title": "The McAfee VirusScan log to file parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM059",
+   "rationale": "This parameter ensures that virus scan activities are written to a log file.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column, contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, ensure that for the Log to file: selection “Enable activity logging and accept the default location for the log file or specify a new location” is selected.\n\nCriteria: If “Enable activity logging and accept the default location for the log file or specify a new location” is selected, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Reports] bLogToFile=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, for the Log to file: selection, select “Enable activity logging and accept the default location for the log file or specify a new location”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM060",
+   "vulnId": "V-6620",
+   "ruleId": "SV-21366r1_rule",
+   "title": "The McAfee VirusScan log file limit parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM060",
+   "rationale": "This parameter determines the minimum size for the log to ensure enough data is available for review.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, locate the \"Log file size\" label. \n\nCriteria: If the \"Limit the size of the file\" option is not selected, this is not a finding.\n\nCriteria: If the \"Limit the size of the file\" option is selected, and the “Maximum log file size:” is at least 100MB this is not a finding. \n\n\n\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Reports] bLogToFile=1 and [Reports] bLimitSize =>100, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, locate the \"Log file size:\" label. If the \"Limit the size of the file\" option is not to be used, ensure \"Limit the size of the file\" is not selected. If the \"Limit the size of the file\" option is selected, ensure the “Maximum log file size:” is at least 100MB. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM062",
+   "vulnId": "V-6624",
+   "ruleId": "SV-21369r1_rule",
+   "title": "The McAfee VirusScan log session summary parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM062-McAfee VirusScan log session summary",
+   "rationale": "This parameter ensures that session summary information is logged for future review if needed.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, locate the \"What to log in addition to scanning activity\" label. \n\nCriteria: If the \"Session summary\" option is selected, this is not a finding.\n\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Reports] bLogSummary=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, locate the \"What to log in addition to scanning activity:\" label. Select Session summary. Select Save.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM063",
+   "vulnId": "V-6625",
+   "ruleId": "SV-21370r1_rule",
+   "title": "The McAfee VirusScan failure on encrypted files parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM063",
+   "rationale": "This parameter ensures that failures on encrypted files are logged.System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, locate the \"What to log in addition to scanning activity\" label. \n\nCriteria: If the \"Failure to scan encrypted files\" option is selected, this is not a finding.\n\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Reports] bLogScanFailure=1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Reports tab, locate the \"What to log in addition to scanning activity:\" label. Select Failure to scan encrypted files. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM070",
+   "vulnId": "V-6627",
+   "ruleId": "SV-21379r1_rule",
+   "title": "The McAfee VirusScan schedule is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM070",
+   "rationale": "This parameter ensures that a comprehensive On-Demand system virus scan is scheduled to be executed on at least a weekly basis. System AdministratorECSC-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Schedule tab. In the \"Schedule Status:\" area, ensure Enabled is selected. Also, in the Schedule type: area (using the pull down menu), ensure that the scan is scheduled for at least a weekly scan. \n\nCriteria: If the Scheduled status: is Enabled and the Schedule type: is at least weekly, this is not a finding.\n\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType=  line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria:\nIf [Settings] Enabled=1 and [Schedule] Type=0 the schedule is daily, this is not a finding.\nIf [Settings] Enabled=1 and [Schedule] Type=1 the schedule is weekly, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Schedule tab. In the \"Schedule Status:\" area select Enabled, in the Schedule type: area (using the pull down menu), ensure that the scan is scheduled on at least a weekly basis.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM090",
+   "vulnId": "V-14618",
+   "ruleId": "SV-21382r1_rule",
+   "title": "The McAfee VirusScan on access scan parameter for script scan is incorrect.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM090",
+   "rationale": "ScriptScan analyzes each webpage opened on your computer via Outlook or a web browser for JavaScript and VBScript. If an unwanted script is found it is not allowed to execute.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the ScriptScan tab, locate the \"ScriptScan:\" label. Ensure the \"Enable scanning of scripts\" option is selected.\n\nCriteria: If the \"Enable scanning of scripts\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the ScriptScan tab, locate the \"ScriptScan:\" label. Select the \"Enable scanning of scripts\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM091",
+   "vulnId": "V-14619",
+   "ruleId": "SV-21386r1_rule",
+   "title": "The McAfee VirusScan on access scan parameter for connection blocking is incorrect.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM091",
+   "rationale": "This setting is required to block connections from remote computers when a threat or unwanted program is detected in a shared folder.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Blocking tab, locate the \"Block the connection:\" label. Ensure the \"Block the connection when a threatened file is detected in a shared folder\" option is selected.\n\nCriteria: If the \"Block the connection when a threatened file is detected in a shared folder\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Blocking tab, locate the \"Block the connection:\" label. Select the \"Block the connection when a threatened file is detected in a shared folder\" option.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM092",
+   "vulnId": "V-14620",
+   "ruleId": "SV-21400r1_rule",
+   "title": "The McAfee VirusScan on access scan parameter for connection blocking time is incorrect.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM092",
+   "rationale": "This parameter unblocks suspected threats in a remote computer shared connection. If a threat is detected blocking blocks the connection. This parameter unblocks the connection after at minimum of 30 minutes.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Blocking tab, locate the \"Block the connection:\" label. Ensure the \"Unblock connections after x minutes\" where x is set to no less than 30 minutes.\n\nCriteria: If the \"Unblock connections after 30 minutes\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Blocking tab, locate the \"Block the connection:\" label. Set the \"Unblock connections after x minutes\", where x is set to no less than 30 minutes.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM093",
+   "vulnId": "V-14621",
+   "ruleId": "SV-21404r2_rule",
+   "title": "The McAfee VirusScan on access scan parameter for blocking unwanted programs is incorrect.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM093",
+   "rationale": "This setting blocks the connection to a remote computer share where an unwanted program is found in the remote share folder.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Blocking tab, locate the \"Block the connection:\" label. Ensure the \"Block the connection when a file with a potentially unwanted program is detected in a shared folder\" is checked.\n\nCriteria: If the \"Block the connection when a file with a potentially unwanted program is detected in a shared folder\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access General Policies. Select from the Policy column the policy associated with the On-Access General Policies. Under the Blocking tab, locate the \"Block the connection:\" label. Check the \"Block the connection when a file with a potentially unwanted program is detected in a shared folder\" option.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM100",
+   "vulnId": "V-14622",
+   "ruleId": "SV-21405r1_rule",
+   "title": "The McAfee VirusScan scan default values for processes are not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM100",
+   "rationale": "With this setting set to \"Configure one scanning policy for all processes\" one policy baseline for all on-access scanning is set using one set of policy options.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Processes tab, locate the \"Process Settings:\" label. Ensure the “Configure one scanning policy for all processes” is selected.\n\nCriteria: If the “Configure one scanning policy for all processes” option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Processes tab, locate the \"Process Settings:\" label. Select the “Configure one scanning policy for all processes” option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM101",
+   "vulnId": "V-14623",
+   "ruleId": "SV-21406r2_rule",
+   "title": "The McAfee VirusScan scan when writing to disk is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM101",
+   "rationale": "This setting requires on-access scanning to be performed whenever a files is written to a non-networked disk drive.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Scan files label. Ensure the “When writing to disk” is selected.\n\nCriteria: If the “When writing to disk” option is selected, this is not a finding. \n\nProcedure: Use the Windows Registry Editor to navigate to the following key:\nHKLM\\software\\McAfee\\VSCore\\On Access Scanner\\McShield\\Configuration\\default\n\nCriteria: If the value bScanIncoming is 1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Scan files:\" label. Select the “When writing to disk” option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM102",
+   "vulnId": "V-14624",
+   "ruleId": "SV-21407r2_rule",
+   "title": "The McAfee VirusScan scan when reading parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM102",
+   "rationale": "This setting requires on-access scanning to be performed whenever a files are read from a non-networked disk drive.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Scan files label. Ensure the “When reading from disk” is selected.\n\nCriteria: If the “When reading from disk” option is selected, this is not a finding. \n\nProcedure: Use the Windows Registry Editor to navigate to the following key:\nHKLM\\software\\McAfee\\VSCore\\On Access Scanner\\McShield\\Configuration\\default\n\nCriteria: If the value bScanOutgoing is 1, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Scan files:\" label. Select the “When reading from disk” option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM103",
+   "vulnId": "V-14625",
+   "ruleId": "SV-21409r2_rule",
+   "title": "The McAfee VirusScan scan all files parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM103",
+   "rationale": "This setting requires on-access scanning to be performed whenever a file is read from or written to network drives.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Policies. Select from the Policy column the policy associated with the On-Access Default Policies. Under the Scan Items tab, locate the \"File Types to Scan\" label. Ensure the \"All Files\" radio button is selected.\n\nCriteria: If the \"All Files\" radio button is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Policies. Select from the Policy column the policy associated with the On-Access Default Policies. Under the Scan Items tab, locate the \"File Types to Scan\" label. Select the \"All Files\" radio button. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM104",
+   "vulnId": "V-14626",
+   "ruleId": "SV-21410r1_rule",
+   "title": "The McAfee VirusScan heuristics program viruses parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM104",
+   "rationale": "This setting requires on-access scanning to  \"Find unknown program threats and trojans\" based on heuristic problem solving techniques. System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Ensure the \"Find unknown program threats and trojans\" option is selected.\n\nCriteria: If the \"Find unknown program threats and trojans\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Select the \"Find unknown program threats and trojans\" option. Select save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM105",
+   "vulnId": "V-14627",
+   "ruleId": "SV-21411r1_rule",
+   "title": "The McAfee VirusScan heuristics macro viruses parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM105",
+   "rationale": "This setting requires on-access scanning to  \"Find unknown macro threats\" based on heuristic problem solving techniques. System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Ensure the \"Find unknown macro threats\" option is selected.\n\nCriteria: If the \"Find unknown macro threats\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Heuristics:\" label. Select the \"Find unknown macro threats\" option. Select save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM106",
+   "vulnId": "V-14628",
+   "ruleId": "SV-21412r1_rule",
+   "title": "The McAfee VirusScan scan inside archives parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM106",
+   "rationale": "This setting requires on-access scanning to scan inside archive files such as .ZIP files. This also enables on-access scanning to be perfomed on other compressed file types as well.System AdministratorECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Compressed files:\" label. Ensure the \"Scan inside archives (e.g. .ZIP)\" option is selected.\n\nCriteria: If the \"Scan inside archives (e.g. .ZIP)\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Scan Items tab, locate the \"Compressed files:\" label. Select the \"Scan inside archives (e.g. .ZIP)\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM111",
+   "vulnId": "V-14631",
+   "ruleId": "SV-21415r2_rule",
+   "title": "The McAfee VirusScan process secondary action parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM111",
+   "rationale": "This setting is required in response to a threat that could not be cleaned by the On-Access \"Clean Files Automatically\" setting. In this event the On_access setting for \"If the first action fails, then perform this action:\" is \"Delete Files Automatically\".  If the file cannot be repaired it should be deleted.\n\n System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Actions tab, When a threat is found: area, ensure that for the “If the first action fails, then perform this action:” pull down menu, “Delete files” is selected.\n\nCriteria: If “Delete files” is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On-Access Default Processes Policies. Select from the Policy column the policy associated with the On-Access Default Processes Policies. Under the Actions tab, When a threat is found: area, If the first action fails, then perform this action:, select “Delete files”. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM038",
+   "vulnId": "V-14651",
+   "ruleId": "SV-21416r1_rule",
+   "title": "The McAfee VirusScan detects unwanted programs email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM038-McAfee VirusScan detect unwanted program",
+   "rationale": "This setting is required for the On-Delivery Email scan. This settings enables the detection of unwanted programs to include Malware and Spyware.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Unwanted programs detection:\" label. Ensure the \"Detect unwanted programs\" option is selected.\n\nCriteria: If the option \"Detect unwanted programs\" is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Scan Items tab, locate the \"Unwanted programs detection:\" label. Select the \"Detect unwanted programs\" option.",
+   "ccis": [],
+   "nist": []
+  },
+  {
+   "code": "DTAM039",
+   "vulnId": "V-14652",
+   "ruleId": "SV-21417r2_rule",
+   "title": "The McAfee VirusScan unwanted programs action email parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM039",
+   "rationale": "This setting is required for the On Delivery Email Scan Policies. When an unwanted program is found the first action to be performed is the \"Prompt for action” option. At that time the option to delete, clean, or archive the program is presented to the user.\n\n\nSystem AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Actions tab, locate the \"When an unwanted program is found:\" section. In the “Perform this action first:” pull down menu, select the \"Clean Attachments” option. Select save.\n\nCriteria: If the option \"Clean Attachments” is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the On Delivery Email Scan Policies. Select from the Policy column the policy associated with the On Delivery Email Scan Policies. Under the Actions tab, locate the \"When an unwanted program is found:\" section. In the “Perform this action first:” pull down menu, select the \"Clean attachments” option. Select save.",
+   "ccis": [
+    "CCI-001243"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM058",
+   "vulnId": "V-14654",
+   "ruleId": "SV-21418r1_rule",
+   "title": "The McAfee VirusScan check for unwanted programs parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM058",
+   "rationale": "This setting enables the detection of unwanted programs during a scheduled, On-Demand Scan, scan. The  “Detect unwanted programs” option is required to be selected in the configuration for the daily or weekly On Demand Scan.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. A daily or weekly on demand client scan may also be identified by reviewing the Product Name, Status, and Schedule of each Task Name in the Client Tasks window. In the same row as the on demand client scan task under review, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Options: area, ensure that “Detect unwanted programs” is selected.\n\nCriteria: If “Detect unwanted programs” is selected in the configuration for the daily or weekly On Demand Scan, this is not a finding.\n\nOn the client machine, use the Windows Explorer to navigate to the following folder:\n%SystemDrive%:\\Document and Settings\\All Users\\Application Data\\McAfee\\Common Framework\\Task\\. Multiple .ini files will be stored in this folder one for each task defined on the ePO server for this client. The name for each task is identified in the first section of the file under the [Task] section on the TaskName= “” line. Additionally, a TaskType= line in the [General] section of the file is provided to describe the type of scan. In this case, TaskType=VSC700_Scan_Task is expected.  Information for this check is determined by examining the contents of this file.\n\nCriteria: If [Spyware] ApplyNVP=1 is present, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select Client Tasks tab. From the list of available tasks in the Task Name column, with the assistance of the ePO SA, identify the weekly on demand client scan task. In the same row as the on demand client scan task, ensure that the Product Name column contains VirusScan Enterprise 8.7.0 and in the Status column, ensure that the status is Enabled. Select Edit from the Actions column. In the Description tab, ensure that for “Type:” “On Demand Scan (VirusScan Enterprise 8.7.0)” is selected. Select the Configuration tab. Under the Scan Items tab, Options: area, select “Detect unwanted programs”. Select Save.",
+   "ccis": [
+    "CCI-001241"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM130",
+   "vulnId": "V-14657",
+   "ruleId": "SV-21419r1_rule",
+   "title": "The McAfee VirusScan buffer overflow protection is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM130",
+   "rationale": "This setting is required to ensure that  buffer overflow protection is enabled. Buffer overflow protection prevents tampered with application code from being executed on the computer.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with the Buffer Overflow Protection Policies. Under the Buffer Overflow Protection tab, locate the \"Buffer Overflow settings:\" label. Ensure the \"Enable buffer overflow protection\" option is selected.\n\nCriteria: If the \"Enable buffer overflow protection\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with, in the same row as, the Buffer Overflow Protection Policies. Under the Buffer Overflow Protection tab, locate the \"Buffer Overflow settings:\" label. Select the \"Enable buffer overflow protection\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM131",
+   "vulnId": "V-14658",
+   "ruleId": "SV-21420r2_rule",
+   "title": "The McAfee VirusScan buffer overflow protection mode is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM131",
+   "rationale": "This setting is required to ensure that  buffer overflow protection is enabled and that \"Protection mode\" is enabled.  Buffer overflow protection prevents tampered with application code from being executed on the computer. The \"Protection mode\" option is selected to ensure that the application is prevented from executing. System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with the Buffer Overflow Protection Policies. Under the Buffer Overflow Protection tab, locate the \"Buffer Overflow settings:\" label. Ensure the \"Protection mode\" option is selected.\n\nCriteria: If the \"Protection mode\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with the Buffer Overflow Protection Policies. Under the Buffer Overflow Protection tab, locate the \"Buffer Overflow settings:\" label. Select the \"Protection mode\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM133",
+   "vulnId": "V-14660",
+   "ruleId": "SV-21422r1_rule",
+   "title": "The McAfee VirusScan buffer overflow log parameter is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM133",
+   "rationale": "This setting is required to ensure when buffer overflow protection is enabled that the \n\"Enable activity logging and accept the default location for the log file or specify a new location\"   is selected.  Buffer overflow protection prevents tampered with application code from being executed on the computer. The \"Enable activity logging and accept the default location for the log file or specify a new location\"  option is selected to ensure that buffer overflow logging is being performed .System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with the Buffer Overflow Protection Policies. Under the Reports tab, locate the \"Log to file:\" label. \n\nCriteria: If the \"Enable activity logging and accept the default location for the log file or specify a new location\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with the Buffer Overflow Protection Policies. Under the Reports tab, locate the \"Log to file:\" label. Select the \"Enable activity logging and accept the default location for the log file or specify a new location\" option. Select Save.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM134",
+   "vulnId": "V-14661",
+   "ruleId": "SV-21423r2_rule",
+   "title": "The McAfee VirusScan log size limitation parameters are not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM134",
+   "rationale": "This setting is required to ensure when buffer overflow protection is enabled that the \n\"Log file size\"  is selected.  Buffer overflow protection prevents tampered with application code from being executed on the computer. The \"Log file size\" option is selected to ensure that buffer overflow log file size does not excced 100mb.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with the Buffer Overflow Protection Policies. Under the Reports tab, locate the \"Log file size\" label.\n\nCriteria: If the \"Limit the size of the file\" option is selected, and the “Maximum log file size:” is less than or equals 100MB, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Buffer Overflow Protection Policies. Select from the Policy column the policy associated with the Buffer Overflow Protection Policies. Under the Reports tab, locate the \"Log file size:\" label. If the \"Limit the size of the file\" option is selected, ensure the “Maximum log file size:” is less than 100MB.",
+   "ccis": [
+    "CCI-001242"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  },
+  {
+   "code": "DTAM136",
+   "vulnId": "V-14663",
+   "ruleId": "SV-21426r1_rule",
+   "title": "The McAfee VirusScan detection of Adware is not configured as required.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "DTAM136",
+   "rationale": "This setting is required to ensure that under the Unwanted Programs Policies, Adware is selected. This enables the detection of Adware on the system.System AdministratorInformation Assurance OfficerECVP-1",
+   "audit": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Unwanted Programs Policies. Select the policy associated with the Unwanted Programs Policies. Under the Scan Items tab, locate the \"Select categories of unwanted programs to detect:\" label. Ensure the \"Adware\" option is selected.\n\nCriteria: If the \"Adware\" option is selected, this is not a finding.",
+   "remediation": "From the ePO server console, select Systems tab, select the asset to be checked, select the Policies tab, select from the product pull down list VirusScan Enterprise 8.7.0. Locate in the Category column the Unwanted Programs Policies. Select from the Policy column the policy associated with the Unwanted Programs Policies. Under the Scan Items tab, locate the \"Select categories of unwanted programs to detect:\" label. Select the \"Adware\" option. Select Save.",
+   "ccis": [
+    "CCI-001668"
+   ],
+   "nist": [
+    "SI-3"
+   ]
+  }
+ ]
+}

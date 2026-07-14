@@ -1,0 +1,705 @@
+{
+ "slug": "stig-splunk8",
+ "benchTitle": "Splunk Enterprise 8.x for Linux Security Technical Implementation Guide",
+ "release": "V2R3",
+ "controls": [
+  {
+   "code": "SPLK-CL-000010",
+   "vulnId": "V-251657",
+   "ruleId": "SV-251657r1043182_rule",
+   "title": "Splunk Enterprise idle session timeout must be set to not exceed 15 minutes.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000295-AU-000190",
+   "rationale": "Automatic session termination after a period of inactivity addresses the potential for a malicious actor to exploit the unattended session. Closing any unattended sessions reduces the attack surface to the application.\n\nSatisfies: SRG-APP-000295-AU-000190, SRG-APP-000389-AU-000180",
+   "audit": "This check is performed on the machine used as a search head, which may be a separate machine in a distributed environment.\n\nIf the instance being reviewed is not used as a search head, this check in Not Applicable.\n\nExamine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the web.conf file.\n \nIf the web.conf file does not exist, this is a finding.\n\nIf the \"tools.sessions.timeout\" is missing or is configured to 16 or more, this is a finding.",
+   "remediation": "This configuration is performed on the machine used as a search head, which may be a separate machine in a distributed environment.\n\nIf the web.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify/Add the following lines in the web.conf file:\n\ntools.session.timeout = 15",
+   "ccis": [
+    "CCI-004895",
+    "CCI-002361",
+    "CCI-002038"
+   ],
+   "nist": [
+    "SC-11",
+    "AC-12",
+    "IA-11"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000020",
+   "vulnId": "V-251658",
+   "ruleId": "SV-251658r1015830_rule",
+   "title": "Splunk Enterprise must notify the system administrator (SA) and information system security officer (ISSO) when account events are received (creation, deletion, modification, or disabling).",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000291-AU-000200",
+   "rationale": "Once an attacker establishes access to an application, the attacker often attempts to create a persistent method of re-establishing access. One way to accomplish this is for the attacker to simply create a new account. Sending notification of account creation events to the system administrator and ISSO is one method for mitigating this risk.\n\nTo address access requirements, many application developers choose to integrate their applications with enterprise-level authentication/access/auditing mechanisms that meet or exceed access control policy requirements. Such integration allows the application developer to off-load those access control functions and focus on core application features and functionality.\n\nSatisfies: SRG-APP-000291-AU-000200, SRG-APP-000292-AU-000420, SRG-APP-000294-AU-000430, SRG-APP-000294-AU-000440",
+   "audit": "Interview the SA to verify that a report exists to notify the SA and ISSO when account events are received for all devices and hosts within its scope of coverage.\n\nInterview the ISSO to confirm receipt of this report.\n\nIf Splunk Enterprise is not configured to notify the SA and ISSO when account events are received for all devices and hosts within its scope of coverage, this is a finding.",
+   "remediation": "Configure Splunk Enterprise, using the reporting and notification tools, to notify the SA and ISSO when account events are received for all devices and hosts within its scope of coverage.",
+   "ccis": [
+    "CCI-000015",
+    "CCI-001683",
+    "CCI-001684",
+    "CCI-001685",
+    "CCI-001686"
+   ],
+   "nist": [
+    "AC-2"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000060",
+   "vulnId": "V-251659",
+   "ruleId": "SV-251659r960840_rule",
+   "title": "Splunk Enterprise must enforce the limit of three consecutive invalid logon attempts by a user during a 15-minute time period.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000065-AU-000240",
+   "rationale": "By limiting the number of failed login attempts, the risk of unauthorized system access via user password guessing, otherwise known as brute forcing, is reduced. Limits are imposed by locking the account.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "This check is applicable to the instance with the Search Head role, which may be a different instance in a distributed environment.\n\nExamine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"lockoutAttempts\" is missing or is configured to more than 3, this is a finding.\n\nIf the \"lockoutThresholdMins\" is missing or is configured to less than 15, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nlockoutAttempts = 3\nlockoutThresholdMins = 15",
+   "ccis": [
+    "CCI-000044"
+   ],
+   "nist": [
+    "AC-7"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000070",
+   "vulnId": "V-251660",
+   "ruleId": "SV-251660r961368_rule",
+   "title": "Splunk Enterprise must automatically lock the account until the locked account is released by an administrator when three unsuccessful login attempts in 15 minutes are exceeded.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000345-AU-000400",
+   "rationale": "By limiting the number of failed login attempts, the risk of unauthorized system access via user password guessing, otherwise known as brute forcing, is reduced. Limits are imposed by locking the account.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the lockoutUsers\" is missing or is configured to 0 or False, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nlockoutUsers = True or 1",
+   "ccis": [
+    "CCI-002238"
+   ],
+   "nist": [
+    "AC-7"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000080",
+   "vulnId": "V-251661",
+   "ruleId": "SV-251661r960843_rule",
+   "title": "Splunk Enterprise must display the Standard Mandatory DOD Notice and Consent Banner before granting access to the server.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000068-AU-000035",
+   "rationale": "Display of the DOD-approved use notification before granting access to the application ensures privacy and security notification verbiage used is consistent with applicable federal laws, Executive Orders, directives, policies, regulations, standards, and guidance.\n\nSystem use notifications are required only for access via logon interfaces with human users and are not required when such human interfaces do not exist.\n\nThe banner must be formatted in accordance with DTM-08-060. Use the following verbiage for applications that can accommodate banners of 1300 characters:\n\n\"You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.\n\nBy using this IS (which includes any device attached to this IS), you consent to the following conditions:\n\n-The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.\n\n-At any time, the USG may inspect and seize data stored on this IS.\n\n-Communications using, or data stored on, this IS are not private, are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.\n\n-This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy.\n\n-Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential. See User Agreement for details.\"\n\nUse the following verbiage for operating systems that have severe limitations on the number of characters that can be displayed in the banner:\n\n\"I've read & consent to terms in IS user agreem't.\"",
+   "audit": "This check is performed on the machine used as a search head, which may be a separate machine in a distributed environment.\n\nIf the instance being reviewed is not used as a search head, this check in N/A.\n\nVerify that the Standard Mandatory DOD Notice and Consent Banner appears before being granted access to Splunk Enterprise.\n\nIf the Standard Mandatory DOD Notice and Consent Banner is not presented, this is a finding.",
+   "remediation": "This configuration is performed on the machine used as a search head, which may be a separate machine in a distributed environment.\n\nConfigure Splunk Enterprise to display the Mandatory DOD Notice and Consent Banner by modifying the web.conf file.\n\nAdd/modify the line: \nlogin_content = <script>function DoDBanner() {alert(\"You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.\\nBy using this IS (which includes any device attached to this IS), you consent to the following conditions:\\n-The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.\\n-At any time, the USG may inspect and seize data stored on this IS.\\n-Communications using, or data stored on, this IS are not private, are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.\\n-This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy.\\n-Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential. See User Agreement for details.\");}DoDBanner();</script>\n\nThe string in the above line will be the text of the DOD consent banner.",
+   "ccis": [
+    "CCI-000048"
+   ],
+   "nist": [
+    "AC-8"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000090",
+   "vulnId": "V-251662",
+   "ruleId": "SV-251662r960864_rule",
+   "title": "Splunk Enterprise must be configured to protect the log data stored in the indexes from alteration.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000080-AU-000010",
+   "rationale": "Without non-repudiation, it is impossible to positively attribute an action to an individual (or process acting on behalf of an individual).\n\nThe records stored by Splunk Enterprise must be protected against alteration. A hash is one way of performing this function. The server must not allow the removal of identifiers or date/time, or it must severely restrict the ability to do so.",
+   "audit": "This check is performed on the machine used as an indexer, which may be a separate machine in a distributed environment.\n\nIf the instance being reviewed is not used as an indexer, this check is N/A.\n\nExamine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the indexes.conf file.\n \nIf the indexes.conf file does not exist, this is a finding.\n\nIf the \"enableDataIntegrityControl\" is missing or is configured to 0 or false for each index, this is a finding.",
+   "remediation": "If the indexes.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the indexes.conf file under each index:\n\nenableDataIntegrityControl = 1 or True",
+   "ccis": [
+    "CCI-000166"
+   ],
+   "nist": [
+    "AU-10"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000100",
+   "vulnId": "V-251663",
+   "ruleId": "SV-251663r992039_rule",
+   "title": "Splunk Enterprise must be configured to aggregate log records from organization-defined devices and hosts within its scope of coverage.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000086-AU-000020",
+   "rationale": "If the application is not configured to collate records based on the time when the events occurred, the ability to perform forensic analysis and investigations across multiple components is significantly degraded. Centralized log aggregation must also include logs from databases and servers (e.g., Windows) that do not natively send logs using the syslog protocol.",
+   "audit": "Examine the site documentation that lists the scope of coverage for the instance being reviewed.\n\nSelect Settings >> Data Inputs. Verify that data inputs are configured to support the scope of coverage documented for the site.\n\nIf Splunk enterprise is not configured to aggregate log records from organization-defined devices and hosts within its scope of coverage, this is a finding.",
+   "remediation": "Configure Splunk Enterprise to aggregate log records from organization-defined devices and hosts within its scope of coverage, as defined in the site security plan.",
+   "ccis": [
+    "CCI-000174",
+    "CCI-003821"
+   ],
+   "nist": [
+    "AU-12",
+    "AU-6"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000110",
+   "vulnId": "V-251664",
+   "ruleId": "SV-251664r960873_rule",
+   "title": "In a distributed environment, Splunk Enterprise indexers must be configured to ingest log records from its forwarders.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000086-AU-000390",
+   "rationale": "Log servers (e.g., syslog servers) are often used on network segments to consolidate from the devices and hosts on that network segment. However, this does not achieve compliance with the DoD requirement for a centralized enclave log server.\n\nTo comply with this requirement, create a central log server that aggregates multiple log servers, or use another method to ensure log analysis and management is centrally managed and available to enterprise forensics and analysis tools. This server is often called a log aggregator, SIEM, or events server.",
+   "audit": "This check is applicable to the instance with the Indexer role or the Forwarder role, which may be a different instance in a distributed environment.\n\nVerify the Splunk Enterprise Environment is configured to ingest log records from different hosts.\n\nOn the forwarders, check if the output.conf file is configured with the details of the indexer is ingesting the log data (e.g., Hostname, port# etc.).\n\nOn the indexer, check if the input.conf file is configured with the details of the forwarders that are sending the data.\n\nIf the Splunk Enterprise is not configured to perform analysis of log records from across multiple hosts, this is a finding.",
+   "remediation": "On the forwarders, configure the outputs.conf with the information of the indexer that the data will be sent to for analysis.\n\nOn the indexer, configure the inputs.conf file with the information of the forwarders that are sending the data for analysis.",
+   "ccis": [
+    "CCI-000174"
+   ],
+   "nist": [
+    "AU-12"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000120",
+   "vulnId": "V-251665",
+   "ruleId": "SV-251665r960891_rule",
+   "title": "The System Administrator (SA) and Information System Security Manager (ISSM) must configure the retention of the log records based on the defined security plan.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000095-AU-000050",
+   "rationale": "If authorized individuals do not have the ability to modify auditing parameters in response to a changing threat environment, the organization may not be able to respond effectively and important forensic information may be lost.\n\nThe organization must define and document log retention requirements for each device and host and then configure Splunk Enterprise to comply with the required retention period.\n\nThis requirement enables organizations to extend or limit auditing as necessary to meet organizational requirements. Auditing that is limited to conserve information system resources may be extended to address certain threat situations.",
+   "audit": "This check is applicable to the instance with the Indexer role, which may be a different instance in a distributed environment.\n\nExamine the site documentation for the retention time for log data.\n\nExamine the following file in the Splunk installation folder:\n\n$SPLUNK_HOME/etc/system/local/indexes.conf\n\nFor each index defined in the scope, the frozenTimePeriodInSecs setting should match the site documentation.\n\nIf the settings do not match, this is a finding.",
+   "remediation": "Edit the following file in the Splunk installation folder:\n\n$SPLUNK_HOME/etc/system/local/indexes.conf\n\nSet frozenTimePeriodInSecs to the defined retention period for each index location.",
+   "ccis": [
+    "CCI-001914"
+   ],
+   "nist": [
+    "AU-12"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000130",
+   "vulnId": "V-251666",
+   "ruleId": "SV-251666r960879_rule",
+   "title": "Splunk Enterprise must be configured to retain the DoD-defined attributes of the log records sent by the devices and hosts.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000089-AU-000400",
+   "rationale": "Log records can be generated from various components within the application (e.g., process, module). Certain specific application functionalities may be audited as well. The list of audited events is the set of events for which audits are to be generated. This set of events is typically a subset of the list of all events for which the system is capable of generating log records.\n\nDoD has defined a list of information or attributes that must be included in the log record, including date, time, source, destination, module, severity level (category of information), etc. Other log record content that may be necessary to satisfy the requirement of this policy includes, for example, time stamps, source and destination addresses, user/process identifiers, event descriptions, success/fail indications, filenames involved, and access control or flow control rules invoked.",
+   "audit": "Review the log records sent in Splunk Enterprise and verify that the log records retain the DoD-defined attributes.\n\nIf the log files do not retain the DoD-defined attributes, this is a finding.",
+   "remediation": "Configure Splunk Enterprise to retain the DoD-defined attributes of the log records sent by the devices and hosts.\n\nUse Splunk Enterprise to modify the props.conf file to include the DoD-defined attributes.",
+   "ccis": [
+    "CCI-000169"
+   ],
+   "nist": [
+    "AU-12"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000140",
+   "vulnId": "V-251667",
+   "ruleId": "SV-251667r992040_rule",
+   "title": "Splunk Enterprise must allow only the individuals appointed by the information system security manager (ISSM) to have full admin rights to the system.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000090-AU-000070",
+   "rationale": "Without restricting which roles and individuals can select which events are audited, unauthorized personnel may be able to prevent the auditing of critical events. Misconfigured audits may degrade the system's performance by overwhelming the audit log. Misconfigured audits may also make it more difficult to establish, correlate, and investigate the events relating to an incident or identify those responsible for one.",
+   "audit": "This check is applicable to the instance with the Search Head role, which may be a different instance in a distributed environment.\n\nSelect Settings >> Users.\n\nIf users have the admin role that are not defined by the ISSM as requiring admin rights, this is a finding.\n\nLDAP Groups Check: \n\nSelect Settings >> Authentication Method >> LDAP Settings >> Map Groups.\n\nObtain the LDAP group name mapped to the admin role.\n\nRequest from the LDAP administrator the group membership of this LDAP group, and compare to the list of individuals appointed by the ISSM.\n\nIf users that are not defined by the ISSM as requiring admin rights are present in the admin role membership, this is a finding.",
+   "remediation": "Provide the list of individuals assigned by the ISSM to be members of the admin role to the Splunk Enterprise administrator.\n\nProvide the list of individuals assigned by the ISSM to be members of the admin role to the LDAP administrator to add to the LDAP group mapped to the admin role.\n\nCreate user accounts and assign the admin role for users provided in the lists.",
+   "ccis": [
+    "CCI-000171",
+    "CCI-003831"
+   ],
+   "nist": [
+    "AU-12",
+    "AU-9"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000150",
+   "vulnId": "V-251668",
+   "ruleId": "SV-251668r961395_rule",
+   "title": "Splunk Enterprise must be configured to offload log records onto a different system or media than the system being audited.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000358-AU-000100",
+   "rationale": "Information stored in one location is vulnerable to accidental or incidental deletion or alteration.\n\nOffloading is a common process in information systems with limited audit storage capacity. Although this may be part of the operating system function, for the enterprise events management system, this is most often a function managed through the application since it is a critical function and requires the use of a large amount of external storage.",
+   "audit": "Verify the Splunk Enterprise Environment is configured to offload log records to an external source.\n\nOn the forwarder, check that the outputs.conf file is configured with the details of the source that the logs will be sent to (e.g. Hostname, port# etc.).\n\nIf the Splunk Enterprise is not configured to offload log records to an external source, this is a finding.",
+   "remediation": "This configuration is performed on the machine used as a forwarder, which is always a separate machine regardless of environment.\n\nOn the forwarders, configure the outputs.conf with the information of the indexer that the data will be sent to for analysis. \n\nThis configuration is performed on the machine used as the assigned indexer to the forwarder in a distributed environment.\n\nOn the indexer, configure the inputs.conf file with the information of the forwarders that are sending the data for analysis.",
+   "ccis": [
+    "CCI-001851"
+   ],
+   "nist": [
+    "AU-4"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000160",
+   "vulnId": "V-251669",
+   "ruleId": "SV-251669r961398_rule",
+   "title": "Splunk Enterprise must be configured to send an immediate alert to the system administrator (SA) and information system security officer (ISSO) (at a minimum) when allocated log record storage volume reaches 75 percent of the repository maximum log record storage capacity.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000359-AU-000120",
+   "rationale": "If security personnel are not notified immediately upon storage volume utilization reaching 75 percent, they are unable to plan for storage capacity expansion. \n\nAlthough this may be part of the operating system function, for the enterprise events management system, this is most often a function managed through the application since it is a critical function and requires the use of a large amount of external storage.",
+   "audit": "Perform the following checks. If any do not comply, this is a finding.\n\n1. Examine the file in the Splunk installation folder:\n\nNote: If necessary, run the \"btool\" app within Splunk to first determine where the effective setting is contained, then validate/change that setting.\n\nSPLUNK_HOME/etc/system/local/server.conf\n\nLocate the following setting:\n\n[diskUsage]\nminFreeSpace = xxxx\n\nVerify that the value is set to 25 percent of the size of the storage volume. For example, 25 percent of a 100GB drive is 25GB, and the value set would be 25000, as the value is in megabytes.\n\n2. Examine the file in the Splunk installation folder:\n\n$SPLUNK_HOME/etc/system/local/health.conf\n\nLocate the following setting:\n\n[alert_action:email]\ndisabled = 0\naction.to =\naction.cc =\n\nVerify that the email addresses of the ISSO and SA are set to receive alerts. This email address can be a group address (example alerts@domain.com) that contain the addresses of the ISSO and SA.\n\n3. In the Splunk console, select Settings >> Health Report Manager >> feature:disk_space.\n\nVerify Red setting is 1, and Yellow setting is 2.",
+   "remediation": "Perform the following fixes.\n\n1. Edit the file in the Splunk installation folder:\n\n$SPLUNK_HOME/etc/system/local/server.conf\n\nAdd the following lines:\n\n[diskUsage]\nminFreeSpace = xxxx\n\nSet the value to 25 percent of the size of the storage volume. For example, 25 percent of a 100GB drive is 25GB, and the value set would be 25000, as the value is in megabytes.\n\n2. Examine the file in the Splunk installation folder:\n\n$SPLUNK_HOME/etc/system/local/health.conf\n\nAdd the following lines:\n\n[alert_action:email]\ndisabled = 0\naction.to =\naction.cc =\n\nSet the email addresses of the ISSO and SA to be able to receive alerts. This email address can be a group address (example alerts@domain.com) that contain the addresses of the ISSO and SA.\n\n3. In the Splunk console, select Settings >> Health Report Manager >> feature:disk_space.\n\nSet the Red setting to 1, and Yellow setting to 2.",
+   "ccis": [
+    "CCI-001855"
+   ],
+   "nist": [
+    "AU-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000170",
+   "vulnId": "V-251670",
+   "ruleId": "SV-251670r961401_rule",
+   "title": "Splunk Enterprise must notify the System Administrator (SA) and Information System Security Officer (ISSO) (at a minimum) of all audit failure events, such as loss of communications with hosts and devices, or if log records are no longer being received.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000360-AU-000130",
+   "rationale": "It is critical for the appropriate personnel to be aware if a system is at risk of failing to process audit logs as required. Without a real-time alert, security personnel may be unaware of an impending failure of the audit function and application operation may be adversely affected.",
+   "audit": "Interview the SA to verify that a report exists to notify the SA and ISSO of any audit failure, such as loss of communication or logs no longer being collected.\n\nInterview the ISSO to confirm receipt of this report.\n\nIf a report does not exist to notify the SA and ISSO of audit failure events, or the ISSO does not confirm receipt of the report, this is a finding.",
+   "remediation": "Configure Splunk Enterprise, using the reporting and notification tools, to create a report with notification to the SA and ISSO of any audit failure events, such as loss of communication or logs no longer being collected.",
+   "ccis": [
+    "CCI-001858"
+   ],
+   "nist": [
+    "AU-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000180",
+   "vulnId": "V-251671",
+   "ruleId": "SV-251671r1001259_rule",
+   "title": "Splunk Enterprise must notify the System Administrator (SA) or Information System Security Officer (ISSO) if communication with the host and devices within its scope of coverage is lost.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000361-AU-000140",
+   "rationale": "If the system were to continue processing after audit failure, actions could be taken on the system that could not be tracked and recorded for later forensic analysis. To perform this function, some type of heartbeat configuration with all of the devices and hosts must be configured.",
+   "audit": "If the Splunk instance is used for Tier 2 CSSP (formerly CND-SP) or JRSS analysis, this check is N/A.\n\nInterview the SA to verify that a report exists to notify the SA and ISSO of any audit failure, such as loss of communication or logs no longer being collected.\n\nInterview the ISSO to confirm receipt of this report.\n\nIf a report does not exist to notify the SA and ISSO of audit failure events, or the ISSO does not confirm receipt of this report, this is a finding.",
+   "remediation": "If the Splunk instance is used for Tier 2 CSSP (formerly CND-SP) or JRSS analysis, this check is N/A.\n\nConfigure Splunk Enterprise, using the reporting and notification tools, to create a report with notification to the SA and ISSO of any audit failure events, such as loss of communication or logs no longer being collected.",
+   "ccis": [
+    "CCI-001861"
+   ],
+   "nist": [
+    "AU-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000190",
+   "vulnId": "V-251672",
+   "ruleId": "SV-251672r960930_rule",
+   "title": "Splunk Enterprise installation directories must be secured.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000118-AU-000100",
+   "rationale": "If audit data were to become compromised, then competent forensic analysis and discovery of the true source of potentially malicious system activity is difficult if not impossible to achieve. In addition, access to audit records provides information an attacker could potentially use to his or her advantage.\n\nTo ensure the veracity of audit data, the information system and/or the application must protect audit information from any and all unauthorized access. This includes read, write, and copy access.\n\nThis requirement can be achieved through multiple methods which will depend upon system architecture and design. Commonly employed methods for protecting audit information include least privilege permissions as well as restricting the location and number of log file repositories.\n\nAdditionally, applications with user interfaces to audit records should not allow for the unfettered manipulation of or access to those records via the application. If the application provides access to the audit data, the application becomes accountable for ensuring audit information is protected from unauthorized access.\n\nAudit information includes all information (e.g., audit records, audit settings, and audit reports) needed to successfully audit information system activity.\n\nSatisfies: SRG-APP-000118-AU-000100, SRG-APP-000119-AU-000110, SRG-APP-000120-AU-000120, SRG-APP-000121-AU-000130, SRG-APP-000122-AU-000140, SRG-APP-000123-AU-000150",
+   "audit": "This check must be done as the \"splunk\" user created during installation.\n\nVerify owner and group are set to splunk user.\n\nls -ld $SPLUNK_HOME and $SPLUNK_ETC \n\nIf the owner or group are not set to the splunk user, this is a finding.\n\nCheck for 700 as permission.\n\nstat -c \"%a %n\" $SPLUNK_HOME and $SPLUNK_ETC \n\nIf the permissions are not set to 700, this is a finding.",
+   "remediation": "Only the \"splunk\" and root users should have access to the Splunk Enterprise installation directories.\n\nchown splunk user $SPLUNK_HOME and $SPLUNK_ETC\nchgrp splunk user $SPLUNK_HOME and $SPLUNK_ETC\nchmod 700 $SPLUNK_HOME and $SPLUNK_ETC",
+   "ccis": [
+    "CCI-000162",
+    "CCI-000163",
+    "CCI-000164",
+    "CCI-001493",
+    "CCI-001494",
+    "CCI-001495"
+   ],
+   "nist": [
+    "AU-9"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000250",
+   "vulnId": "V-251673",
+   "ruleId": "SV-251673r960948_rule",
+   "title": "Splunk Enterprise must be configured to back up the log records repository at least every seven days onto a different system or system component other than the system or component being audited.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000125-AU-000300",
+   "rationale": "Protection of log data includes ensuring log data is not accidentally lost or deleted. Backing up log records to a different system or onto separate media than the system being audited on an organizationally defined frequency helps to ensure that in the event of a catastrophic system failure, the log records will be retained. \n\nThis helps to ensure that a compromise of the information system being audited does not also result in a compromise of the log records.\n\nThis requirement only applies to applications that have a native backup capability for log records. Operating system backup requirements cover applications that do not provide native backup functions.",
+   "audit": "Interview the SA to verify that a process exists to back up the Splunk log data every seven days, using the underlying OS backup tools or another approved backup tool.\n\nIf a backup plan does not exist for the Splunk log data, this is a finding.",
+   "remediation": "Implement a backup plan for the Splunk log data, following the Splunk documentation on backing up indexed data. Use the underlying OS backup tools, or another approved backup tool.",
+   "ccis": [
+    "CCI-001348"
+   ],
+   "nist": [
+    "AU-9"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000260",
+   "vulnId": "V-251674",
+   "ruleId": "SV-251674r961863_rule",
+   "title": "Splunk Enterprise must be configured to retain the identity of the original source host or device where the event occurred as part of the log record.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000516-AU-000330",
+   "rationale": "In this case the information producer is the device based on IP address or some other identifier of the device producing the information. The source of the record must be bound to the record using cryptographic means.\n\nSome events servers allow the administrator to retain only portions of the record sent by devices and hosts.\n\nThis requirement applies to log aggregation servers with the role of fulfilling the DoD requirement for a central log repository. The syslog, SIEM, or other event servers must retain this information with each log record to support incident investigations.",
+   "audit": "Review the log records in Splunk Enterprise and verify that the log records retain the identity of the original source host or device where the event occurred.\n\nIf the log files do not retain the identity of the original source host or device where the event occurred, this is a finding.",
+   "remediation": "Configure Splunk Enterprise to retain the identity of the original source host or device where the event occurred.\n\nUse Splunk Enterprise to modify the props.conf file to include the identity of the original source host or device where the event occurred.",
+   "ccis": [
+    "CCI-000366"
+   ],
+   "nist": [
+    "CM-6"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000270",
+   "vulnId": "V-251675",
+   "ruleId": "SV-251675r961863_rule",
+   "title": "Splunk Enterprise must use TCP for data transmission.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000516-AU-000340",
+   "rationale": "If the UDP protocol is used for communication, then data packets that do not reach the server are not detected as a data loss. The use of TCP to transport data improves delivery reliability, adds data integrity, and gives the option to encrypt the traffic.",
+   "audit": "This check is performed on the machine used as an indexer, which may be a separate machine in a distributed environment.\n\nExamine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the inputs.conf file.\n\nIf any input is configured to use a UDP port, this is a finding.",
+   "remediation": "This configuration is performed on the machine used as an indexer, which may be a separate machine in a distributed environment.\n\nNavigate to $SPLUNK_HOME/etc/system/local/\n\nModify the inputs.conf file to replace any input that is using a UDP port with a TCP port.",
+   "ccis": [
+    "CCI-000366"
+   ],
+   "nist": [
+    "CM-6"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000280",
+   "vulnId": "V-251676",
+   "ruleId": "SV-251676r961863_rule",
+   "title": "Splunk Enterprise must be configured with a report to notify the System Administrator (SA) and Information System Security Officer (ISSO), at a minimum, when an attack is detected on multiple devices and hosts within its scope of coverage.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000516-AU-000350",
+   "rationale": "Detecting when multiple systems are showing anomalies can often indicate an attack. Notifying appropriate personnel can initiate a proper response and mitigation of the attack.",
+   "audit": "Interview the SA to verify that a report exists to notify the SA and ISSO, at a minimum, when an attack is detected on multiple devices and hosts within its scope of coverage.\n\nInterview the ISSO to confirm receipt of this report.\n\nIf a report does not exist, or the ISSO does not confirm receipt of this report, this is a finding.",
+   "remediation": "Configure Splunk Enterprise, using the Reporting and Alert tools, to notify the SA and ISSO, at a minimum, when an attack is detected on multiple devices and hosts within its scope of coverage.",
+   "ccis": [
+    "CCI-000366"
+   ],
+   "nist": [
+    "CM-6"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000290",
+   "vulnId": "V-251677",
+   "ruleId": "SV-251677r961863_rule",
+   "title": "Analysis, viewing, and indexing functions, services, and applications used as part of Splunk Enterprise must be configured to comply with DoD-trusted path and access requirements.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000516-AU-000410",
+   "rationale": "Access to Splunk Enterprise for analysis, viewing, indexing functions, services, and applications, such as analysis tools and other vendor-provided applications, must be secured. Software used to perform additional functions, which resides on the server, must also be secured or could provide a vector for unauthorized access to the events repository.",
+   "audit": "Execute a search query in Splunk using the following:\n\nindex=_internal source=*metrics.log* group=tcpin_connections | dedup hostname | table _time hostname sourceIp destPort ssl\n\nVerify that the report returns ssl = true for every item listed.\n\nNavigate to $SPLUNK_HOME/etc/system/local/web.conf and verify the enableSplunkWebSSL is set to 1.\n\nIf the report returns ssl = false for any item, and/or If enableSplunkWebSSL is not set, this is a finding.",
+   "remediation": "Edit the following files in the installation to configure Splunk to use SSL certificates:\n\nThis configuration is performed on the machine used as an indexer, which may be a separate machine in a distributed environment.\n\n$SPLUNK_HOME/etc/system/local/inputs.conf\n\n[splunktcp-ssl:9997]\ndisabled = 0\n\n[SSL]\nserverCert = <path to the DoD approved certificate in PEM format>\nsslPassword = <password for the certificate>\n\nThis configuration is performed on the machine used as a forwarder, which is always a separate machine regardless of environment.\n\n$SPLUNK_HOME/etc/system/local/outputs.conf\n\n[tcpout:group1]\ndisabled = 0\nclientCert = <path to the DoD approved certificate in PEM format>\nsslPassword = <password for the certificate>\n\nThis configuration is performed on the machine used as a search head, which may be a separate machine in a distributed environment.\n\nEdit the following file in the installation to configure Splunk to use SSL certificates:\n\n$SPLUNK_HOME/etc/opt/system/local/web.conf\n\n[settings]\nenableSplunkWebSSL = 1\nprivKeyPath = <path to the private key generated for the DoD approved certificate>\nserverCert = <path to the DoD approved certificate in PEM format>",
+   "ccis": [
+    "CCI-000366"
+   ],
+   "nist": [
+    "CM-6"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000300",
+   "vulnId": "V-251678",
+   "ruleId": "SV-251678r960963_rule",
+   "title": "When Splunk Enterprise is distributed over multiple servers, each server must be configured to disable non-essential capabilities.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000141-AU-000090",
+   "rationale": "Applications are capable of providing a wide variety of functions and services. Some of the functions and services may not be necessary to support the configuration. This becomes more of an issue in distributed environments, where the application functions are spread out over multiple servers. These unnecessary capabilities or services are often overlooked and therefore may remain unsecured. They increase the risk to the platform by providing additional attack vectors.",
+   "audit": "If the Splunk Installation is not distributed among multiple servers, this check is N/A.\n\nSelect Settings >> Monitoring Console.\n\nIn the Monitoring Console, select Settings >> General Setup.\n\nCheck the Mode type.\n\nIf set to Standalone, then this requirement is N/A, as all functions provided are necessary for operation.\n\nIf Mode is set to Distributed, check that each instance is configured only with the server roles necessary for the implementation.\n\nIf unused roles are configured, this is a finding.",
+   "remediation": "If the Splunk Installation is not distributed among multiple servers, this fix is N/A.\n\nSelect Settings >> Monitoring Console.\n\nIn the Monitoring Console, select Settings >> General Setup.\n\nSet the Mode type based on the implementation design.\n\nIf Mode is set to Distributed, set each instance only with the server roles necessary for the desired functions.",
+   "ccis": [
+    "CCI-000381"
+   ],
+   "nist": [
+    "CM-7"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000320",
+   "vulnId": "V-251679",
+   "ruleId": "SV-251679r1051115_rule",
+   "title": "Splunk Enterprise must use organization-level authentication to uniquely identify and authenticate users.",
+   "severity": "high",
+   "cat": "CAT I",
+   "srg": "SRG-APP-000148-AU-002270",
+   "rationale": "To assure accountability and prevent unauthenticated access, organizational users must be uniquely identified and authenticated to prevent potential misuse and compromise of the system. \n\nSharing of accounts prevents accountability and non-repudiation. Organizational users must be uniquely identified and authenticated for all accesses.",
+   "audit": "This check is performed on the machine used as a search head or a deployment server, which may be a separate machine in a distributed environment.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory.\n\nView the authentication.conf file.\n\nIf the authentication.conf file does not exist, this is a finding.\n\nIn the authentication.conf file, verify minimum settings similar to the example below. If any minimum settings are not configured, this is a finding.\n\nIf using LDAP:\n\n[authentication]\nauthType = LDAP\nauthSettings = <ldap_strategy>\n\n[<ldap_strategy>]\nhost = <LDAP server>\nport = <LDAP port>\nsslEnabled = 1\n\nCheck the following file in the $SPLUNK_HOME/etc/openldap folder:\n\nldap.conf\n\nIf the file does not exist, this is a finding.\n\nCheck for the following lines. If any are missing or do not match the settings below, this is a finding.\n\nTLS_REQCERT\nTLS_CACERT <path to SSL certificate>\nTLS_PROTOCOL_MIN 3.3\nTLS_CIPHER_SUITE ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-\nSHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-\nAES128-SHA256:ECDHE-RSA-AES128-SHA256\n\nIf using SAML:\n\n[authentication]\nauthType = SAML\nauthSettings = <saml_strategy>\n[<saml_strategy>]\nentityId = <saml entity>\nidpSSOUrl = <saml URL>\nidpCertPath = <path to certificate>\n\nOpen the Splunk Web console.\n\nSelect Settings >> Access Controls >> Users. \n\nVerify that no user accounts exist with Authentication system set to Splunk except an account of last resort. They must all be set to LDAP or SAML.\n\nIf any user accounts have Authentication system set to Splunk, with the exception of one emergency account of last resort, this is a finding.",
+   "remediation": "This configuration is performed on the machine used as a search head or a deployment server, which may be a separate machine in a distributed environment.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory.\n\nEdit the authentication.conf file.\n\nIf the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nConfigure minimum settings similar to the example below for using LDAP or SAML.\n\nIf using LDAP:\n\n[authentication]\nauthType = LDAP\nauthSettings = <ldap_strategy>\n\n[<ldap_strategy>]\nhost = <LDAP server>\nport = <LDAP port>\nsslEnabled = 1\n\nEdit the following file in the $SPLUNK_HOME/etc/openldap folder:\n\nldap.conf\n\nConfigure the following lines for your certificate.\n\nTLS_REQCERT\nTLS_CACERT <path to SSL certificate>\nTLS_PROTOCOL_MIN 3.3\nTLS_CIPHER_SUITE ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-\nSHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-\nAES128-SHA256:ECDHE-RSA-AES128-SHA256\n\nIf using SAML:\n\n[authentication]\nauthType = SAML\nauthSettings = <saml_strategy>\n[<saml_strategy>]\nentityId = <saml entity>\nidpSSOUrl = <saml URL>\nidpCertPath = <path to certificate>\n\nAfter configuring LDAP or SAML, open the Splunk Web console.\n\nSelect Settings >> Access Controls >> Users. \n\nCreate appropriate LDAP and SAML users and groups for the environment.\n\nDelete any user account with Authentication system set to Splunk, with the exception of one emergency account of last resort. Splunk will prevent the user from deleting an LDAP or SAML account.",
+   "ccis": [
+    "CCI-000764"
+   ],
+   "nist": [
+    "IA-2"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000330",
+   "vulnId": "V-251680",
+   "ruleId": "SV-251680r960993_rule",
+   "title": "Splunk Enterprise must use HTTPS/SSL for access to the user interface.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000156-AU-002380",
+   "rationale": "A replay attack may enable an unauthorized user to gain access to the application. Authentication sessions between the authenticator and the application validating the user credentials must not be vulnerable to a replay attack.\n\nAnti-replay is a cryptographically based mechanism; thus, it must use FIPS-approved algorithms. An authentication process resists replay attacks if it is impractical to achieve a successful authentication by recording and replaying a previous authentication message. Note that the anti-replay service is implicit when data contains monotonically increasing sequence numbers and data integrity is assured. Use of DoD PKI is inherently compliant with this requirement for user and device access. Use of Transport Layer Security (TLS), including application protocols, such as HTTPS and DNSSEC, that use TLS/SSL as the underlying security protocol is also complaint.\n\nConfigure the information system to use the hash message authentication code (HMAC) algorithm for authentication services to Kerberos, SSH, web management tool, and any other access method.",
+   "audit": "This check is performed on the machine used as a search head or a deployment server, which may be a separate machine in a distributed environment.\n\nCheck the following file in the installation to verify Splunk is set to use SSL and certificates:\n\n$SPLUNK_HOME/etc/system/local/web.conf\n\n[settings]\nenableSplunkWebSSL = 1\nprivKeyPath = <path to the private key generated for the DoD approved certificate>\nserverCert = <path to the DoD approved certificate in PEM format>\n\nIf the settings are not configured to use SSL and certificates, this is a finding.",
+   "remediation": "This configuration is performed on the machine used as a search head or a deployment server, which may be a separate machine in a distributed environment.\n\nEdit the following file in the installation to configure Splunk to use SSL certificates:\n\n$SPLUNK_HOME/etc/system/local/web.conf\n\n[settings]\nenableSplunkWebSSL = 1\nprivKeyPath = <path to the private key generated for the DoD approved certificate>\nserverCert = <path to the DoD approved certificate in PEM format>",
+   "ccis": [
+    "CCI-001941"
+   ],
+   "nist": [
+    "IA-2"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000340",
+   "vulnId": "V-251681",
+   "ruleId": "SV-251681r1015831_rule",
+   "title": "Splunk Enterprise must be configured to enforce password complexity by requiring that at least one uppercase character be used.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000166-AU-002490",
+   "rationale": "Use of a complex password helps to increase the time and resources required to compromise the password. Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force attacks. \n\nPassword complexity is one factor of several that determine how long it takes to crack a password. The more complex the password, the greater the number of possible combinations that need to be tested before the password is compromised.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication, and cannot be disabled. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"minPasswordUppercase\" is missing or is configured to 0, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nminPasswordUppercase = 1",
+   "ccis": [
+    "CCI-004066",
+    "CCI-000192"
+   ],
+   "nist": [
+    "IA-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000350",
+   "vulnId": "V-251682",
+   "ruleId": "SV-251682r1015832_rule",
+   "title": "Splunk Enterprise must be configured to enforce password complexity by requiring that at least one lowercase character be used.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000167-AU-002500",
+   "rationale": "Use of a complex password helps to increase the time and resources required to compromise the password. Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force attacks. \n\nPassword complexity is one factor of several that determine how long it takes to crack a password. The more complex the password, the greater the number of possible combinations that need to be tested before the password is compromised.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication, and cannot be disabled. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"minPasswordLowercase\" is missing or is configured to 0, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nminPasswordLowercase = 1",
+   "ccis": [
+    "CCI-004066",
+    "CCI-000193"
+   ],
+   "nist": [
+    "IA-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000360",
+   "vulnId": "V-251683",
+   "ruleId": "SV-251683r1015833_rule",
+   "title": "Splunk Enterprise must be configured to enforce password complexity by requiring that at least one numeric character be used.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000168-AU-002510",
+   "rationale": "Use of a complex password helps to increase the time and resources required to compromise the password. Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force attacks. \n\nPassword complexity is one factor of several that determine how long it takes to crack a password. The more complex the password, the greater the number of possible combinations that need to be tested before the password is compromised.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication, and cannot be disabled. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"minPasswordDigit\" is missing or is configured to 0, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nminPasswordDigit = 1",
+   "ccis": [
+    "CCI-004066",
+    "CCI-000194"
+   ],
+   "nist": [
+    "IA-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000370",
+   "vulnId": "V-251684",
+   "ruleId": "SV-251684r1015834_rule",
+   "title": "Splunk Enterprise must be configured to enforce a minimum 15-character password length.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000164-AU-002480",
+   "rationale": "The shorter the password, the lower the number of possible combinations that need to be tested before the password is compromised.\n\nPassword complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force attacks. Password length is one factor of several that helps to determine strength and how long it takes to crack a password. The shorter the password, the lower the number of possible combinations that need to be tested before the password is compromised. \n\nUse of more characters in a password helps to exponentially increase the time and/or resources required to compromise the password.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication, and cannot be disabled. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"minPasswordLength\" is missing or is configured to 14 or less, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nminPasswordLength = 15 or more",
+   "ccis": [
+    "CCI-004066",
+    "CCI-000205"
+   ],
+   "nist": [
+    "IA-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000380",
+   "vulnId": "V-251685",
+   "ruleId": "SV-251685r1015835_rule",
+   "title": "Splunk Enterprise must be configured to enforce password complexity by requiring that at least one special character be used.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000169-AU-002520",
+   "rationale": "Use of a complex password helps to increase the time and resources required to compromise the password. Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force attacks. \n\nPassword complexity is one factor in determining how long it takes to crack a password. The more complex the password, the greater the number of possible combinations that need to be tested before the password is compromised.\n\nSpecial characters are those characters that are not alphanumeric. Examples include: ~ ! @ # $ % ^ *.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication, and cannot be disabled. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"minPasswordSpecial\" is missing or is configured to 0, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nminPasswordSpecial = 1",
+   "ccis": [
+    "CCI-004066",
+    "CCI-001619"
+   ],
+   "nist": [
+    "IA-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000390",
+   "vulnId": "V-251686",
+   "ruleId": "SV-251686r961029_rule",
+   "title": "Splunk Enterprise must be installed in FIPS mode to implement NIST FIPS-approved cryptography for all cryptographic functions.",
+   "severity": "high",
+   "cat": "CAT I",
+   "srg": "SRG-APP-000172-AU-002550",
+   "rationale": "FIPS 140-2 precludes the use of unvalidated cryptography for the cryptographic protection of sensitive or valuable data within Federal systems. Unvalidated cryptography is viewed by NIST as providing no protection to the information or data. In effect, the data would be considered unprotected plaintext. If the agency specifies that the information or data be cryptographically protected, then FIPS 140-2 is applicable. In essence, if cryptography is required, it must be validated. Cryptographic modules that have been approved for classified use may be used in lieu of modules that have been validated against the FIPS 140-2 standard.\n\nSatisfies: SRG-APP-000172-AU-002550, SRG-APP-000179-AU-002670, SRG-APP-000514-AU-002890",
+   "audit": "Run the following command from the server command line:\nNote: Run this command as the account of last resort, as no other local user accounts should exist.\n\nsplunk show fips-mode -auth <username>:<password>\n\nVerify that the command returns FIPS mode enabled.\n\nIf the command returns FIPS mode disabled, this is a finding.",
+   "remediation": "FIPS 140-2 mode must be enabled during initial installation. If not enabled, it requires a reinstall or upgrade of the application.\n\nAdd the following line to the $SPLUNK_HOME/etc/splunk-launch.conf file during the installation process and before the initial start of Splunk Enterprise:\n\nSPLUNK_COMMON_CRITERIA=1\nSPLUNK_FIPS=1\n# Do not generate python byte code\nPYTHONDONTWRITEBYTECODE=1\n\nThis will enable FIPS mode before the initial startup.",
+   "ccis": [
+    "CCI-000197",
+    "CCI-000803",
+    "CCI-002450"
+   ],
+   "nist": [
+    "IA-5",
+    "IA-7",
+    "SC-13"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000400",
+   "vulnId": "V-251687",
+   "ruleId": "SV-251687r1043190_rule",
+   "title": "Splunk Enterprise must be configured to enforce a 60-day maximum password lifetime restriction.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000174-AU-002570",
+   "rationale": "Any password, no matter how complex, can eventually be cracked. Therefore, passwords need to be changed at specific intervals. If the application does not limit the lifetime of passwords and force users to change their passwords, there is the risk that the system and/or application passwords could be compromised.\n\nThis requirement does not include emergency administration accounts that are meant for access to the application in case of failure. These accounts are not required to have maximum password lifetime restrictions.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication, and cannot be disabled. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"expirePasswordDays\" is missing or is configured to 61 or more, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nexpirePasswordDays = 60",
+   "ccis": [
+    "CCI-004066",
+    "CCI-000199"
+   ],
+   "nist": [
+    "IA-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000410",
+   "vulnId": "V-251688",
+   "ruleId": "SV-251688r1015267_rule",
+   "title": "Splunk Enterprise must be configured to prohibit password reuse for a minimum of five generations.",
+   "severity": "low",
+   "cat": "CAT III",
+   "srg": "SRG-APP-000165-AU-002580",
+   "rationale": "Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force attacks. \n\nTo meet password policy requirements, passwords need to be changed at specific policy-based intervals. \n\nIf the information system or application allows the user to consecutively reuse their password when that password has exceeded its defined lifetime, the end result is a password that is not changed as per policy requirements.\n\nIn most enterprise environments, this requirement is usually mitigated by a properly configured external authentication system, like LDAP. Splunk local authentication takes precedence over other forms of authentication, and cannot be disabled. The mitigation settings in this requirement apply in the event a local account is created.",
+   "audit": "Examine the configuration.\n\nNavigate to the $SPLUNK_HOME/etc/system/local/ directory. View the authentication.conf file.\n \nIf the authentication.conf file does not exist, this is a finding.\n\nIf the \"enablePasswordHistory\" is missing or is configured to False, this is a finding.\n\nIf the \"passwordHistoryCount\" is missing or is configured to 4 or less, this is a finding.",
+   "remediation": "If the authentication.conf file does not exist, copy the file from $SPLUNK_HOME/etc/system/default to the $SPLUNK_HOME/etc/system/local directory.\n\nModify the following lines in the authentication.conf file under the [splunk_auth]:\n\nenablePasswordHistory = True\npasswordHistoryCount = 5",
+   "ccis": [
+    "CCI-004061"
+   ],
+   "nist": [
+    "IA-5"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000430",
+   "vulnId": "V-251689",
+   "ruleId": "SV-251689r1082345_rule",
+   "title": "Splunk Enterprise must use TLS 1.2 and SHA-2 or higher cryptographic algorithms.",
+   "severity": "high",
+   "cat": "CAT I",
+   "srg": "SRG-APP-000610-AU-000050",
+   "rationale": "Without cryptographic integrity protections, information can be altered by unauthorized users without detection.\n\nTo protect the integrity of the authenticator and authentication mechanism used for the cryptographic module used by the network device, the application, operating system, or protocol must be configured to use one of the following hash functions for hashing the password or other authenticator in accordance with SP 800-131Ar1: SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, SHA-512/256, SHA3-224, SHA3-256, SHA3-384, and SHA3-512.\n\nSplunk Enterprise, by default, is compliant with this requirement. But since the settings can be overridden, the check and fix text in this requirement is necessary.",
+   "audit": "Examine the configuration.\n\nCheck the following files in the $SPLUNK_HOME/etc/system/local folder:\n\ninputs.conf: Check is applicable to the indexer which may be a separate machine in a distributed environment.\n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or this is a finding:\n\nsslVersions = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\noutputs.conf: Check is applicable to the forwarder, which is always a separate machine in the environment. \n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or this is a finding:\n\nsslVersions = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\nserver.conf\n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or it is a finding:\n\nsslVersions = tls1.2\nsslVersionsForClient = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:AES256-GCM-SHA384:AES128-GCM-SHA256:AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\nweb.conf: Check is applicable to search head or deployment server, which may be a separate machine in a distributed environment.\n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or it is a finding:\n\nsslVersions = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\nCheck the following file in the /etc/openldap folder:\n\nldap.conf\n\nCheck for the following lines, they must match the settings below or it is a finding:\n\n#TLS_PROTOCOL_MIN: 3.1 for TLSv1.0, 3.2 for TLSv1.1, 3.3 for TLSv1.2.\nTLS_PROTOCOL_MIN 3.3\nTLS_CIPHER_SUITE ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\n\nNote: Splunk Enterprise must operate in FIPS mode to limit the algorithms allowed.",
+   "remediation": "Edit the following files in the $SPLUNK_HOME/etc/system/local folder:\n\ninputs.conf: Fix is applicable to the indexer, which may be a separate machine in a distributed environment.\n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or be removed:\n\nsslVersions = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\noutputs.conf: Check is applicable to the forwarder which is always a separate machine in the environment. \n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or be removed:\n\nsslVersions = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\nserver.conf\n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or be removed:\n\nsslVersions = tls1.2\nsslVersionsForClient = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:AES256-GCM-SHA384:AES128-GCM-SHA256:AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\nweb.conf: Check is applicable to search head or deployment server, which may be a separate machine in a distributed environment.\n\nIf the following lines do not exist, then the settings are compliant. If they exist, they must match the settings below or be removed:\n\nsslVersions = tls1.2\ncipherSuite = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\necdhCurves = prime256v1, secp384r1, secp521r1\n\nCheck the following file in the /etc/openldap folder:\n\nldap.conf\n\nCheck for the following lines, set to match the settings below:\n\n#TLS_PROTOCOL_MIN: 3.1 for TLSv1.0, 3.2 for TLSv1.1, 3.3 for TLSv1.2.\nTLS_PROTOCOL_MIN 3.3\nTLS_CIPHER_SUITE ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\n\nNote: Splunk Enterprise must operate in FIPS mode to limit the algorithms allowed.",
+   "ccis": [
+    "CCI-000803"
+   ],
+   "nist": [
+    "IA-7"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000450",
+   "vulnId": "V-251690",
+   "ruleId": "SV-251690r992050_rule",
+   "title": "Splunk Enterprise must only allow the use of DOD-approved certificate authorities for cryptographic functions.",
+   "severity": "medium",
+   "cat": "CAT II",
+   "srg": "SRG-APP-000427-AU-000040",
+   "rationale": "Untrusted Certificate Authorities (CA) can issue certificates, but they may be issued by organizations or individuals that seek to compromise DOD systems or by organizations with insufficient security controls. If the CA used for verifying the certificate is not a DOD-approved CA, trust of this CA has not been established.\n\nThe DOD will only accept PKI certificates obtained from a DOD-approved internal or external certificate authority. \n\nSplunk Enterprise contains built-in certificates that are common across all Splunk installations, and are for initial deployment. These should not be used in any production environment.\n\nIt is also recommended that the production certificates be stored in another location away from the Splunk default certificates, as that folder gets replaced on any upgrade of the application. An example would be to use a folder named /etc/system/DODcerts under the Splunk installation root folder.",
+   "audit": "On the host OS of the server, verify the properties of the certificate used by Splunk to ensure that the Issuer is the DOD trusted CA.\n\nThis can be verified by the command:\n\nopenssl x509 -text -inform PEM -in <name of cert>\n\nIf the certificate issuer is not a DOD trusted CA, then this is a finding.",
+   "remediation": "Request a DOD-approved certificate and a copy of the DOD root CA public certificate, and place the files in a location for Splunk use.\n\nConfigure the certificate files to the PEM format, using the Splunk Enterprise system documentation.",
+   "ccis": [
+    "CCI-002470",
+    "CCI-004909",
+    "CCI-004910"
+   ],
+   "nist": [
+    "SC-23",
+    "SC-17",
+    "SC-28"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000460",
+   "vulnId": "V-251691",
+   "ruleId": "SV-251691r961632_rule",
+   "title": "Splunk Enterprise must be configured to protect the confidentiality and integrity of transmitted information.",
+   "severity": "high",
+   "cat": "CAT I",
+   "srg": "SRG-APP-000439-AU-004310",
+   "rationale": "Without protection of the transmitted information, confidentiality and integrity may be compromised since unprotected communications can be intercepted and either read or altered. \n\nThis requirement applies only to those applications that are either distributed or can allow access to data non-locally. Use of this requirement will be limited to situations where the data owner has a strict requirement for ensuring data integrity and confidentiality is maintained at every step of the data transfer and handling process. When transmitting data, applications need to leverage transmission protection mechanisms, such as TLS, SSL VPNs, or IPsec.\n\nCommunication paths outside the physical protection of a controlled boundary are exposed to the possibility of interception and modification. Protecting the confidentiality and integrity of organizational information can be accomplished by physical means (e.g., employing physical distribution systems) or by logical means (e.g., employing cryptographic techniques). If physical means of protection are employed, then logical means (cryptography) do not have to be employed, and vice versa.",
+   "audit": "Check the following files in the installation to verify Splunk uses SSL certificates for communication between the indexer and the forwarder:\n\nThis check is performed on the machine used as an indexer, which may be a separate machine in a distributed environment.\n\n$SPLUNK_HOME/etc/system/local/inputs.conf\n\n[splunktcp-ssl:9997]\ndisabled = 0\n\n[SSL]\nserverCert = <path to the DoD approved certificate in PEM format>\nsslPassword = <password for the certificate>\n\nIf these settings are misconfigured, this is a finding.\n\nThis configuration is performed on the machine used as a forwarder, which is always a separate machine regardless of environment.\n\n$SPLUNK_HOME/etc/system/local/outputs.conf\n\n[tcpout:group1]\ndisabled = 0\nclientCert = <path to the DoD approved certificate in PEM format>\nsslPassword = <password for the certificate>\n\nIf these settings are misconfigured, this is a finding.",
+   "remediation": "Edit the following files in the installation to configure Splunk to use SSL certificates:\n\nThis configuration is performed on the machine used as an indexer, which may be a separate machine in a distributed environment.\n\n$SPLUNK_HOME/etc/system/local/inputs.conf\n\n[splunktcp-ssl:9997]\ndisabled = 0\n\n[SSL]\nserverCert = <path to the DoD approved certificate in PEM format>\nsslPassword = <password for the certificate>\n\nThis configuration is performed on the machine used as a forwarder, which is always a separate machine regardless of environment.\n\n$SPLUNK_HOME/etc/system/local/outputs.conf\n\n[tcpout:group1]\ndisabled = 0\nclientCert = <path to the DoD approved certificate in PEM format>\nsslPassword = <password for the certificate>",
+   "ccis": [
+    "CCI-002418"
+   ],
+   "nist": [
+    "SC-8"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000490",
+   "vulnId": "V-251692",
+   "ruleId": "SV-251692r992052_rule",
+   "title": "Splunk Enterprise must accept the DOD CAC or other PKI credential for identity management and personal authentication.",
+   "severity": "high",
+   "cat": "CAT I",
+   "srg": "SRG-APP-000391-AU-002290",
+   "rationale": "The use of PIV credentials facilitates standardization and reduces the risk of unauthorized access.\n\nDOD has mandated the use of the CAC to support identity management and personal authentication for systems covered under Homeland Security Presidential Directive (HSPD) 12, as well as a primary component of layered protection for national security systems. DOD has approved other methods of PKI, including YubiKey, RSA tokens, etc.\n\nIf the application cannot meet this requirement, the risk may be mitigated through use of an authentication server.",
+   "audit": "If the instance being checked is in a distributed environment and has the web interface disabled, this check is Not Applicable.\n\nVerify that Splunk Enterprise is configured to use the DOD CAC or other PKI credential to log in to the application.\n\nIf it is not configured to allow the use of the DOD CAC or other PKI credential, this is a finding.",
+   "remediation": "Configure an SSO proxy service using Apache, IIS, F5, SAML, etc., to provide PKI credentials to Splunk Enterprise. \n\nExamples for Apache and F5 are provided using the supplemental documentation included in this package to be used in addition to the Splunk documentation.",
+   "ccis": [
+    "CCI-001953",
+    "CCI-004047"
+   ],
+   "nist": [
+    "IA-2"
+   ]
+  },
+  {
+   "code": "SPLK-CL-000510",
+   "vulnId": "V-274465",
+   "ruleId": "SV-274465r1099924_rule",
+   "title": "Splunk Enterprise must use a version supported by the vendor.",
+   "severity": "high",
+   "cat": "CAT I",
+   "srg": "SRG-APP-000391-AU-002290",
+   "rationale": "Running unsupported software increases risk of unresolved vulnerabilities and system damage. Software must be currently maintained by the vendor to patch vulnerabilities.",
+   "audit": "This STIG is sunset and no longer maintained.\n\nCheck that the version in use is still supported by the vendor.\n\nIf the version in use is not supported by the vendor, this is a finding.",
+   "remediation": "Upgrade to a version supported by the vendor.",
+   "ccis": [
+    "CCI-002605"
+   ],
+   "nist": [
+    "SI-2"
+   ]
+  }
+ ]
+}
