@@ -1,0 +1,456 @@
+<style>
+  :root{
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Code","Fragment Mono",SFMono-Regular,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:var(--sans);color:#1C1917;background:#F7F7F5;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--sans);letter-spacing:-.02em;font-weight:700;}
+  a{color:#C9443A;text-decoration:none;}
+  input,textarea,select,button{font-family:inherit;}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #0f4c9c;outline-offset:2px;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#D8D6D3;border-radius:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  .mono{font-family:var(--mono);}
+  @keyframes hh-fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  @keyframes hh-spin{to{transform:rotate(360deg);}}
+  .lift{transition:box-shadow .15s,transform .15s;}
+  .lift:hover{box-shadow:0 8px 24px rgba(20,45,90,.13);transform:translateY(-2px);}
+  .pri{transition:background .15s;}
+  .pri:hover{background:#1C1917 !important;}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
+  .demo-banner{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:200;background:#1C1917;color:#fff;font-size:12px;padding:8px 16px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92;}
+</style>
+
+<div id="app"></div>
+<div class="demo-banner">Vista de demostración · la generación de documentos es simulada</div>
+
+<script>
+/* HardenHub — self-contained clickable preview of the app.
+   Faithful port of the design; state + views in vanilla JS. */
+(function(){
+"use strict";
+
+/* ---------------- data ---------------- */
+var PRODUCTS=[
+ {id:"cis-win2022",framework:"CIS",platform:"Windows Server",name:"CIS Windows Server 2022 Benchmark",version:"v2.0.0",blurb:"Secure-configuration baseline for Windows Server 2022 — domain controller and member server profiles.",controls:387,profiles:"L1 · L2",price:"$1,290",savings:"$18k",type:"Hardening guide"},
+ {id:"cis-ubuntu2204",framework:"CIS",platform:"Linux",name:"CIS Ubuntu 22.04 LTS Benchmark",version:"v2.0.0",blurb:"Hardening baseline for Ubuntu 22.04 LTS servers and workstations across L1/L2 profiles.",controls:241,profiles:"L1 · L2",price:"$990",savings:"$12k",type:"Hardening guide"},
+ {id:"stig-rhel9",framework:"DISA STIG",platform:"Linux",name:"DISA STIG — Red Hat Enterprise Linux 9",version:"V1R3",blurb:"DoD Security Technical Implementation Guide for RHEL 9, mapped to NIST 800-53 controls.",controls:312,profiles:"CAT I–III",price:"$1,150",savings:"$16k",type:"Standard"},
+ {id:"cis-k8s",framework:"CIS",platform:"Kubernetes",name:"CIS Kubernetes Benchmark",version:"v1.9.0",blurb:"Control-plane and worker-node hardening for self-managed Kubernetes clusters.",controls:124,profiles:"L1 · L2",price:"$860",savings:"$9k",type:"Hardening guide"},
+ {id:"cis-aws",framework:"CIS",platform:"AWS",name:"CIS AWS Foundations Benchmark",version:"v3.0.0",blurb:"Account-level security baseline for Amazon Web Services — IAM, logging, monitoring, networking.",controls:78,profiles:"L1 · L2",price:"$740",savings:"$7k",type:"Hardening guide"},
+ {id:"nist-80053",framework:"NIST 800-53",platform:"Policy",name:"NIST 800-53 Rev 5 Moderate Baseline",version:"Rev 5",blurb:"Original policy content mapped to the NIST 800-53 moderate control baseline — public-domain source.",controls:287,profiles:"Moderate",price:"$1,090",savings:"$14k",type:"Standard"}
+];
+var FAMILIES=[
+ {id:"hardening",label:"Hardening Guides",desc:"Technical secure-configuration baselines by platform — CIS Benchmarks, DISA STIG, sold as platform packs."},
+ {id:"standards",label:"Security Standards & Policies",desc:"Editable policies, procedures and compliance programs mapped to frameworks — sold as governance packs."}
+];
+var BUNDLES=[
+ {id:"pk-hard-all",family:"hardening",name:"Complete Hardening Suite",tagline:"Every hardening guide across OS, cloud, containers, network and databases.",price:"$6,900",count:42,savings:"$60k",featured:true,includes:["Operating Systems Pack (12 guides)","Cloud Hardening Pack (9 guides)","Container & Orchestration Pack (5 guides)","Network & Database Pack (8 guides)","All future additions for 12 months"]},
+ {id:"pk-hard-os",family:"hardening",name:"Operating Systems Pack",tagline:"Windows Server, Windows 11, Ubuntu, RHEL, Debian and macOS baselines.",price:"$2,490",count:12,savings:"$22k",includes:["CIS Windows Server 2022 & 2019","CIS Windows 11 Enterprise","CIS Ubuntu 22.04 LTS","DISA STIG — RHEL 9","CIS Debian 12","CIS macOS 14"]},
+ {id:"pk-hard-cloud",family:"hardening",name:"Cloud Hardening Pack",tagline:"Account-level baselines for the major cloud and SaaS platforms.",price:"$2,190",count:9,savings:"$18k",includes:["CIS AWS Foundations","CIS Microsoft Azure","CIS Microsoft 365","CIS Google Cloud Platform"]},
+ {id:"pk-hard-cont",family:"hardening",name:"Container & Orchestration Pack",tagline:"Control-plane, node and runtime hardening for containerized workloads.",price:"$1,290",count:5,savings:"$9k",includes:["CIS Kubernetes Benchmark","CIS Docker Benchmark","DISA STIG — Kubernetes"]},
+ {id:"pk-hard-net",family:"hardening",name:"Network & Database Pack",tagline:"Network devices and database engines in a single hardening pack.",price:"$1,690",count:8,savings:"$12k",includes:["CIS Cisco IOS 17","CIS Palo Alto PAN-OS","CIS PostgreSQL 16","CIS Microsoft SQL Server","CIS Oracle MySQL"]},
+ {id:"pk-std-all",family:"standards",name:"Complete Standards Suite",tagline:"Every editable policy, procedure and compliance program we publish.",price:"$7,900",count:38,savings:"$70k",featured:true,includes:["Governance Standards Pack","NIST 800-53 Compliance Pack","NIST 800-171 / CMMC Pack","PCI DSS Compliance Pack","All future additions for 12 months"]},
+ {id:"pk-std-gov",family:"standards",name:"Governance Standards Pack",tagline:"Policies + procedures for SCF, NIST CSF 2.0 and ISO 27001/27002.",price:"$2,990",count:14,savings:"$26k",includes:["Policies & Standards — Secure Controls Framework","Policies & Standards — NIST CSF 2.0","Policies & Standards — ISO 27001/27002","Matching editable procedures","Cybersecurity Business Plan (CBP)"]},
+ {id:"pk-std-nist",family:"standards",name:"NIST 800-53 Compliance Pack",tagline:"Moderate and high baselines with policies, procedures and SSP.",price:"$2,490",count:9,savings:"$20k",includes:["Policies & Standards — NIST 800-53 R5 (moderate)","Policies & Standards — NIST 800-53 R5 (high)","Matching editable procedures","System Security Program (SSP)"]},
+ {id:"pk-std-171",family:"standards",name:"NIST 800-171 / CMMC Pack",tagline:"Everything to stand up an 800-171 / CMMC compliance program.",price:"$1,890",count:6,savings:"$14k",includes:["NIST 800-171 Compliance Program (NCP)","NIST 800-171 System Security Program (SSP)","Plan of Action & Milestones (POA&M) template"]},
+ {id:"pk-std-pci",family:"standards",name:"PCI DSS Compliance Pack",tagline:"Policies & standards for every PCI DSS v4 SAQ type.",price:"$2,290",count:8,savings:"$16k",includes:["PCI DSS v4 SAQ A / A-EP","PCI DSS v4 SAQ B / B-IP","PCI DSS v4 SAQ C / C-VT","PCI DSS v4 SAQ D (Merchant & Service Provider)"]}
+];
+var DIRECTORY={
+ hardening:[
+  {cat:"Operating Systems",items:["CIS Windows Server 2022","CIS Windows Server 2019","CIS Windows 11 Enterprise","CIS Ubuntu 22.04 LTS","DISA STIG — RHEL 9","CIS Debian 12","CIS macOS 14"]},
+  {cat:"Cloud Platforms",items:["CIS AWS Foundations","CIS Microsoft Azure","CIS Microsoft 365","CIS Google Cloud Platform"]},
+  {cat:"Containers & Orchestration",items:["CIS Kubernetes","CIS Docker","DISA STIG — Kubernetes"]},
+  {cat:"Network & Infrastructure",items:["CIS Cisco IOS 17","CIS Palo Alto PAN-OS","CIS Juniper JunOS"]},
+  {cat:"Databases",items:["CIS PostgreSQL 16","CIS Microsoft SQL Server","CIS Oracle MySQL"]}
+ ],
+ standards:[
+  {cat:"Editable Policies & Standards",items:["Secure Controls Framework (SCF)","NIST CSF 2.0","ISO 27001 / 27002","NIST 800-53 R5 (moderate)","NIST 800-53 R5 (high)","CORE Fundamentals"]},
+  {cat:"Editable Procedures",items:["Procedures — SCF","Procedures — NIST CSF 2.0","Procedures — ISO 27001/27002","Procedures — NIST 800-53 R5"]},
+  {cat:"NIST 800-171 Compliance",items:["800-171 Compliance Program (NCP)","800-171 System Security Program (SSP)"]},
+  {cat:"PCI DSS Compliance",items:["PCI DSS v4 SAQ A","PCI DSS v4 SAQ A-EP","PCI DSS v4 SAQ B / B-IP","PCI DSS v4 SAQ C / C-VT","PCI DSS v4 SAQ D (Merchant)","PCI DSS v4 SAQ D (Service Provider)"]},
+  {cat:"Risk & Governance",items:["Risk Management Program (RMP)","Third-Party Risk Management (TPRM)","Cybersecurity Risk Assessment (CRA)","Continuity of Operations (COOP)"]}
+ ]
+};
+var SAMPLE=[
+ {id:"1.1.1",severity:"High",profile:"L1",title:"Ensure 'Enforce password history' is set to '24 or more password(s)'",rationale:"Reusing old passwords weakens account security by allowing compromised credentials to be re-enabled. A long history forces genuinely new passwords."},
+ {id:"2.3.1.1",severity:"Medium",profile:"L1",title:"Ensure 'Accounts: Block Microsoft accounts' is set to 'Users can't add or log on with Microsoft accounts'",rationale:"Blocking Microsoft account use keeps authentication under organizational control and prevents credential sprawl to unmanaged identities."}
+];
+var WIZ_CONTROLS=[
+ {id:"1.1.1",family:"Account Policies",title:"Enforce password history — 24 or more passwords",severity:"High"},
+ {id:"1.1.2",family:"Account Policies",title:"Maximum password age — 365 or fewer days",severity:"Medium"},
+ {id:"1.2.1",family:"Account Policies",title:"Account lockout duration — 15 or more minutes",severity:"Medium"},
+ {id:"2.3.1.1",family:"Local Policies",title:"Block Microsoft accounts",severity:"Medium"},
+ {id:"2.3.7.1",family:"Local Policies",title:"Machine inactivity limit — 900 seconds",severity:"Low"},
+ {id:"9.1.1",family:"Windows Firewall",title:"Domain profile firewall state — On",severity:"High"},
+ {id:"17.1.1",family:"Advanced Audit Policy",title:"Audit Credential Validation — Success and Failure",severity:"Medium"},
+ {id:"18.9.4.1",family:"Administrative Templates",title:"Configure SMB v1 client driver — Disabled",severity:"High"},
+ {id:"18.10.7.2",family:"Administrative Templates",title:"Prevent installation of removable devices",severity:"Low"},
+ {id:"19.7.4.1",family:"User Templates",title:"Do not preserve zone information on attachments",severity:"Low"}
+];
+var MAPPINGS=[
+ {src:"1.1.1",nist:"IA-5(1)",csf:"PR.AC-1",iso:"A.5.17"},
+ {src:"2.3.1.1",nist:"AC-2",csf:"PR.AC-4",iso:"A.5.15"},
+ {src:"2.3.7.1",nist:"AC-11",csf:"PR.AC-7",iso:"A.8.5"},
+ {src:"18.9.x",nist:"CM-6",csf:"PR.IP-1",iso:"A.8.9"}
+];
+var KPIS=[
+ {k:"Revenue (30d)",v:"$142,380",d:"+18%",dc:"#1f7a4d"},
+ {k:"Orders",v:"96",d:"+12%",dc:"#1f7a4d"},
+ {k:"Conversion",v:"4.7%",d:"+0.6pt",dc:"#1f7a4d"},
+ {k:"Avg. order value",v:"$1,483",d:"−2%",dc:"#b4381f"}
+];
+var TOP_PRODUCTS=[
+ {name:"CIS Windows Server 2022",rev:"$38,700",units:30,pct:82},
+ {name:"DISA STIG — RHEL 9",rev:"$27,600",units:24,pct:64},
+ {name:"CIS Ubuntu 22.04 LTS",rev:"$21,780",units:22,pct:52},
+ {name:"NIST 800-53 Moderate",rev:"$18,530",units:17,pct:42},
+ {name:"CIS AWS Foundations",rev:"$12,580",units:17,pct:30}
+];
+var REV_BY_FW=[{fw:"CIS",pct:58,c:"#0f4c9c"},{fw:"DISA STIG",pct:22,c:"#6a2f6a"},{fw:"NIST",pct:20,c:"#1f6a4d"}];
+var ORDERS=[
+ {id:"#HH-2041",org:"Northwind Financial Group",total:"$2,280",status:"Paid",c:"#1f7a4d"},
+ {id:"#HH-2040",org:"Meridian Health Systems",total:"$1,150",status:"PO pending",c:"#b5721c"},
+ {id:"#HH-2039",org:"Apex Manufacturing",total:"$3,140",status:"Paid",c:"#1f7a4d"},
+ {id:"#HH-2038",org:"Cobalt Logistics",total:"$860",status:"Refunded",c:"#b4381f"},
+ {id:"#HH-2037",org:"Vanta Retail Group",total:"$1,730",status:"Paid",c:"#1f7a4d"}
+];
+var DIFF_ROWS=[
+ {label:"Added",c:"#1f7a4d",sign:"+",items:"12 controls",note:"New Credential Guard & LAPS recommendations"},
+ {label:"Modified",c:"#b5721c",sign:"~",items:"34 controls",note:"Updated audit / remediation text"},
+ {label:"Removed",c:"#b4381f",sign:"−",items:"5 controls",note:"Deprecated SMBv1 legacy items"}
+];
+var LIBRARY_ITEMS=[
+ {name:"CIS Windows Server 2022 Benchmark",version:"v2.0.0",fw:"CIS",status:"Ready",sc:"#1f7a4d",gens:"2 of 5 generations used",artifacts:["DOCX","PDF","XLSX"],pid:"cis-win2022"},
+ {name:"CIS Ubuntu 22.04 LTS Benchmark",version:"v2.0.0",fw:"CIS",status:"Needs scope",sc:"#b5721c",gens:"0 of 5 generations used",artifacts:[],pid:"cis-ubuntu2204"},
+ {name:"DISA STIG — RHEL 9",version:"V1R3",fw:"DISA STIG",status:"Update available",sc:"#1663d6",gens:"1 of 5 generations used",artifacts:["DOCX","PDF"],pid:"stig-rhel9"}
+];
+var AI_STAGES=["Fetching source document","Extracting recommendations","Normalizing to Control schema","Drafting original mapped content","Cross-mapping frameworks (NIST · ISO · CSF)"];
+
+function findItem(id){for(var i=0;i<PRODUCTS.length;i++)if(PRODUCTS[i].id===id)return PRODUCTS[i];for(var j=0;j<BUNDLES.length;j++)if(BUNDLES[j].id===id)return BUNDLES[j];return null;}
+function priceNum(s){return Number(String(s).replace(/[^0-9.]/g,""));}
+function fmt(n){return "$"+n.toLocaleString("en-US");}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ---------------- style helpers ---------------- */
+function fwStyle(fw){var m={CIS:"#0f4c9c","DISA STIG":"#6a2f6a","NIST 800-53":"#1f6a4d","NIST 800-171":"#1f6a4d",PACK:"#0f4c9c"};var c=m[fw]||"#57534E";return "display:inline-block;font-size:11px;font-weight:600;font-family:var(--mono);color:"+c+";background:"+c+"14;border:1px solid "+c+"33;padding:2px 8px;border-radius:5px;letter-spacing:.3px;";}
+function sevStyle(s){var c=({High:"#b4381f",Medium:"#b5721c",Low:"#57534E"})[s]||"#57534E";return "font-size:10.5px;font-weight:600;color:"+c+";background:"+c+"14;padding:2px 7px;border-radius:20px;";}
+function profStyle(){return "font-size:10.5px;font-weight:600;color:#1663d6;background:#F1F2EA;padding:2px 7px;border-radius:20px;";}
+function pill(c){return "font-size:11px;font-weight:600;color:"+c+";background:"+c+"14;padding:3px 10px;border-radius:20px;";}
+
+/* ---------------- state ---------------- */
+var S={
+ view:"storefront",family:"hardening",filter:"All",selectedId:"cis-win2022",variant:"Windows Server 2022",profile:"Level 1",
+ cart:["cis-ubuntu2204"],coupon:"",pay:"card",justOrdered:false,
+ wizardStep:1,
+ scope:{legal:"Northwind Financial Group",trade:"Northwind",sector:"Financial services",owner:"M. Torres, CISO",docv:"1.0",classification:"Internal Use",color:"#0f4c9c",env:"On-premises",profile:"Level 1",conf:"Confidential — for internal use by Northwind Financial Group only. Do not distribute."},
+ excluded:{},odp:{pwlen:"14",lockout:"5",logret:"365",sessions:"10"},
+ gen:"idle",genArts:[],
+ aiStatus:"idle",aiStage:0
+};
+
+/* ---------------- actions (global) ---------------- */
+var A=window.HH={};
+A.go=function(v){S.view=v;if(v!=="wizard")S.gen=S.gen;render();window.scrollTo?window.scrollTo(0,0):0;var m=document.querySelector("main");if(m)m.scrollTop=0;};
+A.open=function(id){var p=findItem(id);S.view="product";S.selectedId=id;if(p&&p.platform)S.variant=p.platform;render();};
+A.setFamily=function(f){S.family=f;render();};
+A.add=function(id){if(S.cart.indexOf(id)<0)S.cart.push(id);render();};
+A.buyNow=function(id){if(S.cart.indexOf(id)<0)S.cart.push(id);S.view="cart";render();};
+A.remove=function(id){S.cart=S.cart.filter(function(x){return x!==id;});render();};
+A.setVariant=function(v){S.variant=v;render();};
+A.setProfile=function(v){S.profile=v;render();};
+A.coupon=function(v){S.coupon=(v||"").toUpperCase();};
+A.applyCoupon=function(){render();};
+A.pay=function(v){S.pay=v;render();};
+A.placeOrder=function(){S.view="library";S.justOrdered=true;render();};
+A.wizGo=function(n){S.wizardStep=n;render();};
+A.wizNext=function(){S.wizardStep=Math.min(6,S.wizardStep+1);render();};
+A.wizPrev=function(){S.wizardStep=Math.max(1,S.wizardStep-1);render();};
+A.scope=function(k,v){S.scope[k]=v;};
+A.scopeColor=function(c){S.scope.color=c;render();};
+A.scopeSeg=function(k,v){S.scope[k]=v;render();};
+A.odp=function(k,v){S.odp[k]=v;};
+A.toggleEx=function(id){if(S.excluded[id])delete S.excluded[id];else S.excluded[id]="Not applicable to environment";render();};
+A.reason=function(id,v){S.excluded[id]=v;};
+A.generate=function(){S.gen="processing";render();setTimeout(function(){S.gen="done";S.genArts=[{format:"DOCX"},{format:"PDF"},{format:"XLSX"}];render();},1900);};
+A.runAI=function(){S.aiStatus="analyzing";S.aiStage=0;render();var t=setInterval(function(){S.aiStage++;if(S.aiStage>=AI_STAGES.length){clearInterval(t);S.aiStatus="done";}render();},700);};
+A.resetAI=function(){S.aiStatus="idle";S.aiStage=0;render();};
+A.demoDownload=function(f){alert("Descarga simulada de "+f+".\n\nEn la versión ejecutada en local (npm run dev) este enlace descarga el documento real generado por el motor.");};
+
+/* ---------------- chrome ---------------- */
+function domainOf(v){if(["library","license","subscriptions","invoices","account"].indexOf(v)>=0)return "customer";if(v.indexOf("admin")===0)return "admin";return "store";}
+function topbar(){
+ var domain=domainOf(S.view);
+ var tabs=[["store","Storefront","storefront"],["customer","My Library","library"],["admin","Back Office","admin-dashboard"]];
+ var tabH=tabs.map(function(t){var on=domain===t[0];return '<button onclick="HH.go(\''+t[2]+'\')" style="background:'+(on?"#F1F2EA":"transparent")+';color:'+(on?"#1C1917":"#79716B")+';border:1px solid '+(on?"#E7E6E5":"transparent")+';border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:'+(on?600:500)+';cursor:pointer;">'+t[1]+'</button>';}).join("");
+ var badge=S.cart.length?'<span style="position:absolute;top:-7px;right:-7px;background:#E4544B;color:#fff;font-size:10px;font-weight:700;border-radius:16px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;">'+S.cart.length+'</span>':"";
+ return '<header style="height:62px;background:#FBFAF9;display:flex;align-items:center;padding:0 22px;gap:26px;position:sticky;top:0;z-index:50;border-bottom:1px solid #E7E6E5;">'
+ +'<div style="display:flex;align-items:center;gap:9px;cursor:pointer;" onclick="HH.go(\'storefront\')">'
+ +'<div style="height:30px;width:30px;border-radius:7px;background:#0f4c9c;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">H</div>'
+ +'<span style="font-weight:700;font-size:18px;letter-spacing:-.01em;">Harden<span style="color:#0f4c9c;">Hub</span></span>'
+ +'<span class="mono" style="font-size:10px;color:#79716B;border:1px solid #E7E6E5;border-radius:20px;padding:2px 8px;margin-left:2px;">v0.1</span></div>'
+ +'<nav style="display:flex;gap:4px;">'+tabH+'</nav>'
+ +'<div style="flex:1;"></div>'
+ +'<div style="display:flex;align-items:center;background:#F7F7F5;border:1px solid #E7E6E5;border-radius:999px;padding:9px 15px;gap:8px;width:280px;"><span class="mono" style="color:#79716B;font-size:13px;">⌕</span><input placeholder="Search benchmarks, controls, CVEs…" style="background:transparent;border:none;outline:none;font-size:13px;width:100%;"/></div>'
+ +'<button onclick="HH.go(\'cart\')" style="position:relative;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:999px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Cart'+badge+'</button>'
+ +'<div class="mono" style="width:34px;height:34px;border-radius:50%;background:#0f4c9c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">MT</div>'
+ +'</header>';
+}
+function sidebar(){
+ var domain=domainOf(S.view);
+ var defs={store:[["Catalog","storefront"],["Bundles","storefront"],["Frameworks","storefront"],["Free guides","storefront"],["Cart","cart"]],
+  customer:[["Library","library"],["Licenses","license"],["Subscriptions","library"],["Invoices","library"],["Account","library"]],
+  admin:[["Dashboard","admin-dashboard"],["AI Generator","admin-ingest"],["Control editor","admin-editor"],["Catalog & pricing","admin-catalog"],["Orders","admin-orders"],["Versioning","admin-versioning"],["Audit log","admin-dashboard"]]};
+ var titles={store:"Storefront",customer:"My account",admin:"Back office"};
+ var items=defs[domain].map(function(it){
+  var active=S.view===it[1]||(it[1]==="storefront"&&S.view==="product");
+  var badge=(it[0]==="Cart"&&S.cart.length)?S.cart.length:(it[0]==="Orders"?"3":"");
+  var b=badge?'<span style="background:#0f4c9c;color:#fff;font-size:10px;font-weight:700;border-radius:16px;padding:1px 6px;">'+badge+'</span>':"";
+  return '<button onclick="HH.go(\''+it[1]+'\')" style="display:flex;align-items:center;justify-content:space-between;width:calc(100% - 12px);margin:1px 6px;text-align:left;background:'+(active?"#F1F2EA":"transparent")+';color:'+(active?"#1C1917":"#57534E")+';border:none;border-left:3px solid '+(active?"#0f4c9c":"transparent")+';border-radius:0 6px 6px 0;padding:9px 14px;font-size:13.5px;font-weight:'+(active?600:500)+';cursor:pointer;"><span>'+it[0]+'</span>'+b+'</button>';
+ }).join("");
+ return '<aside style="width:236px;background:#F1F2EA;border-right:1px solid #E7E6E5;padding:18px 0;display:flex;flex-direction:column;flex-shrink:0;">'
+ +'<div style="padding:0 20px 10px;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#79716B;">'+titles[domain]+'</div>'
+ +items
+ +'<div style="flex:1;"></div>'
+ +'<div style="margin:0 16px;padding:12px 14px;background:#F1F2EA;border:1px solid #E7E6E5;border-radius:8px;"><div style="font-size:12px;font-weight:600;color:#0f4c9c;margin-bottom:3px;">CIS SecureSuite</div><div style="font-size:11px;line-height:1.45;color:#57534E;">Commercial license active — derivatives permitted.</div></div>'
+ +'</aside>';
+}
+
+/* ---------------- views ---------------- */
+function vStorefront(){
+ var fam=S.family,af=null;FAMILIES.forEach(function(f){if(f.id===fam)af=f;});
+ var bundles=BUNDLES.filter(function(b){return b.family===fam;});
+ var flagship=bundles.filter(function(b){return b.featured;})[0]||bundles[0];
+ var dir=DIRECTORY[fam];
+ var hero='<div style="background:#F1F2EA;padding:54px 34px 48px;position:relative;overflow:hidden;border-bottom:1px solid #E7E6E5;">'
+  +'<div style="position:absolute;inset:0;opacity:.6;pointer-events:none;background-image:radial-gradient(#E1E0D8 1px,transparent 1px);background-size:22px 22px;"></div>'
+  +'<div style="max-width:1180px;position:relative;">'
+  +'<div class="mono" style="display:flex;align-items:center;gap:9px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C9443A;margin-bottom:18px;">◆ Security configuration baselines</div>'
+  +'<h1 style="margin:0 0 16px;font-size:42px;letter-spacing:-.03em;line-height:1.06;max-width:760px;">Audit-ready hardening standards for every platform you run</h1>'
+  +'<p style="margin:0 0 30px;font-size:16px;line-height:1.6;color:#57534E;max-width:650px;">HardenHub turns CIS Benchmarks and DISA STIGs into branded, scoped, board-ready security documents — mapped to NIST 800-53, NIST CSF and ISO 27002, and exported to DOCX, PDF and XLSX in minutes instead of weeks.</p>'
+  +'<div style="display:flex;flex-wrap:wrap;gap:11px;">'
+  +["Built on CIS Benchmarks & DISA STIGs","Cross-mapped to NIST & ISO 27002","Scope & brand in the Wizard","Export DOCX · PDF · XLSX"].map(function(l){return '<div style="display:flex;align-items:center;gap:9px;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:999px;padding:10px 17px;font-size:13px;font-weight:500;color:#57534E;box-shadow:0 1px 2px rgba(28,25,23,.04);"><span style="color:#0f4c9c;">✓</span>'+l+'</div>';}).join("")
+  +'</div></div></div>';
+ var famSel='<div style="display:flex;gap:14px;background:#e3e9f1;border-radius:22px;padding:8px;margin-bottom:26px;">'
+  +FAMILIES.map(function(f){var on=fam===f.id;return '<button onclick="HH.setFamily(\''+f.id+'\')" style="flex:1;text-align:left;background:'+(on?"#fff":"transparent")+';border:1px solid '+(on?"#c3d2ea":"transparent")+';border-radius:16px;padding:14px 18px;cursor:pointer;box-shadow:'+(on?"0 2px 10px rgba(20,45,90,.07)":"none")+';"><div style="font-size:15px;font-weight:600;color:'+(on?"#1C1917":"#57534E")+';margin-bottom:3px;">'+f.label+'</div><div style="font-size:12px;color:#79716B;line-height:1.4;">'+f.desc+'</div></button>';}).join("")
+  +'</div>';
+ var grid='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:40px;">'
+  +bundles.map(function(b){
+   var badge=b.featured?'<div style="position:absolute;top:-9px;left:18px;background:#E4544B;color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;">Best value</div>':"";
+   var incs=b.includes.slice(0,4).map(function(t){return '<div style="font-size:12px;color:#57534E;line-height:1.7;display:flex;gap:7px;"><span style="color:#1f7a4d;">✓</span>'+t+'</div>';}).join("");
+   return '<div class="lift" onclick="HH.open(\''+b.id+'\')" style="background:#FBFAF9;border:1px solid '+(b.featured?"#0f4c9c":"#E7E6E5")+';border-radius:22px;padding:20px;cursor:pointer;display:flex;flex-direction:column;position:relative;box-shadow:'+(b.featured?"0 6px 22px rgba(20,45,90,.10)":"none")+';">'+badge
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span class="mono" style="font-size:11px;font-weight:600;color:#0f4c9c;background:#F1F2EA;padding:3px 9px;border-radius:5px;">◫ PACKAGE</span><span class="mono" style="font-size:11px;color:#79716B;">'+b.count+' items</span></div>'
+    +'<div style="font-size:16px;font-weight:700;line-height:1.3;margin-bottom:6px;">'+b.name+'</div>'
+    +'<div style="font-size:12.5px;color:#57534E;line-height:1.5;margin-bottom:14px;min-height:52px;">'+b.tagline+'</div>'
+    +'<div style="border-top:1px solid #EFEEEC;padding-top:12px;margin-bottom:12px;">'+incs+'</div><div style="flex:1;"></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:10px;color:#79716B;text-transform:uppercase;letter-spacing:.4px;">from</div><div style="font-size:21px;font-weight:700;">'+b.price+'</div></div><div style="font-size:11px;color:#1f7a4d;font-weight:600;background:#e7f4ee;padding:3px 9px;border-radius:20px;">saves '+b.savings+'</div></div></div>';
+  }).join("")+'</div>';
+ var dirH='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px 34px;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:26px 28px;">'
+  +dir.map(function(c){return '<div><div style="font-size:13px;font-weight:600;border-left:3px solid #0f4c9c;padding-left:10px;margin-bottom:12px;">'+c.cat+'</div>'
+   +c.items.map(function(n){return '<div onclick="HH.open(\''+flagship.id+'\')" style="font-size:13px;color:#57534E;line-height:1.55;padding:3px 0;cursor:pointer;">'+n+'</div>';}).join("")+'</div>';}).join("")+'</div>';
+ return hero+'<div style="padding:26px 34px 60px;max-width:1180px;">'
+  +'<h1 style="margin:0 0 4px;font-size:26px;letter-spacing:-.4px;">Catalog</h1>'
+  +'<p style="margin:0 0 20px;color:#57534E;font-size:14px;">Two product lines, sold as packages. Pick a family, then a pack.</p>'
+  +famSel
+  +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;"><h2 style="margin:0;font-size:16px;font-weight:600;">'+af.label+' — packages</h2><span class="mono" style="font-size:12px;color:#79716B;">buy as a pack · save vs. individual</span></div>'
+  +grid
+  +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;"><h2 style="margin:0;font-size:16px;font-weight:600;">Everything included in '+af.label+'</h2><span style="font-size:12px;color:#79716B;">available across the packages above</span></div>'
+  +dirH+'</div>';
+}
+
+function vProduct(){
+ var base=findItem(S.selectedId)||PRODUCTS[0];
+ var isB=!!base.includes;
+ var framework=isB?"PACK":base.framework, platform=isB?"Bundle":base.platform, blurb=isB?base.tagline:base.blurb;
+ var stats=isB?[["Type","Package"],["Included guides",String(base.count)],["Updated","Jun 2026"],["Savings",base.savings]]
+  :[["Source version",base.version],["Controls",String(base.controls)],["Updated","Jun 2026"],["Type",base.type]];
+ var statsH=stats.map(function(s){return '<div style="flex:1;padding:14px 16px;border-right:1px solid #EFEEEC;"><div style="font-size:11px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">'+s[0]+'</div><div class="mono" style="font-size:15px;font-weight:600;">'+s[1]+'</div></div>';}).join("");
+ var left;
+ if(isB){
+  left='<h3 style="font-size:15px;font-weight:600;margin:0 0 12px;">What\'s included in this package</h3>'
+   +'<div style="border:1px solid #E7E6E5;border-radius:16px;overflow:hidden;margin-bottom:28px;background:#FBFAF9;">'
+   +base.includes.map(function(n){return '<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #EFEEEC;font-size:13.5px;"><span style="color:#1f7a4d;font-weight:700;">✓</span>'+n+'</div>';}).join("")
+   +'</div><div style="background:#F1F2EA;border:1px solid #E7E6E5;border-radius:16px;padding:16px 18px;font-size:12.5px;color:#0f4c9c;line-height:1.55;">Every guide in this package is fully customizable in the Scope Wizard — apply your branding, include/exclude controls, and generate DOCX/PDF/XLSX per platform.</div>';
+ }else{
+  var maps='<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:9px 14px;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;"><div>This control</div><div>NIST 800-53</div><div>NIST CSF</div><div>ISO 27002</div></div>'
+   +MAPPINGS.map(function(m){return '<div class="mono" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;padding:10px 14px;font-size:12.5px;border-bottom:1px solid #EFEEEC;"><div>'+m.src+'</div><div style="color:#1663d6;">'+m.nist+'</div><div style="color:#1663d6;">'+m.csf+'</div><div style="color:#1663d6;">'+m.iso+'</div></div>';}).join("");
+  var samples=SAMPLE.map(function(c){return '<div style="border:1px solid #E7E6E5;border-radius:16px;padding:16px 18px;margin-top:12px;background:#FBFAF9;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span class="mono" style="font-size:12px;font-weight:600;background:#F1F2EA;padding:2px 7px;border-radius:4px;">'+c.id+'</span><span style="'+sevStyle(c.severity)+'">'+c.severity+'</span><span style="'+profStyle()+'">'+c.profile+'</span></div><div style="font-size:14px;font-weight:600;margin-bottom:8px;">'+esc(c.title)+'</div><div style="font-size:12.5px;color:#57534E;line-height:1.55;"><b>Rationale.</b> '+c.rationale+'</div></div>';}).join("");
+  left='<h3 style="font-size:15px;font-weight:600;margin:0 0 12px;">Cross-framework mappings</h3>'
+   +'<div style="border:1px solid #E7E6E5;border-radius:16px;overflow:hidden;margin-bottom:28px;background:#FBFAF9;">'+maps+'</div>'
+   +'<h3 style="font-size:15px;font-weight:600;margin:0 0 4px;">Control preview <span style="font-weight:400;color:#79716B;font-size:12px;">· watermarked sample</span></h3>'
+   +'<div style="position:relative;"><div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:2;"><span class="mono" style="font-size:52px;font-weight:700;color:rgba(20,45,90,.05);transform:rotate(-16deg);letter-spacing:6px;">PREVIEW · HARDENHUB</span></div>'+samples+'</div>';
+ }
+ var box;
+ var variantSel=isB?'<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:11px 14px;background:#F1F2EA;border-radius:8px;font-size:12.5px;color:#57534E;"><span class="mono" style="font-weight:600;color:#0f4c9c;">'+base.count+'</span> guides · one-organization license · per-guide scoping</div>'
+  :'<div style="font-size:12px;font-weight:600;color:#57534E;margin-bottom:6px;">OS / platform version</div><div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">'
+   +["Windows Server 2022","Windows Server 2019"].map(function(l){var on=S.variant===l;return '<button onclick="HH.setVariant(\''+l+'\')" style="text-align:left;background:'+(on?"#F1F2EA":"#fff")+';border:1px solid '+(on?"#0f4c9c":"#E7E6E5")+';border-radius:7px;padding:9px 12px;font-size:13px;cursor:pointer;font-weight:'+(on?600:400)+';">'+l+'</button>';}).join("")
+   +'</div><div style="font-size:12px;font-weight:600;color:#57534E;margin-bottom:6px;">Profile</div><div style="display:flex;gap:6px;margin-bottom:20px;">'
+   +["Level 1","Level 2"].map(function(l){var on=S.profile===l;return '<button onclick="HH.setProfile(\''+l+'\')" style="flex:1;background:'+(on?"#0f4c9c":"#fff")+';color:'+(on?"#fff":"#57534E")+';border:1px solid '+(on?"#0f4c9c":"#E7E6E5")+';border-radius:7px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;">'+l+'</button>';}).join("")+'</div>';
+ box='<div style="position:sticky;top:20px;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:20px;box-shadow:0 4px 16px rgba(20,45,90,.06);">'
+  +'<div style="font-size:30px;font-weight:700;">'+base.price+'</div>'
+  +'<div style="font-size:12px;color:#1f7a4d;font-weight:600;margin:4px 0 18px;">Est. savings vs. in-house authoring: '+base.savings+'</div>'
+  +variantSel
+  +'<button class="pri" onclick="HH.buyNow(\''+base.id+'\')" style="width:100%;background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:13px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:9px;">Buy now</button>'
+  +'<button onclick="HH.add(\''+base.id+'\')" style="width:100%;background:#FBFAF9;color:#0f4c9c;border:1px solid #E7E6E5;border-radius:999px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;">Add to cart</button>'
+  +'<div style="margin-top:18px;padding-top:16px;border-top:1px solid #EFEEEC;font-size:12px;color:#57534E;line-height:1.9;"><div>✓ DOCX · PDF · XLSX output</div><div>✓ Your logo &amp; branding</div><div>✓ Include/exclude with justification</div><div>✓ 1-year update subscription</div></div></div>';
+ return '<div style="padding:20px 34px 60px;max-width:1120px;">'
+  +'<div class="mono" style="font-size:12px;color:#79716B;margin-bottom:16px;"><span onclick="HH.go(\'storefront\')" style="cursor:pointer;color:#1663d6;">Catalog</span> / '+framework+' / '+platform+'</div>'
+  +'<div style="display:grid;grid-template-columns:1fr 336px;gap:30px;align-items:start;"><div>'
+  +'<span style="'+fwStyle(framework)+'">'+framework+'</span>'
+  +'<h1 style="margin:12px 0 8px;font-size:27px;letter-spacing:-.4px;line-height:1.2;">'+base.name+'</h1>'
+  +'<p style="margin:0 0 20px;color:#57534E;font-size:14.5px;line-height:1.6;">'+blurb+'</p>'
+  +'<div style="display:flex;border:1px solid #E7E6E5;border-radius:16px;overflow:hidden;margin-bottom:26px;background:#FBFAF9;">'+statsH+'</div>'
+  +left+'</div>'+box+'</div></div>';
+}
+
+function cartRows(){return S.cart.map(function(id){return findItem(id);}).filter(Boolean);}
+function cartTotals(){var rows=cartRows();var sub=0;rows.forEach(function(p){sub+=priceNum(p.price);});var disc=S.coupon==="HARDEN25"?Math.round(sub*0.25):0;var vat=Math.round((sub-disc)*0.21);return {sub:sub,disc:disc,vat:vat,total:sub-disc+vat};}
+function vCart(){
+ var rows=cartRows(),t=cartTotals();
+ var list=rows.length?rows.map(function(p){var sub=p.count?p.count+" items":(p.profiles+" · one-organization license");return '<div style="display:flex;gap:16px;padding:18px;border-bottom:1px solid #EFEEEC;align-items:center;"><div class="mono" style="width:44px;height:44px;border-radius:8px;background:#F1F2EA;display:flex;align-items:center;justify-content:center;font-weight:600;color:#0f4c9c;font-size:12px;flex-shrink:0;">'+p.framework+'</div><div style="flex:1;"><div style="font-size:14.5px;font-weight:600;">'+p.name+'</div><div class="mono" style="font-size:12px;color:#79716B;margin-top:3px;">'+sub+'</div></div><div style="font-size:15px;font-weight:700;">'+p.price+'</div><button onclick="HH.remove(\''+p.id+'\')" style="background:transparent;border:none;color:#b4381f;font-size:12px;cursor:pointer;">Remove</button></div>';}).join("")
+  :'<div style="padding:40px;text-align:center;color:#79716B;font-size:14px;">Your cart is empty. <span onclick="HH.go(\'storefront\')" style="color:#1663d6;cursor:pointer;">Browse the catalog →</span></div>';
+ var discRow=t.disc>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;color:#1f7a4d;"><span>Discount (HARDEN25)</span><span class="mono">−'+fmt(t.disc)+'</span></div>':"";
+ return '<div style="padding:26px 34px 60px;max-width:1020px;"><h1 style="margin:0 0 22px;font-size:24px;letter-spacing:-.3px;">Cart</h1>'
+  +'<div style="display:grid;grid-template-columns:1fr 320px;gap:26px;align-items:start;">'
+  +'<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;">'+list+'</div>'
+  +'<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:20px;">'
+  +'<div style="display:flex;gap:8px;margin-bottom:16px;"><input value="'+esc(S.coupon)+'" oninput="HH.coupon(this.value)" placeholder="Coupon code" class="mono" style="flex:1;border:1px solid #E7E6E5;border-radius:7px;padding:9px 11px;font-size:13px;text-transform:uppercase;outline:none;"/><button onclick="HH.applyCoupon()" style="background:#F1F2EA;border:1px solid #E7E6E5;border-radius:999px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;color:#0f4c9c;">Apply</button></div>'
+  +'<div style="font-size:11px;color:#79716B;margin-bottom:16px;">Try <b class="mono" style="color:#1f7a4d;">HARDEN25</b> for 25% off.</div>'
+  +'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;color:#57534E;"><span>Subtotal</span><span class="mono">'+fmt(t.sub)+'</span></div>'+discRow
+  +'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;color:#57534E;"><span>VAT (21%)</span><span class="mono">'+fmt(t.vat)+'</span></div>'
+  +'<div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;padding:12px 0 4px;border-top:1px solid #EFEEEC;margin-top:8px;"><span>Total</span><span class="mono">'+fmt(t.total)+'</span></div>'
+  +'<button class="pri" onclick="HH.go(\'checkout\')" style="width:100%;background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:13px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px;">Proceed to checkout</button></div></div></div>';
+}
+
+function vCheckout(){
+ var rows=cartRows(),t=cartTotals();
+ var fields=[["Organization (legal name)","Northwind Financial Group",true,false,""],["VAT number (EU)","ES B12345678",false,true,"✓ VIES validated · reverse-charge applies"],["Country","Spain",false,false,""],["Billing address","Paseo de la Castellana 200, 28046 Madrid",true,false,""]];
+ var fH=fields.map(function(f){return '<div style="'+(f[2]?"grid-column:1/3;":"")+'"><label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:5px;">'+f[0]+'</label><input value="'+esc(f[1])+'" '+(f[3]?'class="mono"':'')+' style="width:100%;border:1px solid #E7E6E5;border-radius:7px;padding:10px 12px;font-size:13.5px;outline:none;"/>'+(f[4]?'<div style="font-size:11px;color:#1f7a4d;margin-top:5px;">'+f[4]+'</div>':'')+'</div>';}).join("");
+ var pm=[["card","Credit / debit card"],["po","Invoice / Purchase Order"]].map(function(p){var on=S.pay===p[0];return '<button onclick="HH.pay(\''+p[0]+'\')" style="flex:1;background:'+(on?"#F1F2EA":"#fff")+';border:1px solid '+(on?"#0f4c9c":"#E7E6E5")+';border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">'+p[1]+'</button>';}).join("");
+ var payBox=S.pay==="card"?'<div style="border:1px solid #E7E6E5;border-radius:9px;padding:16px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#57534E;"><span class="mono" style="font-weight:600;color:#635bff;">stripe</span> · secured payment — HardenHub stores no card data</div><div class="mono" style="border:1px solid #E7E6E5;border-radius:7px;padding:12px 14px;font-size:13.5px;color:#57534E;display:flex;justify-content:space-between;">4242 4242 4242 4242 <span style="color:#79716B;">12/28 · 123</span></div></div>'
+  :'<div style="border:1px solid #E7E6E5;border-radius:9px;padding:16px;font-size:13px;color:#57534E;line-height:1.6;">Order will be created as <b style="color:#b5721c;">Pending payment</b>. An invoice with PO reference is emailed; access unlocks on reconciliation.</div>';
+ var summ=rows.map(function(p){return '<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;color:#57534E;"><span style="max-width:190px;">'+p.name+'</span><span class="mono">'+p.price+'</span></div>';}).join("");
+ return '<div style="padding:26px 34px 60px;max-width:1020px;"><div class="mono" style="font-size:12px;color:#79716B;margin-bottom:8px;"><span onclick="HH.go(\'cart\')" style="cursor:pointer;color:#1663d6;">Cart</span> / Checkout</div><h1 style="margin:0 0 22px;font-size:24px;letter-spacing:-.3px;">Checkout</h1>'
+  +'<div style="display:grid;grid-template-columns:1fr 320px;gap:26px;align-items:start;"><div style="display:flex;flex-direction:column;gap:20px;">'
+  +'<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:22px;"><h3 style="margin:0 0 16px;font-size:15px;font-weight:600;">Billing details</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+fH+'</div></div>'
+  +'<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:22px;"><h3 style="margin:0 0 16px;font-size:15px;font-weight:600;">Payment method</h3><div style="display:flex;gap:12px;margin-bottom:18px;">'+pm+'</div>'+payBox+'</div></div>'
+  +'<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:20px;position:sticky;top:20px;"><h3 style="margin:0 0 14px;font-size:14px;font-weight:600;">Order summary</h3>'+summ
+  +'<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;color:#57534E;border-top:1px solid #EFEEEC;margin-top:8px;"><span>VAT (reverse-charge)</span><span class="mono">'+fmt(t.vat)+'</span></div>'
+  +'<div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700;padding:10px 0 4px;"><span>Total</span><span class="mono">'+fmt(t.total)+'</span></div>'
+  +'<button onclick="HH.placeOrder()" style="width:100%;background:#1f7a4d;color:#fff;border:none;border-radius:999px;padding:13px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px;">Pay &amp; place order</button>'
+  +'<div style="font-size:11px;color:#79716B;text-align:center;margin-top:10px;line-height:1.5;">By ordering you accept the per-organization license terms.</div></div></div></div>';
+}
+
+/* ---- wizard ---- */
+var STEP_NAMES=["Organization","Branding","Technical scope","Controls","Parameters","Review & generate"];
+var COLORS=["#0f4c9c","#6a2f6a","#1f6a4d","#b4381f","#1C1917"];
+function wizField(k,label,full){return '<div style="'+(full?"grid-column:1/3;":"")+'"><label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:6px;">'+label+'</label><input value="'+esc(S.scope[k])+'" oninput="HH.scope(\''+k+'\',this.value)" '+(k==="docv"?'class="mono"':'')+' style="width:100%;border:1px solid #E7E6E5;border-radius:8px;padding:11px 13px;font-size:14px;outline:none;"/></div>';}
+function seg(opts,val,key,maxw){return '<div style="display:flex;gap:10px;max-width:'+maxw+';margin-bottom:24px;">'+opts.map(function(l){var on=val===l;return '<button onclick="HH.scopeSeg(\''+key+'\',\''+l+'\')" style="flex:1;background:'+(on?"#0f4c9c":"#fff")+';color:'+(on?"#fff":"#57534E")+';border:1px solid '+(on?"#0f4c9c":"#E7E6E5")+';border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">'+l+'</button>';}).join("")+'</div>';}
+function wizStepBody(){
+ var st=S.wizardStep,sc=S.scope;
+ if(st===1){return '<h2 style="margin:0 0 4px;font-size:22px;">Organization details</h2><p style="margin:0 0 26px;color:#57534E;font-size:14px;">These fields populate the cover page, headers, and version-control block of every generated document.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'+wizField("legal","Legal name",true)+wizField("trade","Trade name")+wizField("sector","Sector")+wizField("owner","Document owner")+wizField("docv","Document version")+wizField("classification","Classification")+'</div>';}
+ if(st===2){return '<h2 style="margin:0 0 4px;font-size:22px;">Branding</h2><p style="margin:0 0 26px;color:#57534E;font-size:14px;">Applied to the cover page, headers, and footer of the deliverable.</p>'
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div><label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:8px;">Organization logo</label><div style="border:2px dashed #D8D6D3;border-radius:16px;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:repeating-linear-gradient(45deg,#f7f9fc,#f7f9fc 10px,#f2f5f9 10px,#f2f5f9 20px);color:#79716B;cursor:pointer;"><div style="font-size:26px;margin-bottom:6px;">↑</div><div style="font-size:13px;font-weight:600;color:#57534E;">Drop logo or click to upload</div><div class="mono" style="font-size:11px;margin-top:4px;">PNG · SVG · max 2 MB</div></div></div>'
+  +'<div><label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:8px;">Corporate color</label><div style="display:flex;gap:10px;margin-bottom:22px;">'+COLORS.map(function(c){return '<button onclick="HH.scopeColor(\''+c+'\')" style="width:30px;height:30px;border-radius:7px;background:'+c+';cursor:pointer;border:2px solid '+(sc.color===c?"#1C1917":"transparent")+';"></button>';}).join("")+'</div><label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:8px;">Confidentiality notice (footer)</label><textarea oninput="HH.scope(\'conf\',this.value)" style="width:100%;border:1px solid #E7E6E5;border-radius:8px;padding:11px 13px;font-size:13px;outline:none;height:82px;resize:none;">'+esc(sc.conf)+'</textarea></div></div>'
+  +'<div style="margin-top:26px;border:1px solid #E7E6E5;border-radius:16px;padding:20px;background:#FBFAF9;"><div style="font-size:11px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Cover preview</div><div style="border:1px solid #EFEEEC;border-radius:8px;padding:26px;background:#FBFAF9;"><div class="mono" style="width:52px;height:52px;border-radius:8px;background:'+sc.color+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">N</div><div style="font-size:22px;font-weight:600;margin-top:18px;color:'+sc.color+';">Windows Server 2022 Hardening Standard</div><div style="font-size:13px;color:#57534E;margin-top:6px;">'+esc(sc.legal)+' · '+esc(sc.classification)+' · v'+esc(sc.docv)+'</div></div></div>';}
+ if(st===3){var roles=[["Domain controller",true,false],["Member server",true,false],["Standalone / workgroup server",false,true]];
+  return '<h2 style="margin:0 0 4px;font-size:22px;">Technical scope</h2><p style="margin:0 0 26px;color:#57534E;font-size:14px;">Determines which controls are applicable to your environment.</p>'
+   +'<label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:8px;">Benchmark profile</label>'+seg(["Level 1","Level 2"],sc.profile,"profile","320px")
+   +'<label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:8px;">Environment</label>'+seg(["On-premises","Cloud","Hybrid"],sc.env,"env","440px")
+   +'<label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:8px;">Platform roles</label><div style="display:flex;flex-direction:column;gap:10px;max-width:520px;">'
+   +roles.map(function(r){return '<label style="display:flex;align-items:center;gap:10px;border:1px solid #E7E6E5;border-radius:8px;padding:12px 14px;background:#FBFAF9;font-size:13.5px;cursor:pointer;'+(r[2]?"color:#79716B;":"")+'"><input type="checkbox" '+(r[1]?"checked":"")+' style="width:16px;height:16px;accent-color:#0f4c9c;"/> '+r[0]+'</label>';}).join("")+'</div>';}
+ if(st===4){var inc=WIZ_CONTROLS.filter(function(c){return !S.excluded[c.id];}).length;var exc=WIZ_CONTROLS.length-inc;
+  var rows=WIZ_CONTROLS.map(function(c){var ex=!!S.excluded[c.id];
+   var reason=ex?'<input value="'+esc(S.excluded[c.id])+'" oninput="HH.reason(\''+c.id+'\',this.value)" placeholder="Justification (N/A, risk accepted, compensating control)" style="margin-top:8px;width:100%;border:1px solid #e6c9b8;border-radius:6px;padding:7px 10px;font-size:12px;outline:none;background:#FBFAF9;"/>':"";
+   return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #EFEEEC;background:'+(ex?"#fbf7f4":"#fff")+';"><button onclick="HH.toggleEx(\''+c.id+'\')" style="width:42px;height:24px;border-radius:20px;position:relative;cursor:pointer;flex-shrink:0;border:none;background:'+(ex?"#E7E6E5":"#1f7a4d")+';"><span style="position:absolute;top:2px;left:'+(ex?"2px":"20px")+';width:20px;height:20px;border-radius:50%;background:#FBFAF9;transition:left .15s;"></span></button><span class="mono" style="font-size:12px;font-weight:600;width:64px;flex-shrink:0;">'+c.id+'</span><div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:500;'+(ex?"text-decoration:line-through;color:#79716B;":"")+'">'+c.title+'</div><div style="font-size:11px;color:#79716B;margin-top:2px;">'+c.family+'</div>'+reason+'</div><span style="'+sevStyle(c.severity)+'">'+c.severity+'</span></div>';}).join("");
+  return '<h2 style="margin:0 0 4px;font-size:22px;">Include / exclude controls</h2><p style="margin:0 0 18px;color:#57534E;font-size:14px;">Toggle off any control that does not apply. Excluded controls require a justification and are recorded in the applicability matrix.</p><div class="mono" style="display:flex;gap:20px;margin-bottom:16px;font-size:13px;"><span style="color:#1f7a4d;font-weight:600;">● '+inc+' included</span><span style="color:#b5721c;font-weight:600;">● '+exc+' excluded</span><span style="color:#79716B;">of '+WIZ_CONTROLS.length+' total</span></div><div style="border:1px solid #E7E6E5;border-radius:16px;overflow:hidden;background:#FBFAF9;">'+rows+'</div>';}
+ if(st===5){var od=[["pwlen","Minimum password length","control 1.1.4 · default 14"],["lockout","Account lockout threshold","control 1.2.2 · default 5 attempts"],["logret","Log retention (days)","control 17.x · default 365"],["sessions","Session inactivity lock (min)","control 2.3.7.1 · default 15"]];
+  return '<h2 style="margin:0 0 4px;font-size:22px;">Organization-defined parameters</h2><p style="margin:0 0 26px;color:#57534E;font-size:14px;">Control-level values with suggested defaults. These substitute into the remediation text of each control.</p><div style="display:flex;flex-direction:column;gap:14px;max-width:640px;">'
+   +od.map(function(r){return '<div style="display:flex;align-items:center;gap:16px;border:1px solid #E7E6E5;border-radius:9px;padding:14px 16px;background:#FBFAF9;"><div style="flex:1;"><div style="font-size:13.5px;font-weight:600;">'+r[1]+'</div><div class="mono" style="font-size:11.5px;color:#79716B;">'+r[2]+'</div></div><input value="'+esc(S.odp[r[0]])+'" oninput="HH.odp(\''+r[0]+'\',this.value)" class="mono" style="width:90px;border:1px solid #E7E6E5;border-radius:7px;padding:9px;font-size:14px;text-align:center;outline:none;"/></div>';}).join("")+'</div>';}
+ // step 6
+ var inc=WIZ_CONTROLS.filter(function(c){return !S.excluded[c.id];}).length;var exc=WIZ_CONTROLS.length-inc;
+ var genH;
+ if(S.gen==="idle")genH='<button onclick="HH.generate()" style="background:#1f7a4d;color:#fff;border:none;border-radius:999px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;">Generate documents</button>';
+ else if(S.gen==="processing")genH='<div style="display:flex;align-items:center;gap:14px;border:1px solid #cfe0d6;background:#f0f7f3;border-radius:16px;padding:18px 20px;max-width:520px;"><div style="width:22px;height:22px;border:3px solid #cfe0d6;border-top-color:#1f7a4d;border-radius:50%;animation:hh-spin .8s linear infinite;"></div><div><div style="font-size:14px;font-weight:600;color:#186340;">Generating — job queued</div><div style="font-size:12.5px;color:#57534E;">Resolving applicability · substituting fields · rendering DOCX/PDF/XLSX…</div></div></div>';
+ else genH='<div style="border:1px solid #cfe0d6;background:#f0f7f3;border-radius:16px;padding:20px;max-width:560px;"><div style="font-size:15px;font-weight:600;color:#186340;margin-bottom:4px;">✓ Documents ready</div><div style="font-size:13px;color:#57534E;margin-bottom:16px;">3 artifacts generated · hash verified · saved to your library.</div><div style="display:flex;gap:10px;margin-bottom:16px;">'+["DOCX","PDF","XLSX"].map(function(f){return '<span class="mono" onclick="HH.demoDownload(\''+f+'\')" style="font-size:12px;background:#F1F2EA;color:#0f4c9c;padding:6px 12px;border-radius:6px;font-weight:600;cursor:pointer;">↓ '+f+'</span>';}).join("")+'</div><button onclick="HH.go(\'library\')" style="background:#0f4c9c;color:#fff;border:none;border-radius:8px;padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer;">Go to library →</button></div>';
+ return '<h2 style="margin:0 0 4px;font-size:22px;">Review &amp; generate</h2><p style="margin:0 0 24px;color:#57534E;font-size:14px;">Confirm the configuration. Generation runs asynchronously — you\'ll be emailed when the artifact is ready.</p>'
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;"><div style="border:1px solid #E7E6E5;border-radius:9px;padding:16px;background:#FBFAF9;"><div style="font-size:11px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Organization</div><div style="font-size:14px;font-weight:600;">'+esc(sc.legal)+'</div><div style="font-size:12.5px;color:#57534E;margin-top:2px;">'+esc(sc.classification)+' · v'+esc(sc.docv)+' · '+esc(sc.owner)+'</div></div>'
+  +'<div style="border:1px solid #E7E6E5;border-radius:9px;padding:16px;background:#FBFAF9;"><div style="font-size:11px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Scope</div><div style="font-size:14px;font-weight:600;">'+sc.profile+' · '+sc.env+'</div><div style="font-size:12.5px;color:#57534E;margin-top:2px;">'+inc+' controls included · '+exc+' excluded</div></div></div>'
+  +'<div style="border:1px solid #E7E6E5;border-radius:9px;padding:16px;background:#FBFAF9;margin-bottom:26px;"><div style="font-size:11px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Output formats</div><div style="display:flex;gap:10px;align-items:center;">'+["DOCX","PDF","XLSX"].map(function(f){return '<span class="mono" style="font-size:12px;background:#F1F2EA;color:#0f4c9c;padding:5px 12px;border-radius:6px;font-weight:600;">'+f+'</span>';}).join("")+'<span style="font-size:12px;color:#57534E;">watermark + license ID embedded</span></div></div>'+genH;
+}
+function vWizard(){
+ var st=S.wizardStep;
+ var rail=STEP_NAMES.map(function(l,i){var n=i+1,done=n<st,active=n===st;return '<div onclick="HH.wizGo('+n+')" style="display:flex;align-items:center;gap:9px;padding:10px 4px;font-size:13px;font-weight:'+(active?600:500)+';color:'+(active?"#1C1917":done?"#1f7a4d":"#79716B")+';cursor:pointer;"><span class="mono" style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;background:'+(active?"#0f4c9c":done?"#1f7a4d":"#E7E6E5")+';color:'+(n<=st?"#fff":"#79716B")+';">'+(done?"✓":n)+'</span><span>'+l+'</span></div>';}).join("");
+ var footRight=st!==6?'<button class="pri" onclick="HH.wizNext()" style="background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 26px;font-size:14px;font-weight:600;cursor:pointer;">Continue</button>':'<div style="width:96px;"></div>';
+ return '<div style="display:flex;min-height:calc(100vh - 62px);"><div style="width:250px;background:#F1F2EA;border-right:1px solid #E7E6E5;padding:24px 20px;flex-shrink:0;"><div style="font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#79716B;margin-bottom:4px;">Scope Wizard</div><div style="font-size:14px;font-weight:600;margin-bottom:20px;line-height:1.3;">CIS Windows Server 2022</div>'+rail+'</div>'
+  +'<div style="flex:1;min-width:0;display:flex;flex-direction:column;"><div style="flex:1;overflow-y:auto;padding:30px 40px;max-width:900px;">'+wizStepBody()+'</div>'
+  +'<div style="border-top:1px solid #E7E6E5;background:#FBFAF9;padding:14px 40px;display:flex;justify-content:space-between;align-items:center;"><button onclick="HH.wizPrev()" style="background:#FBFAF9;border:1px solid #E7E6E5;color:#57534E;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;">Back</button><div class="mono" style="font-size:12px;color:#79716B;">Step '+st+' of 6</div>'+footRight+'</div></div></div>';
+}
+
+function vLibrary(){
+ var banner=S.justOrdered?'<div style="background:#f0f7f3;border:1px solid #cfe0d6;border-radius:9px;padding:14px 18px;margin-bottom:20px;font-size:13.5px;color:#186340;">✓ Order confirmed. Your invoice has been emailed. Configure each product to generate documents.</div>':"";
+ var items=LIBRARY_ITEMS.map(function(it){
+  var real=(it.pid==="cis-win2022"&&S.gen==="done");var arts=real?["DOCX","PDF","XLSX"]:it.artifacts;var status=real?"Ready":it.status;var sc=real?"#1f7a4d":it.sc;
+  var chips=arts.map(function(a){return '<span class="mono" onclick="HH.demoDownload(\''+a+'\')" style="font-size:11px;background:#F1F2EA;color:#0f4c9c;padding:3px 9px;border-radius:5px;font-weight:600;cursor:pointer;">↓ '+a+'</span>';}).join("");
+  return '<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;padding:20px;display:flex;align-items:center;gap:18px;"><div class="mono" style="width:46px;height:46px;border-radius:9px;background:#F1F2EA;display:flex;align-items:center;justify-content:center;font-weight:600;color:#0f4c9c;font-size:12px;flex-shrink:0;">'+it.fw+'</div><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:15px;font-weight:600;">'+it.name+'</span><span style="'+pill(sc)+'">'+status+'</span></div><div class="mono" style="font-size:12px;color:#79716B;margin-top:4px;">'+it.version+' · one-organization license · '+it.gens+'</div><div style="display:flex;gap:8px;margin-top:10px;">'+chips+'</div></div><button class="pri" onclick="HH.go(\'wizard\')" style="background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;">Configure &amp; generate</button></div>';
+ }).join("");
+ return '<div style="padding:26px 34px 60px;max-width:1080px;">'+banner+'<div style="margin-bottom:22px;"><h1 style="margin:0;font-size:24px;letter-spacing:-.3px;">Library</h1><p style="margin:6px 0 0;color:#57534E;font-size:14px;">Purchased products, licenses, and generated documents.</p></div><div style="display:flex;flex-direction:column;gap:14px;">'+items+'</div></div>';
+}
+function vLicense(){
+ var rows=[["CIS Windows Server 2022","2 / 5","Active","#1f7a4d","#e7f4ee"],["CIS Ubuntu 22.04 LTS","0 / 5","Active","#1f7a4d","#e7f4ee"],["DISA STIG — RHEL 9","1 / 5","Expires 30d","#b5721c","#f6efe4"]];
+ var body=rows.map(function(r,i){return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:15px 18px;'+(i<rows.length-1?"border-bottom:1px solid #EFEEEC;":"")+'font-size:13px;align-items:center;"><div style="font-weight:600;">'+r[0]+'</div><div style="color:#57534E;">One organization</div><div class="mono" style="color:#57534E;">'+r[1]+'</div><div><span style="font-size:11px;font-weight:600;color:'+r[3]+';background:'+r[4]+';padding:3px 9px;border-radius:20px;">'+r[2]+'</span></div></div>';}).join("");
+ return '<div style="padding:26px 34px 60px;max-width:900px;"><h1 style="margin:0 0 6px;font-size:24px;letter-spacing:-.3px;">Licenses</h1><p style="margin:0 0 22px;color:#57534E;font-size:14px;">Per-product license terms, generation limits, and update subscriptions.</p><div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;"><div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:11px 18px;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;"><div>Product</div><div>License type</div><div>Generations</div><div>Updates</div></div>'+body+'</div></div>';
+}
+function vAdminDash(){
+ var k=KPIS.map(function(x){return '<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;padding:18px;"><div style="font-size:12px;color:#79716B;margin-bottom:8px;">'+x.k+'</div><div class="mono" style="font-size:26px;font-weight:700;letter-spacing:-.5px;">'+x.v+'</div><div style="font-size:12px;font-weight:600;margin-top:6px;color:'+x.dc+';">'+x.d+' vs prev.</div></div>';}).join("");
+ var tp=TOP_PRODUCTS.map(function(p){return '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="font-weight:500;">'+p.name+'</span><span class="mono" style="color:#57534E;">'+p.rev+' · '+p.units+'u</span></div><div style="height:8px;background:#EFEEEC;border-radius:6px;overflow:hidden;"><div style="height:100%;width:'+p.pct+'%;background:linear-gradient(90deg,#0f4c9c,#2f86e6);border-radius:6px;"></div></div></div>';}).join("");
+ var rv=REV_BY_FW.map(function(r){return '<div style="margin-bottom:16px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="font-weight:500;">'+r.fw+'</span><span class="mono" style="color:#57534E;">'+r.pct+'%</span></div><div style="height:8px;background:#EFEEEC;border-radius:6px;overflow:hidden;"><div style="height:100%;width:'+r.pct+'%;background:'+r.c+';border-radius:6px;"></div></div></div>';}).join("");
+ return '<div style="padding:26px 34px 60px;max-width:1180px;"><h1 style="margin:0 0 22px;font-size:24px;letter-spacing:-.3px;">Dashboard</h1><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;">'+k+'</div><div style="display:grid;grid-template-columns:1.6fr 1fr;gap:18px;"><div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:20px;"><h3 style="margin:0 0 16px;font-size:15px;font-weight:600;">Best-selling products</h3>'+tp+'</div><div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:20px;"><h3 style="margin:0 0 16px;font-size:15px;font-weight:600;">Revenue by framework</h3>'+rv+'<div style="margin-top:22px;padding-top:16px;border-top:1px solid #EFEEEC;font-size:12px;color:#57534E;line-height:1.7;"><div style="display:flex;justify-content:space-between;"><span>Active subscriptions</span><b class="mono">214</b></div><div style="display:flex;justify-content:space-between;"><span>Coupons redeemed (30d)</span><b class="mono">37</b></div><div style="display:flex;justify-content:space-between;"><span>Documents generated</span><b class="mono">1,842</b></div></div></div></div></div>';
+}
+function vAdminIngest(){
+ var body;
+ if(S.aiStatus==="idle")body='<div style="border:1px dashed #D8D6D3;border-radius:22px;padding:40px;text-align:center;background:repeating-linear-gradient(45deg,#f7f9fc,#f7f9fc 12px,#f3f6fa 12px,#f3f6fa 24px);"><div style="font-size:15px;font-weight:600;color:#57534E;margin-bottom:6px;">Ready to generate</div><div style="font-size:13px;color:#79716B;max-width:460px;margin:0 auto;line-height:1.55;">The AI drafts original control text mapped to the source standard — respecting each framework\'s reproduction policy (verbatim for public-domain, mapped-only for copyrighted).</div></div>';
+ else if(S.aiStatus==="analyzing")body='<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:24px;"><div style="font-size:14px;font-weight:600;margin-bottom:18px;">Generating standard…</div><div style="display:flex;flex-direction:column;gap:14px;">'+AI_STAGES.map(function(l,i){var done=i<S.aiStage,spin=i===S.aiStage;var mark=spin?'<span style="width:20px;height:20px;border:3px solid #cdd8ea;border-top-color:#0f4c9c;border-radius:50%;animation:hh-spin .8s linear infinite;flex-shrink:0;"></span>':'<span class="mono" style="width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;background:'+(done?"#1f7a4d":"#E7E6E5")+';color:'+(done?"#fff":"#79716B")+';">'+(done?"✓":(i+1))+'</span>';return '<div style="display:flex;align-items:center;gap:12px;">'+mark+'<span style="font-size:13.5px;color:'+(i<=S.aiStage?"#1C1917":"#79716B")+';font-weight:'+(i===S.aiStage?600:400)+';">'+l+'</span></div>';}).join("")+'</div></div>';
+ else{var rows=WIZ_CONTROLS.slice(0,7).map(function(c,i){var rev=i%4===0;return '<div style="display:grid;grid-template-columns:70px 1fr 130px 90px 90px;padding:11px 18px;border-bottom:1px solid #EFEEEC;font-size:12.5px;align-items:center;"><div class="mono" style="font-weight:600;">'+c.id+'</div><div>'+c.title+'</div><div style="color:#57534E;">'+c.family+'</div><div><span style="'+sevStyle(c.severity)+'">'+c.severity+'</span></div><div><span style="font-size:11px;font-weight:600;color:'+(rev?"#b5721c":"#6a2f6a")+';background:'+(rev?"#f6efe4":"#f2e9f2")+';padding:2px 9px;border-radius:20px;">'+(rev?"Review":"AI draft")+'</span></div></div>';}).join("");
+  body='<div style="background:#f0f7f3;border:1px solid #cfe0d6;border-radius:20px;padding:16px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;"><div style="font-size:13.5px;color:#186340;"><b>✓ Draft ready.</b> AI generated <b>387 controls</b> from the source, mapped to NIST 800-53 · CSF · ISO 27002. Review before publishing.</div><button onclick="HH.resetAI()" style="background:transparent;border:1px solid #b6d2c1;color:#186340;border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;">New generation</button></div><div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;"><div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #EFEEEC;"><div style="font-size:13.5px;"><b>Review &amp; reconcile</b> — edit any AI-drafted field before approving</div><button style="background:#1f7a4d;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;">Approve &amp; create product</button></div><div style="display:grid;grid-template-columns:70px 1fr 130px 90px 90px;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:9px 18px;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;"><div>ID</div><div>Title</div><div>Family</div><div>Severity</div><div>Status</div></div>'+rows+'</div>';}
+ return '<div style="padding:26px 34px 60px;max-width:960px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;"><h1 style="margin:0;font-size:24px;letter-spacing:-.3px;">AI Standard Generator</h1><span style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6a2f6a;background:#f2e9f2;border:1px solid #e2cfe2;padding:3px 8px;border-radius:20px;">AI</span></div><p style="margin:0 0 24px;color:#57534E;font-size:14px;">Paste a link to a benchmark, STIG or standard — the engine fetches it and drafts an original, framework-mapped product for review. Nothing is published automatically.</p>'
+  +'<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:22px;margin-bottom:22px;"><label style="font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:7px;">Source URL or reference</label><div style="display:flex;gap:10px;margin-bottom:16px;"><div style="flex:1;display:flex;align-items:center;gap:8px;border:1px solid #E7E6E5;border-radius:8px;padding:0 12px;"><span class="mono" style="color:#79716B;font-size:13px;">↗</span><input value="https://www.cisecurity.org/benchmark/microsoft_windows_server" class="mono" style="flex:1;border:none;outline:none;padding:11px 0;font-size:13.5px;"/></div><button class="pri" onclick="HH.runAI()" style="background:#0f4c9c;color:#fff;border:none;border-radius:8px;padding:0 22px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;">Generate with AI</button></div><div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:#79716B;"><span>Also accepts:</span><span class="mono">XCCDF/SCAP</span><span class="mono">OSCAL/JSON</span><span class="mono">Excel/CSV</span><span class="mono">PDF (assisted)</span></div></div>'+body+'</div>';
+}
+function vAdminEditor(){
+ var ctrls=[["1.1.1","Enforce password history",true],["1.1.2","Maximum password age",false],["1.2.1","Account lockout duration",false],["2.3.1.1","Block Microsoft accounts",false]];
+ var list=ctrls.map(function(c,i){return '<div style="padding:11px 14px;'+(i<ctrls.length-1?"border-bottom:1px solid #EFEEEC;":"")+(c[2]?"background:#F1F2EA;border-left:3px solid #0f4c9c;":"")+'"><div class="mono" style="font-size:12px;font-weight:600;color:'+(c[2]?"#1C1917":"#57534E")+';">'+c[0]+'</div><div style="font-size:12px;color:'+(c[2]?"#57534E":"#79716B")+';margin-top:2px;">'+c[1]+'</div></div>';}).join("");
+ return '<div style="padding:26px 34px 60px;max-width:1080px;"><div class="mono" style="font-size:12px;color:#79716B;margin-bottom:8px;">CIS Windows Server 2022 / Account Policies</div><h1 style="margin:0 0 22px;font-size:24px;letter-spacing:-.3px;">Control editor</h1><div style="display:grid;grid-template-columns:280px 1fr;gap:22px;align-items:start;"><div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;overflow:hidden;"><div style="padding:11px 14px;background:#F1F2EA;border-bottom:1px solid #E7E6E5;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;">Controls</div>'+list+'</div>'
+  +'<div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;padding:22px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;"><span class="mono" style="font-size:13px;font-weight:600;background:#F1F2EA;padding:3px 9px;border-radius:5px;">1.1.1</span><input value="Enforce password history — 24 or more passwords" style="flex:1;border:1px solid #E7E6E5;border-radius:7px;padding:9px 12px;font-size:14px;font-weight:600;outline:none;"/></div>'
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px;"><div><label style="font-size:11px;font-weight:600;color:#57534E;display:block;margin-bottom:5px;">Severity</label><select style="width:100%;border:1px solid #E7E6E5;border-radius:7px;padding:9px;font-size:13px;"><option>High</option><option>Medium</option><option>Low</option></select></div><div><label style="font-size:11px;font-weight:600;color:#57534E;display:block;margin-bottom:5px;">Profile</label><select style="width:100%;border:1px solid #E7E6E5;border-radius:7px;padding:9px;font-size:13px;"><option>Level 1</option><option>Level 2</option></select></div><div><label style="font-size:11px;font-weight:600;color:#57534E;display:block;margin-bottom:5px;">Tags</label><input value="password, identity" style="width:100%;border:1px solid #E7E6E5;border-radius:7px;padding:9px;font-size:13px;outline:none;"/></div></div>'
+  +'<label style="font-size:11px;font-weight:600;color:#57534E;display:block;margin-bottom:5px;">Rationale</label><textarea style="width:100%;border:1px solid #E7E6E5;border-radius:7px;padding:10px 12px;font-size:13px;outline:none;height:64px;resize:none;margin-bottom:14px;">Reusing old passwords weakens account security. A long history forces genuinely new passwords each cycle.</textarea>'
+  +'<label style="font-size:11px;font-weight:600;color:#57534E;display:block;margin-bottom:5px;">Remediation</label><textarea class="mono" style="width:100%;border:1px solid #E7E6E5;border-radius:7px;padding:10px 12px;font-size:13px;outline:none;height:64px;resize:none;margin-bottom:18px;">…Password Policy → set "Enforce password history" to {{password_history}} or more.</textarea>'
+  +'<div style="border:1px dashed #D8D6D3;border-radius:8px;padding:14px;margin-bottom:18px;"><div style="font-size:11px;font-weight:600;color:#57534E;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Customization field (ODP placeholder)</div><div style="display:flex;gap:12px;align-items:center;font-size:12.5px;"><span class="mono" style="color:#0f4c9c;">{{password_history}}</span><span style="color:#79716B;">type: number · default: 24 · help: "Number of remembered passwords"</span></div></div>'
+  +'<div style="display:flex;gap:10px;"><button style="background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;">Save control</button><button style="background:#FBFAF9;border:1px solid #E7E6E5;color:#57534E;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;">Preview in document</button></div></div></div></div>';
+}
+function vAdminCatalog(){
+ var rows=PRODUCTS.map(function(p){return '<div onclick="HH.go(\'admin-editor\')" style="display:grid;grid-template-columns:2fr 1fr 90px 90px 110px;padding:14px 18px;border-bottom:1px solid #EFEEEC;font-size:13px;align-items:center;cursor:pointer;"><div style="font-weight:600;">'+p.name+'</div><div><span style="'+fwStyle(p.framework)+'">'+p.framework+'</span></div><div class="mono" style="font-weight:600;">'+p.price+'</div><div class="mono" style="color:#57534E;">'+p.controls+'</div><div><span style="font-size:11px;font-weight:600;color:#1f7a4d;background:#e7f4ee;padding:3px 9px;border-radius:20px;">Published</span></div></div>';}).join("");
+ return '<div style="padding:26px 34px 60px;max-width:1080px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;"><h1 style="margin:0;font-size:24px;letter-spacing:-.3px;">Catalog &amp; pricing</h1><button onclick="HH.go(\'admin-ingest\')" style="background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;">+ New product</button></div><div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;"><div style="display:grid;grid-template-columns:2fr 1fr 90px 90px 110px;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:11px 18px;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;"><div>Product</div><div>Framework</div><div>Price</div><div>Controls</div><div>Status</div></div>'+rows+'</div></div>';
+}
+function vAdminOrders(){
+ var rows=ORDERS.map(function(o){return '<div style="display:grid;grid-template-columns:120px 1fr 120px 130px 80px;padding:14px 18px;border-bottom:1px solid #EFEEEC;font-size:13px;align-items:center;"><div class="mono" style="font-weight:600;">'+o.id+'</div><div>'+o.org+'</div><div class="mono" style="font-weight:600;">'+o.total+'</div><div><span style="'+pill(o.c)+'">'+o.status+'</span></div><div style="text-align:right;"><span style="color:#1663d6;font-size:12px;cursor:pointer;">View</span></div></div>';}).join("");
+ return '<div style="padding:26px 34px 60px;max-width:980px;"><h1 style="margin:0 0 22px;font-size:24px;letter-spacing:-.3px;">Orders</h1><div style="background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;"><div style="display:grid;grid-template-columns:120px 1fr 120px 130px 80px;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:11px 18px;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;"><div>Order</div><div>Organization</div><div>Total</div><div>Status</div><div></div></div>'+rows+'</div></div>';
+}
+function vAdminVersioning(){
+ var rows=DIFF_ROWS.map(function(d){return '<div style="display:flex;align-items:center;gap:14px;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:16px;padding:16px 18px;"><span class="mono" style="font-size:12px;font-weight:700;color:'+d.c+';background:'+d.c+'14;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+d.sign+'</span><div style="flex:1;"><div style="font-size:14px;font-weight:600;">'+d.label+' — '+d.items+'</div><div style="font-size:12.5px;color:#57534E;margin-top:2px;">'+d.note+'</div></div></div>';}).join("");
+ return '<div style="padding:26px 34px 60px;max-width:920px;"><h1 style="margin:0 0 4px;font-size:24px;letter-spacing:-.3px;">Versioning &amp; updates</h1><p style="margin:0 0 22px;color:#57534E;font-size:14px;">Publishing <b>CIS Windows Server 2022 v2.0.0 → v2.1.0</b>. Review the control diff before notifying subscribers.</p><div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">'+rows+'</div><div style="background:#F1F2EA;border:1px solid #E7E6E5;border-radius:16px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;"><div style="font-size:13px;color:#0f4c9c;"><b>214 subscribers</b> will be notified. Previous version stays available to prior purchasers.</div><button style="background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0;">Publish &amp; notify</button></div></div>';
+}
+
+var VIEWS={storefront:vStorefront,product:vProduct,cart:vCart,checkout:vCheckout,wizard:vWizard,library:vLibrary,license:vLicense,"admin-dashboard":vAdminDash,"admin-ingest":vAdminIngest,"admin-editor":vAdminEditor,"admin-catalog":vAdminCatalog,"admin-orders":vAdminOrders,"admin-versioning":vAdminVersioning};
+
+function render(){
+ var view=(VIEWS[S.view]||vStorefront)();
+ var html='<div style="min-height:100vh;display:flex;flex-direction:column;background:#F7F7F5;">'+topbar()
+  +'<div style="flex:1;display:flex;min-height:0;">'+sidebar()
+  +'<main style="flex:1;min-width:0;overflow-y:auto;height:calc(100vh - 62px);"><div style="animation:hh-fade .28s ease;">'+view+'</div></main></div></div>';
+ document.getElementById("app").innerHTML=html;
+}
+render();
+})();
+</script>
