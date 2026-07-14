@@ -17,6 +17,9 @@ type StigJson = {
 const STIG_META: Record<string, { name: string; platform: string; version: string; priceCents: number }> = {
   "stig-rhel9": { name: "DISA STIG — Red Hat Enterprise Linux 9", platform: "Linux", version: "V2R4", priceCents: 115000 },
   "stig-win2022": { name: "DISA STIG — Microsoft Windows Server 2022", platform: "Windows Server", version: "V2R4", priceCents: 129000 },
+  "stig-win2019": { name: "DISA STIG — Microsoft Windows Server 2019", platform: "Windows Server", version: "V3R5", priceCents: 119000 },
+  "stig-win11": { name: "DISA STIG — Microsoft Windows 11", platform: "Windows", version: "V2R4", priceCents: 99000 },
+  "stig-ubuntu2204": { name: "DISA STIG — Canonical Ubuntu 22.04 LTS", platform: "Linux", version: "V2R5", priceCents: 99000 },
 };
 function stigFamily(code: string): string {
   const m = code.match(/^([A-Z0-9]+-[A-Z0-9]{2})/i);

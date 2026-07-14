@@ -37,6 +37,10 @@ export const PRODUCTS: Product[] = [
   { id: "cis-k8s", framework: "CIS", platform: "Kubernetes", name: "CIS Kubernetes Benchmark", version: "v1.9.0", blurb: "Control-plane and worker-node hardening for self-managed Kubernetes clusters.", controls: 124, profiles: "L1 · L2", formats: "DOCX·PDF·XLSX", price: "$860", savings: "$9k", type: "Hardening guide" },
   { id: "cis-aws", framework: "CIS", platform: "AWS", name: "CIS AWS Foundations Benchmark", version: "v3.0.0", blurb: "Account-level security baseline for Amazon Web Services — IAM, logging, monitoring, networking.", controls: 78, profiles: "L1 · L2", formats: "DOCX·PDF·XLSX", price: "$740", savings: "$7k", type: "Hardening guide" },
   { id: "nist-80053", framework: "NIST 800-53", platform: "Policy", name: "NIST 800-53 Rev 5 Moderate Baseline", version: "Rev 5", blurb: "Original policy content mapped to the NIST 800-53 moderate control baseline — public-domain source.", controls: 287, profiles: "Moderate", formats: "DOCX·PDF·XLSX", price: "$1,090", savings: "$14k", type: "Standard" },
+  { id: "stig-win2022", framework: "DISA STIG", platform: "Windows Server", name: "DISA STIG — Microsoft Windows Server 2022", version: "V2R4", blurb: "DoD Security Technical Implementation Guide for Windows Server 2022, mapped to NIST 800-53. Public-domain source.", controls: 275, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$1,290", savings: "$17k", type: "Standard" },
+  { id: "stig-win2019", framework: "DISA STIG", platform: "Windows Server", name: "DISA STIG — Microsoft Windows Server 2019", version: "V3R5", blurb: "DoD Security Technical Implementation Guide for Windows Server 2019, mapped to NIST 800-53. Public-domain source.", controls: 275, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$1,190", savings: "$16k", type: "Standard" },
+  { id: "stig-win11", framework: "DISA STIG", platform: "Windows", name: "DISA STIG — Microsoft Windows 11", version: "V2R4", blurb: "DoD Security Technical Implementation Guide for Windows 11 endpoints, mapped to NIST 800-53. Public-domain source.", controls: 258, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$990", savings: "$13k", type: "Standard" },
+  { id: "stig-ubuntu2204", framework: "DISA STIG", platform: "Linux", name: "DISA STIG — Canonical Ubuntu 22.04 LTS", version: "V2R5", blurb: "DoD Security Technical Implementation Guide for Ubuntu 22.04 LTS, mapped to NIST 800-53. Public-domain source.", controls: 187, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$990", savings: "$12k", type: "Standard" },
 ];
 
 export const FAMILIES = [
@@ -138,7 +142,9 @@ export const DIFF_ROWS = [
 export const LIBRARY_ITEMS = [
   { name: "DISA STIG — Red Hat Enterprise Linux 9", version: "V2R4 · 452 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-rhel9" },
   { name: "DISA STIG — Microsoft Windows Server 2022", version: "V2R4 · 275 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win2022" },
-  { name: "CIS Windows Server 2022 Benchmark", version: "v2.0.0 · demo content", fw: "CIS", status: "Ready to scope", statusColor: "#b5721c", gens: "2 of 5 generations used", artifacts: [] as string[], configured: true, productId: "cis-win2022" },
+  { name: "DISA STIG — Microsoft Windows Server 2019", version: "V3R5 · 275 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win2019" },
+  { name: "DISA STIG — Microsoft Windows 11", version: "V2R4 · 258 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win11" },
+  { name: "DISA STIG — Canonical Ubuntu 22.04 LTS", version: "V2R5 · 187 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-ubuntu2204" },
 ];
 
 export const AI_STAGES = [

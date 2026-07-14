@@ -25,6 +25,9 @@ export type StigDoc = { slug: string; benchTitle: string; release: string; contr
 export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platform: string; version: string }> = {
   "stig-rhel9": { slug: "stig-rhel9", name: "DISA STIG — Red Hat Enterprise Linux 9", platform: "Linux", version: "V2R4" },
   "stig-win2022": { slug: "stig-win2022", name: "DISA STIG — Microsoft Windows Server 2022", platform: "Windows Server", version: "V2R4" },
+  "stig-win2019": { slug: "stig-win2019", name: "DISA STIG — Microsoft Windows Server 2019", platform: "Windows Server", version: "V3R5" },
+  "stig-win11": { slug: "stig-win11", name: "DISA STIG — Microsoft Windows 11", platform: "Windows", version: "V2R4" },
+  "stig-ubuntu2204": { slug: "stig-ubuntu2204", name: "DISA STIG — Canonical Ubuntu 22.04 LTS", platform: "Linux", version: "V2R5" },
 };
 
 const cache = new Map<string, StigDoc | null>();
