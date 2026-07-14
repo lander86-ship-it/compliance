@@ -6,7 +6,7 @@ import { css, statusPill } from "@/lib/hub/theme";
 import { LIBRARY_ITEMS } from "@/lib/hub/data";
 
 export function Library() {
-  const { s, go } = useHub();
+  const { s, configure } = useHub();
   const artChip = "font-size:11px;font-family:'Fragment Mono',monospace;background:#F1F2EA;color:#0f4c9c;padding:3px 9px;border-radius:5px;font-weight:600;cursor:pointer;";
 
   return (
@@ -23,7 +23,7 @@ export function Library() {
       <div style={css("display:flex;flex-direction:column;gap:14px;")}>
         {LIBRARY_ITEMS.map((it) => {
           // Wire real artifacts produced by the generation engine onto the matching product.
-          const real = it.productId === "cis-win2022" && s.genArtifacts.length > 0 ? s.genArtifacts : null;
+          const real = it.productId === s.wizardProductId && s.genArtifacts.length > 0 ? s.genArtifacts : null;
           const artifacts = real ? real.map((a) => a.format) : it.artifacts;
           const status = real ? "Ready" : it.status;
           const statusColor = real ? "#1f7a4d" : it.statusColor;
@@ -46,7 +46,7 @@ export function Library() {
                   )}
                 </div>
               </div>
-              <button onClick={() => go("wizard")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;")}>Configure &amp; generate</button>
+              <button onClick={() => configure(it.productId)} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;")}>Configure &amp; generate</button>
             </div>
           );
         })}

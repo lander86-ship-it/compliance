@@ -1,7 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
-import { PRODUCTS, WIZ_CONTROLS } from "./data";
+import { PRODUCTS } from "./data";
+
+export type WizControl = { id: string; title: string; family: string; severity: string; cat?: string };
 
 export type Scope = {
   legal: string;
@@ -30,6 +32,12 @@ export type HubState = {
   profile: string;
   cart: string[];
   wizardStep: number;
+  wizardProductId: string;
+  wizName: string;
+  wizBenchmark: string;
+  wizControls: WizControl[];
+  wizTotal: number;
+  wizLoading: boolean;
   scope: Scope;
   excluded: Record<string, string>;
   odp: Record<string, string>;
@@ -53,6 +61,12 @@ const initialState: HubState = {
   profile: "Level 1",
   cart: ["cis-ubuntu2204"],
   wizardStep: 1,
+  wizardProductId: "cis-win2022",
+  wizName: "CIS Windows Server 2022 Benchmark",
+  wizBenchmark: "CIS Windows Server 2022 Benchmark v2.0.0",
+  wizControls: [],
+  wizTotal: 0,
+  wizLoading: false,
   scope: {
     legal: "Northwind Financial Group",
     trade: "Northwind",
@@ -84,6 +98,7 @@ type HubContextValue = {
   removeFromCart: (id: string) => void;
   toggleExclude: (id: string) => void;
   setReason: (id: string, reason: string) => void;
+  configure: (productId: string) => void;
   setScope: (k: keyof Scope, v: string) => void;
   setOdp: (k: string, v: string) => void;
   generate: () => Promise<void>;
@@ -121,6 +136,15 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
   const setReason = useCallback((id: string, reason: string) => setS((p) => ({ ...p, excluded: { ...p.excluded, [id]: reason } })), []);
+
+  // Enter the Scope Wizard for a product and load its real controls.
+  const configure = useCallback((productId: string) => {
+    setS((p) => ({ ...p, view: "wizard", wizardProductId: productId, wizardStep: 1, excluded: {}, genStatus: "idle", genArtifacts: [], wizLoading: true, wizControls: [], wizTotal: 0 }));
+    fetch(`/api/product/${productId}/controls`)
+      .then((r) => r.json())
+      .then((d) => setS((p) => ({ ...p, wizControls: d.controls || [], wizTotal: d.total || 0, wizName: d.name || productId, wizBenchmark: d.benchmark || "", wizLoading: false })))
+      .catch(() => setS((p) => ({ ...p, wizLoading: false })));
+  }, []);
   const setScope = useCallback((k: keyof Scope, v: string) => setS((p) => ({ ...p, scope: { ...p.scope, [k]: v } })), []);
   const setOdp = useCallback((k: string, v: string) => setS((p) => ({ ...p, odp: { ...p.odp, [k]: v } })), []);
 
@@ -129,17 +153,16 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     setS((p) => ({ ...p, genStatus: "processing", genError: null }));
     try {
       const state = sRef.current;
-      const excludedList = WIZ_CONTROLS.filter((c) => state.excluded[c.id]).map((c) => ({ controlId: c.id, reason: state.excluded[c.id] }));
-      const includedIds = WIZ_CONTROLS.filter((c) => !state.excluded[c.id]).map((c) => c.id);
+      const excludedList = Object.keys(state.excluded).map((id) => ({ controlId: id, reason: state.excluded[id] || "Excluded" }));
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          productId: "cis-win2022",
+          productId: state.wizardProductId,
           scope: state.scope,
           odp: state.odp,
           excluded: excludedList,
-          included: includedIds,
+          included: [],
           formats: ["DOCX", "PDF", "XLSX"],
         }),
       });
@@ -166,7 +189,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, setScope, setOdp, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 

@@ -3,7 +3,8 @@
 import React from "react";
 import { useHub } from "@/lib/hub/store";
 import { css, sevStyle } from "@/lib/hub/theme";
-import { WIZ_CONTROLS } from "@/lib/hub/data";
+
+const WIZ_DISPLAY_CAP = 80; // render at most N control rows for performance; the rest stay included
 
 const STEP_NAMES = ["Organization", "Branding", "Technical scope", "Controls", "Parameters", "Review & generate"];
 const COLORS = ["#0f4c9c", "#6a2f6a", "#1f6a4d", "#b4381f", "#1C1917"];
@@ -20,7 +21,7 @@ function StepRail() {
   return (
     <div style={css("width:250px;background:#F1F2EA;border-right:1px solid #E7E6E5;padding:24px 20px;flex-shrink:0;")}>
       <div style={css("font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#79716B;margin-bottom:4px;")}>Scope Wizard</div>
-      <div style={css("font-size:14px;font-weight:600;margin-bottom:20px;line-height:1.3;")}>CIS Windows Server 2022</div>
+      <div style={css("font-size:14px;font-weight:600;margin-bottom:20px;line-height:1.3;")}>{s.wizName}</div>
       {STEP_NAMES.map((label, i) => {
         const n = i + 1;
         const done = n < step;
@@ -142,8 +143,10 @@ function Step3() {
 
 function Step4() {
   const { s, toggleExclude, setReason } = useHub();
-  const included = WIZ_CONTROLS.filter((c) => !s.excluded[c.id]).length;
-  const excluded = WIZ_CONTROLS.length - included;
+  const total = s.wizTotal || s.wizControls.length;
+  const excluded = Object.keys(s.excluded).length;
+  const included = total - excluded;
+  const shown = s.wizControls.slice(0, WIZ_DISPLAY_CAP);
   return (
     <>
       <h2 style={css("margin:0 0 4px;font-size:22px;font-weight:700;")}>Include / exclude controls</h2>
@@ -151,17 +154,18 @@ function Step4() {
       <div style={css("display:flex;gap:20px;margin-bottom:16px;font-size:13px;font-family:'Fragment Mono',monospace;")}>
         <span style={css("color:#1f7a4d;font-weight:600;")}>● {included} included</span>
         <span style={css("color:#b5721c;font-weight:600;")}>● {excluded} excluded</span>
-        <span style={css("color:#79716B;")}>of {WIZ_CONTROLS.length} total</span>
+        <span style={css("color:#79716B;")}>of {total} total</span>
       </div>
+      {s.wizLoading && <div style={css("color:#79716B;font-size:13px;padding:20px;")}>Loading controls…</div>}
       <div style={css("border:1px solid #E7E6E5;border-radius:16px;overflow:hidden;background:#FBFAF9;")}>
-        {WIZ_CONTROLS.map((c) => {
+        {shown.map((c) => {
           const isEx = !!s.excluded[c.id];
           return (
             <div key={c.id} style={css(`display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #EFEEEC;background:${isEx ? "#fbf7f4" : "#fff"};`)}>
               <button onClick={() => toggleExclude(c.id)} style={css(`width:42px;height:24px;border-radius:20px;position:relative;cursor:pointer;flex-shrink:0;border:none;background:${isEx ? "#E7E6E5" : "#1f7a4d"};`)}>
                 <span style={css(`position:absolute;top:2px;left:${isEx ? "2px" : "20px"};width:20px;height:20px;border-radius:50%;background:#FBFAF9;transition:left .15s;`)} />
               </button>
-              <span style={css("font-family:'Fragment Mono',monospace;font-size:12px;font-weight:600;color:#1C1917;width:64px;flex-shrink:0;")}>{c.id}</span>
+              <span style={css("font-family:'Fragment Mono',monospace;font-size:12px;font-weight:600;color:#1C1917;width:110px;flex-shrink:0;")}>{c.id}</span>
               <div style={css("flex:1;min-width:0;")}>
                 <div style={css(`font-size:13.5px;font-weight:500;${isEx ? "text-decoration:line-through;color:#79716B;" : ""}`)}>{c.title}</div>
                 <div style={css("font-size:11px;color:#79716B;margin-top:2px;")}>{c.family}</div>
@@ -174,6 +178,9 @@ function Step4() {
           );
         })}
       </div>
+      {total > shown.length && (
+        <div style={css("font-size:12px;color:#79716B;margin-top:12px;")}>Showing the first {shown.length} of {total} controls. The remaining {total - shown.length} are included by default — refine or exclude them after generating.</div>
+      )}
     </>
   );
 }
@@ -201,8 +208,9 @@ function Step5() {
 
 function Step6() {
   const { s, generate, go } = useHub();
-  const included = WIZ_CONTROLS.filter((c) => !s.excluded[c.id]).length;
-  const excluded = WIZ_CONTROLS.length - included;
+  const total = s.wizTotal || s.wizControls.length;
+  const excluded = Object.keys(s.excluded).length;
+  const included = total - excluded;
   return (
     <>
       <h2 style={css("margin:0 0 4px;font-size:22px;font-weight:700;")}>Review &amp; generate</h2>

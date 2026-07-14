@@ -12,6 +12,7 @@ import {
 import { PDFDocument, StandardFonts, rgb, degrees, type PDFFont } from "pdf-lib";
 import ExcelJS from "exceljs";
 import { WINDOWS_CONTROLS, substituteOdp, type FullControl } from "./hub/controlContent";
+import { isStigProduct, loadStig, toFullControl, STIG_PRODUCTS } from "./hub/stig";
 
 export type GenInput = {
   productId: string;
@@ -38,10 +39,37 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r: ((n >> 16) & 255) / 255, g: ((n >> 8) & 255) / 255, b: (n & 255) / 255 };
 }
 
+// The control source for a product: real DISA STIG data, or the demo CIS-mapped set.
+export function sourceControls(productId: string): FullControl[] {
+  if (isStigProduct(productId)) {
+    const doc = loadStig(STIG_PRODUCTS[productId].slug);
+    if (doc) return doc.controls.map(toFullControl);
+  }
+  return WINDOWS_CONTROLS;
+}
+
+// Deliverable title + benchmark line + provenance note, per product.
+export function docMeta(productId: string): { title: string; benchmark: string; source: string } {
+  if (isStigProduct(productId)) {
+    const p = STIG_PRODUCTS[productId];
+    const doc = loadStig(p.slug);
+    return {
+      title: `${p.name.replace(/^DISA STIG — /, "")} — Security Baseline`,
+      benchmark: `${doc?.benchTitle || p.name} ${p.version}`,
+      source: "Sourced from the DISA Security Technical Implementation Guide (U.S. Government, public domain) and cross-mapped to NIST 800-53.",
+    };
+  }
+  return {
+    title: "Windows Server 2022 Hardening Standard",
+    benchmark: "CIS Windows Server 2022 Benchmark v2.0.0",
+    source: "Control text is original and cross-mapped to NIST 800-53, NIST CSF and ISO 27002.",
+  };
+}
+
 // Step 1: resolve applicability (FR-A-11) + Step 2: substitute ODP values.
 export function resolve(input: GenInput): ResolvedRow[] {
   const exMap = new Map(input.excluded.map((e) => [e.controlId, e.reason]));
-  return WINDOWS_CONTROLS.map((c) => {
+  return sourceControls(input.productId).map((c) => {
     const excluded = exMap.has(c.id);
     return {
       ...c,
@@ -52,11 +80,10 @@ export function resolve(input: GenInput): ResolvedRow[] {
   });
 }
 
-const PRODUCT_TITLE = "Windows Server 2022 Hardening Standard";
-
 // ─────────────────────────── DOCX ───────────────────────────
 async function buildDocx(input: GenInput, rows: ResolvedRow[], licenseId: string, generatedAt: string): Promise<Buffer> {
   const brand = input.scope.color.replace("#", "");
+  const meta = docMeta(input.productId);
   const included = rows.filter((r) => r.status === "included");
   const excluded = rows.filter((r) => r.status === "excluded");
 
@@ -82,22 +109,22 @@ async function buildDocx(input: GenInput, rows: ResolvedRow[], licenseId: string
 
   const doc = new Document({
     creator: "HardenHub",
-    title: PRODUCT_TITLE,
+    title: meta.title,
     description: `License ${licenseId}`,
     sections: [
       {
         properties: {},
         children: [
           new Paragraph({ spacing: { before: 1200 }, children: [new TextRun({ text: input.scope.legal, bold: true, size: 28, color: brand })] }),
-          new Paragraph({ spacing: { before: 200, after: 120 }, children: [new TextRun({ text: PRODUCT_TITLE, bold: true, size: 56, color: brand })] }),
-          new Paragraph({ children: [new TextRun({ text: `CIS Windows Server 2022 Benchmark v2.0.0  ·  Profile ${input.scope.profile}  ·  ${input.scope.env}`, size: 22, color: "57534E" })] }),
+          new Paragraph({ spacing: { before: 200, after: 120 }, children: [new TextRun({ text: meta.title, bold: true, size: 56, color: brand })] }),
+          new Paragraph({ children: [new TextRun({ text: `${meta.benchmark}  ·  Profile ${input.scope.profile}  ·  ${input.scope.env}`, size: 22, color: "57534E" })] }),
           new Paragraph({ spacing: { before: 600 }, children: [new TextRun({ text: `Classification: ${input.scope.classification}`, size: 20 })] }),
           new Paragraph({ children: [new TextRun({ text: `Document version: ${input.scope.docv}   ·   Date: ${generatedAt}`, size: 20 })] }),
           new Paragraph({ children: [new TextRun({ text: `Owner: ${input.scope.owner}`, size: 20 })] }),
           new Paragraph({ spacing: { before: 400 }, children: [new TextRun({ text: `License ID: ${licenseId}  —  ${input.scope.confidentiality || "Confidential. Do not distribute."}`, italics: true, size: 16, color: "79716B" })] }),
 
           new Paragraph({ pageBreakBefore: true, heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: "1. Executive summary" })] }),
-          new Paragraph({ children: [new TextRun({ text: `This standard adapts the CIS Windows Server 2022 Benchmark to ${input.scope.legal}. Of ${rows.length} candidate controls, ${included.length} are included and ${excluded.length} are excluded with recorded justification. Control text is original and cross-mapped to NIST 800-53, NIST CSF and ISO 27002.`, size: 20 })] }),
+          new Paragraph({ children: [new TextRun({ text: `This baseline adapts the ${meta.benchmark} to ${input.scope.legal}. Of ${rows.length} candidate controls, ${included.length} are included and ${excluded.length} are excluded with recorded justification. ${meta.source}`, size: 20 })] }),
 
           new Paragraph({ spacing: { before: 240 }, heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: "2. Applicability matrix" })] }),
           new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: { top: { style: BorderStyle.SINGLE, size: 1, color: "E7E6E5" }, bottom: { style: BorderStyle.SINGLE, size: 1, color: "E7E6E5" }, left: { style: BorderStyle.SINGLE, size: 1, color: "E7E6E5" }, right: { style: BorderStyle.SINGLE, size: 1, color: "E7E6E5" }, insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "EFEEEC" }, insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "EFEEEC" } }, rows: applicabilityRows }),
@@ -114,6 +141,7 @@ async function buildDocx(input: GenInput, rows: ResolvedRow[], licenseId: string
 // ─────────────────────────── PDF ───────────────────────────
 async function buildPdf(input: GenInput, rows: ResolvedRow[], licenseId: string, generatedAt: string): Promise<Buffer> {
   const pdf = await PDFDocument.create();
+  const meta = docMeta(input.productId);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const brand = hexToRgb(input.scope.color);
@@ -174,8 +202,8 @@ async function buildPdf(input: GenInput, rows: ResolvedRow[], licenseId: string,
   y -= 70;
   write(input.scope.legal, { size: 13, font: bold, color: rgb(brand.r, brand.g, brand.b) });
   y -= 6;
-  write(PRODUCT_TITLE, { size: 26, font: bold, color: rgb(brand.r, brand.g, brand.b) });
-  write(`CIS Windows Server 2022 Benchmark v2.0.0  ·  Profile ${input.scope.profile}  ·  ${input.scope.env}`, { size: 11, color: muted, gap: 20 });
+  write(meta.title, { size: 26, font: bold, color: rgb(brand.r, brand.g, brand.b) });
+  write(`${meta.benchmark}  ·  Profile ${input.scope.profile}  ·  ${input.scope.env}`, { size: 11, color: muted, gap: 20 });
   write(`Classification: ${input.scope.classification}`, { size: 11 });
   write(`Document version: ${input.scope.docv}   ·   Date: ${generatedAt}`, { size: 11 });
   write(`Owner: ${input.scope.owner}`, { size: 11, gap: 16 });
@@ -187,7 +215,7 @@ async function buildPdf(input: GenInput, rows: ResolvedRow[], licenseId: string,
 
   newPage();
   write("1. Executive summary", { size: 15, font: bold, gap: 8 });
-  write(`This standard adapts the CIS Windows Server 2022 Benchmark to ${input.scope.legal}. Of ${rows.length} candidate controls, ${included.length} are included and ${excluded.length} are excluded with recorded justification. Control text is original and cross-mapped to NIST 800-53, NIST CSF and ISO 27002.`, { size: 10, color: muted, gap: 16 });
+  write(`This baseline adapts the ${meta.benchmark} to ${input.scope.legal}. Of ${rows.length} candidate controls, ${included.length} are included and ${excluded.length} are excluded with recorded justification. ${meta.source}`, { size: 10, color: muted, gap: 16 });
 
   write("2. Applicability matrix", { size: 15, font: bold, gap: 8 });
   for (const r of rows) {
@@ -214,13 +242,14 @@ async function buildPdf(input: GenInput, rows: ResolvedRow[], licenseId: string,
 async function buildXlsx(input: GenInput, rows: ResolvedRow[], licenseId: string, generatedAt: string): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "HardenHub";
+  const meta = docMeta(input.productId);
 
   const cover = wb.addWorksheet("Summary");
   cover.columns = [{ width: 26 }, { width: 70 }];
-  const meta: [string, string][] = [
+  const metaRows: [string, string][] = [
     ["Organization", input.scope.legal],
-    ["Document", PRODUCT_TITLE],
-    ["Benchmark", "CIS Windows Server 2022 Benchmark v2.0.0"],
+    ["Document", meta.title],
+    ["Benchmark", meta.benchmark],
     ["Profile", input.scope.profile],
     ["Environment", input.scope.env],
     ["Classification", input.scope.classification],
@@ -231,7 +260,7 @@ async function buildXlsx(input: GenInput, rows: ResolvedRow[], licenseId: string
     ["Controls excluded", String(rows.filter((r) => r.status === "excluded").length)],
     ["License ID", licenseId],
   ];
-  meta.forEach(([k, v]) => {
+  metaRows.forEach(([k, v]) => {
     const row = cover.addRow([k, v]);
     row.getCell(1).font = { bold: true, color: { argb: "FF57534E" } };
   });

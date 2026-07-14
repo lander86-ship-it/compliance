@@ -136,9 +136,9 @@ export const DIFF_ROWS = [
 ];
 
 export const LIBRARY_ITEMS = [
-  { name: "CIS Windows Server 2022 Benchmark", version: "v2.0.0", fw: "CIS", status: "Ready", statusColor: "#1f7a4d", gens: "2 of 5 generations used", artifacts: ["DOCX", "PDF", "XLSX"], configured: true, productId: "cis-win2022" },
-  { name: "CIS Ubuntu 22.04 LTS Benchmark", version: "v2.0.0", fw: "CIS", status: "Needs scope", statusColor: "#b5721c", gens: "0 of 5 generations used", artifacts: [] as string[], configured: false, productId: "cis-ubuntu2204" },
-  { name: "DISA STIG — RHEL 9", version: "V1R3", fw: "DISA STIG", status: "Update available", statusColor: "#1663d6", gens: "1 of 5 generations used", artifacts: ["DOCX", "PDF"], configured: true, productId: "stig-rhel9" },
+  { name: "DISA STIG — Red Hat Enterprise Linux 9", version: "V2R4 · 452 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-rhel9" },
+  { name: "DISA STIG — Microsoft Windows Server 2022", version: "V2R4 · 275 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win2022" },
+  { name: "CIS Windows Server 2022 Benchmark", version: "v2.0.0 · demo content", fw: "CIS", status: "Ready to scope", statusColor: "#b5721c", gens: "2 of 5 generations used", artifacts: [] as string[], configured: true, productId: "cis-win2022" },
 ];
 
 export const AI_STAGES = [

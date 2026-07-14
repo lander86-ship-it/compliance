@@ -3,8 +3,25 @@
 // maps to the benchmark; NIST / DISA STIG are public-domain (VERBATIM_OK).
 
 import { PrismaClient } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 import { WINDOWS_CONTROLS, ODP_TOKENS } from "../src/lib/hub/controlContent";
 import { PRODUCTS } from "../src/lib/hub/data";
+
+type StigJson = {
+  slug: string;
+  benchTitle: string;
+  release: string;
+  controls: { code: string; vulnId: string; ruleId: string; title: string; severity: string; cat: string; srg: string; rationale: string; audit: string; remediation: string; ccis: string[]; nist: string[] }[];
+};
+const STIG_META: Record<string, { name: string; platform: string; version: string; priceCents: number }> = {
+  "stig-rhel9": { name: "DISA STIG — Red Hat Enterprise Linux 9", platform: "Linux", version: "V2R4", priceCents: 115000 },
+  "stig-win2022": { name: "DISA STIG — Microsoft Windows Server 2022", platform: "Windows Server", version: "V2R4", priceCents: 129000 },
+};
+function stigFamily(code: string): string {
+  const m = code.match(/^([A-Z0-9]+-[A-Z0-9]{2})/i);
+  return m ? m[1].toUpperCase() : "General";
+}
 
 const prisma = new PrismaClient();
 
@@ -98,7 +115,58 @@ async function main() {
   await prisma.user.create({ data: { orgId: org.id, email: "m.torres@northwind.example", passwordHash: "seeded-no-login", name: "M. Torres", role: "customer", mfaEnabled: true } });
   await prisma.user.create({ data: { email: "admin@hardenhub.example", passwordHash: "seeded-no-login", name: "HardenHub Admin", role: "owner", mfaEnabled: true } });
 
-  const counts = { frameworks: frameworks.length, controls: WINDOWS_CONTROLS.length, products: PRODUCTS.length };
+  // ── Ingest real DISA STIG data (public domain) into the data model ──
+  const stigCounts: Record<string, number> = {};
+  for (const slug of Object.keys(STIG_META)) {
+    const file = path.join(process.cwd(), "data", "stig", `${slug}.json`);
+    if (!fs.existsSync(file)) continue;
+    const doc = JSON.parse(fs.readFileSync(file, "utf8")) as StigJson;
+    const meta = STIG_META[slug];
+
+    const src = await prisma.sourceDocument.create({ data: { frameworkId: "fw-stig", format: "XCCDF", version: meta.version, fileName: `${slug}.json`, importDate: new Date() } });
+
+    // families
+    const famNames = Array.from(new Set(doc.controls.map((c) => stigFamily(c.code))));
+    const famId = new Map<string, string>();
+    for (const name of famNames) {
+      const f = await prisma.controlFamily.create({ data: { frameworkId: "fw-stig", code: name, name } });
+      famId.set(name, f.id);
+    }
+
+    // product
+    const product = await prisma.product.upsert({
+      where: { slug },
+      update: { benchmarkVersion: meta.version, status: "published" },
+      create: {
+        slug, name: meta.name, platform: meta.platform, type: "hardening_guide", frameworkTag: "DISA STIG",
+        benchmarkVersion: meta.version, profiles: JSON.stringify(["CAT I", "CAT II", "CAT III"]),
+        formats: JSON.stringify(["DOCX", "PDF", "XLSX"]), description: doc.benchTitle, priceCents: meta.priceCents,
+        currency: "USD", status: "published", maxGenerations: 5,
+      },
+    });
+
+    // controls + mappings + product links
+    const mappingRows: { controlId: string; targetFramework: string; targetControlCode: string }[] = [];
+    let order = 0;
+    for (const c of doc.controls) {
+      const control = await prisma.control.create({
+        data: {
+          frameworkId: "fw-stig", sourceDocumentId: src.id, familyId: famId.get(stigFamily(c.code)),
+          code: c.code, title: c.title, rationale: c.rationale, audit: c.audit, remediation: c.remediation,
+          severity: c.severity, profile: c.cat, references: JSON.stringify([c.vulnId, c.ruleId, ...c.ccis]),
+        },
+      });
+      for (const n of c.nist || []) mappingRows.push({ controlId: control.id, targetFramework: "NIST 800-53", targetControlCode: n });
+      await prisma.productControl.create({ data: { productId: product.id, controlId: control.id, order: order++, applicabilityRule: JSON.stringify({ profiles: [c.cat] }) } });
+    }
+    // bulk-insert mappings in chunks
+    for (let i = 0; i < mappingRows.length; i += 500) {
+      await prisma.mapping.createMany({ data: mappingRows.slice(i, i + 500) });
+    }
+    stigCounts[slug] = doc.controls.length;
+  }
+
+  const counts = { frameworks: frameworks.length, cisDemoControls: WINDOWS_CONTROLS.length, products: PRODUCTS.length, stig: stigCounts };
   console.log("Seed complete:", JSON.stringify(counts));
 }
 
