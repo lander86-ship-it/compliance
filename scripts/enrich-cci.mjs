@@ -40,6 +40,10 @@ console.log(`CCI→NIST map: ${Object.keys(map).length} entries → ${path.relat
 
 for (const slug of slugs) {
   const p = path.join(process.cwd(), "data", "stig", `${slug}.json`);
+  if (!fs.existsSync(p)) {
+    console.warn(`  ${slug}: SKIP (no data file — import may have failed)`);
+    continue;
+  }
   const doc = JSON.parse(fs.readFileSync(p, "utf8"));
   let withNist = 0;
   for (const c of doc.controls) {

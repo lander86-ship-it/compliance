@@ -32,6 +32,16 @@ export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platfor
   "stig-macos14": { slug: "stig-macos14", name: "DISA STIG — Apple macOS 14 (Sonoma)", platform: "macOS", version: "V2R4" },
   "stig-postgresql": { slug: "stig-postgresql", name: "DISA STIG — Crunchy Data PostgreSQL", platform: "Database", version: "V2R2" },
   "stig-cisco-ios-rtr": { slug: "stig-cisco-ios-rtr", name: "DISA STIG — Cisco IOS XE Router (RTR)", platform: "Network", version: "V3R1" },
+  "stig-win2016": { slug: "stig-win2016", name: "DISA STIG — Microsoft Windows Server 2016", platform: "Windows Server", version: "V2R10" },
+  "stig-win10": { slug: "stig-win10", name: "DISA STIG — Microsoft Windows 10", platform: "Windows", version: "V3R6" },
+  "stig-rhel8": { slug: "stig-rhel8", name: "DISA STIG — Red Hat Enterprise Linux 8", platform: "Linux", version: "V2R8" },
+  "stig-mssql2016": { slug: "stig-mssql2016", name: "DISA STIG — Microsoft SQL Server 2016 Instance", platform: "Database", version: "V3R6" },
+  "stig-iis10": { slug: "stig-iis10", name: "DISA STIG — Microsoft IIS 10.0 Server", platform: "Web", version: "V3R7" },
+  "stig-apache24": { slug: "stig-apache24", name: "DISA STIG — Apache Server 2.4 (UNIX)", platform: "Web", version: "V2R3" },
+  "stig-docker": { slug: "stig-docker", name: "DISA STIG — Docker Enterprise 2.x", platform: "Containers", version: "V2R1" },
+  "stig-cisco-switch-ndm": { slug: "stig-cisco-switch-ndm", name: "DISA STIG — Cisco IOS XE Switch (NDM)", platform: "Network", version: "V3R4" },
+  "stig-cisco-switch-l2s": { slug: "stig-cisco-switch-l2s", name: "DISA STIG — Cisco IOS XE Switch (L2S)", platform: "Network", version: "V3R2" },
+  "stig-vsphere8-esxi": { slug: "stig-vsphere8-esxi", name: "DISA STIG — VMware vSphere 8.0 ESXi", platform: "Virtualization", version: "V2R4" },
 };
 
 const cache = new Map<string, StigDoc | null>();

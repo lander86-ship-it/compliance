@@ -45,6 +45,16 @@ export const PRODUCTS: Product[] = [
   { id: "stig-macos14", framework: "DISA STIG", platform: "macOS", name: "DISA STIG — Apple macOS 14 (Sonoma)", version: "V2R4", blurb: "DoD Security Technical Implementation Guide for macOS 14 Sonoma endpoints, mapped to NIST 800-53. Public-domain source.", controls: 156, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$10k", type: "Standard" },
   { id: "stig-postgresql", framework: "DISA STIG", platform: "Databases", name: "DISA STIG — Crunchy Data PostgreSQL", version: "V2R2", blurb: "DoD Security Technical Implementation Guide for Crunchy Data PostgreSQL, mapped to NIST 800-53. Public-domain source.", controls: 114, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$11k", type: "Standard" },
   { id: "stig-cisco-ios-rtr", framework: "DISA STIG", platform: "Network", name: "DISA STIG — Cisco IOS XE Router (RTR)", version: "V3R1", blurb: "DoD Security Technical Implementation Guide for Cisco IOS XE routers (RTR policy), mapped to NIST 800-53. Public-domain source.", controls: 97, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$990", savings: "$12k", type: "Standard" },
+  { id: "stig-win2016", framework: "DISA STIG", platform: "Windows Server", name: "DISA STIG — Microsoft Windows Server 2016", version: "V2R10", blurb: "DoD STIG for Windows Server 2016, mapped to NIST 800-53. Public-domain source.", controls: 273, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$1,190", savings: "$16k", type: "Standard" },
+  { id: "stig-win10", framework: "DISA STIG", platform: "Windows", name: "DISA STIG — Microsoft Windows 10", version: "V3R6", blurb: "DoD STIG for Windows 10 endpoints, mapped to NIST 800-53. Public-domain source.", controls: 263, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$15k", type: "Standard" },
+  { id: "stig-rhel8", framework: "DISA STIG", platform: "Linux", name: "DISA STIG — Red Hat Enterprise Linux 8", version: "V2R8", blurb: "DoD STIG for RHEL 8, mapped to NIST 800-53. Public-domain source.", controls: 365, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$1,190", savings: "$18k", type: "Standard" },
+  { id: "stig-mssql2016", framework: "DISA STIG", platform: "Databases", name: "DISA STIG — Microsoft SQL Server 2016 Instance", version: "V3R6", blurb: "DoD STIG for SQL Server 2016 database instances, mapped to NIST 800-53. Public-domain source.", controls: 84, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$10k", type: "Standard" },
+  { id: "stig-iis10", framework: "DISA STIG", platform: "Web", name: "DISA STIG — Microsoft IIS 10.0 Server", version: "V3R7", blurb: "DoD STIG for IIS 10.0 web servers, mapped to NIST 800-53. Public-domain source.", controls: 40, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$690", savings: "$7k", type: "Standard" },
+  { id: "stig-apache24", framework: "DISA STIG", platform: "Web", name: "DISA STIG — Apache Server 2.4 (UNIX)", version: "V2R3", blurb: "DoD STIG for Apache HTTP Server 2.4 on UNIX, mapped to NIST 800-53. Public-domain source.", controls: 47, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$690", savings: "$7k", type: "Standard" },
+  { id: "stig-docker", framework: "DISA STIG", platform: "Kubernetes", name: "DISA STIG — Docker Enterprise 2.x", version: "V2R1", blurb: "DoD STIG for Docker Enterprise 2.x on Linux/UNIX, mapped to NIST 800-53. Public-domain source.", controls: 100, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$11k", type: "Standard" },
+  { id: "stig-cisco-switch-ndm", framework: "DISA STIG", platform: "Network", name: "DISA STIG — Cisco IOS XE Switch (NDM)", version: "V3R4", blurb: "DoD STIG for Cisco IOS XE switch network-device management, mapped to NIST 800-53. Public-domain source.", controls: 42, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$790", savings: "$6k", type: "Standard" },
+  { id: "stig-cisco-switch-l2s", framework: "DISA STIG", platform: "Network", name: "DISA STIG — Cisco IOS XE Switch (L2S)", version: "V3R2", blurb: "DoD STIG for Cisco IOS XE layer-2 switching, mapped to NIST 800-53. Public-domain source.", controls: 22, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$690", savings: "$5k", type: "Standard" },
+  { id: "stig-vsphere8-esxi", framework: "DISA STIG", platform: "AWS", name: "DISA STIG — VMware vSphere 8.0 ESXi", version: "V2R4", blurb: "DoD STIG for VMware vSphere 8.0 ESXi hypervisor, mapped to NIST 800-53. Public-domain source.", controls: 66, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$9k", type: "Standard" },
 ];
 
 export const FAMILIES = [
@@ -143,17 +153,18 @@ export const DIFF_ROWS = [
   { t: "removed", label: "Removed", c: "#b4381f", sign: "−", items: "5 controls", note: "Deprecated SMBv1 legacy items" },
 ];
 
-export const LIBRARY_ITEMS = [
-  { name: "DISA STIG — Red Hat Enterprise Linux 9", version: "V2R4 · 452 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-rhel9" },
-  { name: "DISA STIG — Microsoft Windows Server 2022", version: "V2R4 · 275 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win2022" },
-  { name: "DISA STIG — Microsoft Windows Server 2019", version: "V3R5 · 275 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win2019" },
-  { name: "DISA STIG — Microsoft Windows 11", version: "V2R4 · 258 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win11" },
-  { name: "DISA STIG — Canonical Ubuntu 22.04 LTS", version: "V2R5 · 187 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-ubuntu2204" },
-  { name: "DISA STIG — Kubernetes", version: "V2R4 · 94 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-k8s" },
-  { name: "DISA STIG — Apple macOS 14 (Sonoma)", version: "V2R4 · 156 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-macos14" },
-  { name: "DISA STIG — Crunchy Data PostgreSQL", version: "V2R2 · 114 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-postgresql" },
-  { name: "DISA STIG — Cisco IOS XE Router (RTR)", version: "V3R1 · 97 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-cisco-ios-rtr" },
-];
+// Library shows every ingested DISA STIG product, derived from the catalog above.
+export const LIBRARY_ITEMS = PRODUCTS.filter((p) => p.framework === "DISA STIG").map((p) => ({
+  name: p.name,
+  version: `${p.version} · ${p.controls} controls`,
+  fw: "STIG",
+  status: "Ready to scope",
+  statusColor: "#1f7a4d",
+  gens: "0 of 5 generations used",
+  artifacts: [] as string[],
+  configured: true,
+  productId: p.id,
+}));
 
 export const AI_STAGES = [
   "Fetching source document",

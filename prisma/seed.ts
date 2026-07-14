@@ -7,23 +7,18 @@ import fs from "fs";
 import path from "path";
 import { WINDOWS_CONTROLS, ODP_TOKENS } from "../src/lib/hub/controlContent";
 import { PRODUCTS } from "../src/lib/hub/data";
+import { STIG_PRODUCTS } from "../src/lib/hub/stig";
+
+// Deterministic price from control count (cents), so new STIGs price themselves.
+function stigPriceCents(controls: number): number {
+  return Math.min(149000, Math.max(69000, 69000 + controls * 150));
+}
 
 type StigJson = {
   slug: string;
   benchTitle: string;
   release: string;
   controls: { code: string; vulnId: string; ruleId: string; title: string; severity: string; cat: string; srg: string; rationale: string; audit: string; remediation: string; ccis: string[]; nist: string[] }[];
-};
-const STIG_META: Record<string, { name: string; platform: string; version: string; priceCents: number }> = {
-  "stig-rhel9": { name: "DISA STIG — Red Hat Enterprise Linux 9", platform: "Linux", version: "V2R4", priceCents: 115000 },
-  "stig-win2022": { name: "DISA STIG — Microsoft Windows Server 2022", platform: "Windows Server", version: "V2R4", priceCents: 129000 },
-  "stig-win2019": { name: "DISA STIG — Microsoft Windows Server 2019", platform: "Windows Server", version: "V3R5", priceCents: 119000 },
-  "stig-win11": { name: "DISA STIG — Microsoft Windows 11", platform: "Windows", version: "V2R4", priceCents: 99000 },
-  "stig-ubuntu2204": { name: "DISA STIG — Canonical Ubuntu 22.04 LTS", platform: "Linux", version: "V2R5", priceCents: 99000 },
-  "stig-k8s": { name: "DISA STIG — Kubernetes", platform: "Kubernetes", version: "V2R4", priceCents: 89000 },
-  "stig-macos14": { name: "DISA STIG — Apple macOS 14 (Sonoma)", platform: "macOS", version: "V2R4", priceCents: 89000 },
-  "stig-postgresql": { name: "DISA STIG — Crunchy Data PostgreSQL", platform: "Database", version: "V2R2", priceCents: 89000 },
-  "stig-cisco-ios-rtr": { name: "DISA STIG — Cisco IOS XE Router (RTR)", platform: "Network", version: "V3R1", priceCents: 99000 },
 };
 function stigFamily(code: string): string {
   const m = code.match(/^([A-Z0-9]+-[A-Z0-9]{2})/i);
@@ -124,11 +119,12 @@ async function main() {
 
   // ── Ingest real DISA STIG data (public domain) into the data model ──
   const stigCounts: Record<string, number> = {};
-  for (const slug of Object.keys(STIG_META)) {
+  for (const slug of Object.keys(STIG_PRODUCTS)) {
     const file = path.join(process.cwd(), "data", "stig", `${slug}.json`);
     if (!fs.existsSync(file)) continue;
     const doc = JSON.parse(fs.readFileSync(file, "utf8")) as StigJson;
-    const meta = STIG_META[slug];
+    const p = STIG_PRODUCTS[slug];
+    const meta = { name: p.name, platform: p.platform, version: p.version, priceCents: stigPriceCents(doc.controls.length) };
 
     const src = await prisma.sourceDocument.create({ data: { frameworkId: "fw-stig", format: "XCCDF", version: meta.version, fileName: `${slug}.json`, importDate: new Date() } });
 
