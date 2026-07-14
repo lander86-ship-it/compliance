@@ -34,3 +34,6 @@ yarn-error.log*
 
 # local working files
 /scratchpad/
+
+# render-check temp
+*.full.html
