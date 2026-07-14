@@ -66,6 +66,23 @@ export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platfor
   "stig-edge": { slug: "stig-edge", name: "DISA STIG — Microsoft Edge", platform: "Application", version: "V2R5" },
   "stig-adobe-acrobat": { slug: "stig-adobe-acrobat", name: "DISA STIG — Adobe Acrobat Pro DC Continuous", platform: "Application", version: "V1R2" },
   "stig-vsphere8-photon": { slug: "stig-vsphere8-photon", name: "DISA STIG — VMware vSphere 8.0 vCenter Photon OS 4.0", platform: "Virtualization", version: "V2R2" },
+  "stig-macos15": { slug: "stig-macos15", name: "DISA STIG — Apple macOS 15 (Sequoia)", platform: "macOS", version: "V1R7" },
+  "stig-oracle-linux8": { slug: "stig-oracle-linux8", name: "DISA STIG — Oracle Linux 8", platform: "Linux", version: "V2R9" },
+  "stig-vsphere7-esxi": { slug: "stig-vsphere7-esxi", name: "DISA STIG — VMware vSphere 7.0 ESXi", platform: "Virtualization", version: "V1R4" },
+  "stig-vsphere7-vcenter": { slug: "stig-vsphere7-vcenter", name: "DISA STIG — VMware vSphere 7.0 vCenter", platform: "Virtualization", version: "V1R3" },
+  "stig-cisco-switch-rtr": { slug: "stig-cisco-switch-rtr", name: "DISA STIG — Cisco IOS XE Switch (RTR)", platform: "Network", version: "V3R4" },
+  "stig-cisco-iosxr-rtr": { slug: "stig-cisco-iosxr-rtr", name: "DISA STIG — Cisco IOS XR Router (RTR)", platform: "Network", version: "V3R3" },
+  "stig-cisco-iosxr-ndm": { slug: "stig-cisco-iosxr-ndm", name: "DISA STIG — Cisco IOS XR Router (NDM)", platform: "Network", version: "V3R6" },
+  "stig-f5-bigip-ltm": { slug: "stig-f5-bigip-ltm", name: "DISA STIG — F5 BIG-IP Local Traffic Manager", platform: "Network", version: "V2R4" },
+  "stig-paloalto-alg": { slug: "stig-paloalto-alg", name: "DISA STIG — Palo Alto Networks (ALG)", platform: "Network", version: "V3R4" },
+  "stig-mongodb4": { slug: "stig-mongodb4", name: "DISA STIG — MongoDB Enterprise Advanced 4.x", platform: "Database", version: "V1R4" },
+  "stig-apache24-win": { slug: "stig-apache24-win", name: "DISA STIG — Apache Server 2.4 (Windows)", platform: "Web", version: "V3R4" },
+  "stig-iis10-site": { slug: "stig-iis10-site", name: "DISA STIG — Microsoft IIS 10.0 Site", platform: "Web", version: "V2R16" },
+  "stig-exchange2019-mbx": { slug: "stig-exchange2019-mbx", name: "DISA STIG — Microsoft Exchange 2019 Mailbox Server", platform: "Application", version: "V2R3" },
+  "stig-office365": { slug: "stig-office365", name: "DISA STIG — Microsoft Office 365 ProPlus", platform: "Application", version: "V3R5" },
+  "stig-dotnet4": { slug: "stig-dotnet4", name: "DISA STIG — .NET Framework 4.0", platform: "Application", version: "V2R9" },
+  "stig-defender-av": { slug: "stig-defender-av", name: "DISA STIG — Microsoft Defender Antivirus", platform: "Application", version: "V2R9" },
+  "stig-windows-firewall": { slug: "stig-windows-firewall", name: "DISA STIG — Windows Defender Firewall", platform: "Application", version: "V2R2" },
 };
 
 const cache = new Map<string, StigDoc | null>();
