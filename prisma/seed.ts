@@ -22,6 +22,8 @@ const STIG_META: Record<string, { name: string; platform: string; version: strin
   "stig-ubuntu2204": { name: "DISA STIG — Canonical Ubuntu 22.04 LTS", platform: "Linux", version: "V2R5", priceCents: 99000 },
   "stig-k8s": { name: "DISA STIG — Kubernetes", platform: "Kubernetes", version: "V2R4", priceCents: 89000 },
   "stig-macos14": { name: "DISA STIG — Apple macOS 14 (Sonoma)", platform: "macOS", version: "V2R4", priceCents: 89000 },
+  "stig-postgresql": { name: "DISA STIG — Crunchy Data PostgreSQL", platform: "Database", version: "V2R2", priceCents: 89000 },
+  "stig-cisco-ios-rtr": { name: "DISA STIG — Cisco IOS XE Router (RTR)", platform: "Network", version: "V3R1", priceCents: 99000 },
 };
 function stigFamily(code: string): string {
   const m = code.match(/^([A-Z0-9]+-[A-Z0-9]{2})/i);

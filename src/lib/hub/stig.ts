@@ -30,6 +30,8 @@ export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platfor
   "stig-ubuntu2204": { slug: "stig-ubuntu2204", name: "DISA STIG — Canonical Ubuntu 22.04 LTS", platform: "Linux", version: "V2R5" },
   "stig-k8s": { slug: "stig-k8s", name: "DISA STIG — Kubernetes", platform: "Kubernetes", version: "V2R4" },
   "stig-macos14": { slug: "stig-macos14", name: "DISA STIG — Apple macOS 14 (Sonoma)", platform: "macOS", version: "V2R4" },
+  "stig-postgresql": { slug: "stig-postgresql", name: "DISA STIG — Crunchy Data PostgreSQL", platform: "Database", version: "V2R2" },
+  "stig-cisco-ios-rtr": { slug: "stig-cisco-ios-rtr", name: "DISA STIG — Cisco IOS XE Router (RTR)", platform: "Network", version: "V3R1" },
 };
 
 const cache = new Map<string, StigDoc | null>();
