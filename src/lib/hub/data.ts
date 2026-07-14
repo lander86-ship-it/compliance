@@ -41,6 +41,8 @@ export const PRODUCTS: Product[] = [
   { id: "stig-win2019", framework: "DISA STIG", platform: "Windows Server", name: "DISA STIG — Microsoft Windows Server 2019", version: "V3R5", blurb: "DoD Security Technical Implementation Guide for Windows Server 2019, mapped to NIST 800-53. Public-domain source.", controls: 275, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$1,190", savings: "$16k", type: "Standard" },
   { id: "stig-win11", framework: "DISA STIG", platform: "Windows", name: "DISA STIG — Microsoft Windows 11", version: "V2R4", blurb: "DoD Security Technical Implementation Guide for Windows 11 endpoints, mapped to NIST 800-53. Public-domain source.", controls: 258, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$990", savings: "$13k", type: "Standard" },
   { id: "stig-ubuntu2204", framework: "DISA STIG", platform: "Linux", name: "DISA STIG — Canonical Ubuntu 22.04 LTS", version: "V2R5", blurb: "DoD Security Technical Implementation Guide for Ubuntu 22.04 LTS, mapped to NIST 800-53. Public-domain source.", controls: 187, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$990", savings: "$12k", type: "Standard" },
+  { id: "stig-k8s", framework: "DISA STIG", platform: "Kubernetes", name: "DISA STIG — Kubernetes", version: "V2R4", blurb: "DoD Security Technical Implementation Guide for Kubernetes clusters (control plane + nodes), mapped to NIST 800-53. Public-domain source.", controls: 94, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$9k", type: "Standard" },
+  { id: "stig-macos14", framework: "DISA STIG", platform: "macOS", name: "DISA STIG — Apple macOS 14 (Sonoma)", version: "V2R4", blurb: "DoD Security Technical Implementation Guide for macOS 14 Sonoma endpoints, mapped to NIST 800-53. Public-domain source.", controls: 156, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$10k", type: "Standard" },
 ];
 
 export const FAMILIES = [
@@ -145,6 +147,8 @@ export const LIBRARY_ITEMS = [
   { name: "DISA STIG — Microsoft Windows Server 2019", version: "V3R5 · 275 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win2019" },
   { name: "DISA STIG — Microsoft Windows 11", version: "V2R4 · 258 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-win11" },
   { name: "DISA STIG — Canonical Ubuntu 22.04 LTS", version: "V2R5 · 187 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-ubuntu2204" },
+  { name: "DISA STIG — Kubernetes", version: "V2R4 · 94 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-k8s" },
+  { name: "DISA STIG — Apple macOS 14 (Sonoma)", version: "V2R4 · 156 controls", fw: "STIG", status: "Ready to scope", statusColor: "#1f7a4d", gens: "0 of 5 generations used", artifacts: [] as string[], configured: true, productId: "stig-macos14" },
 ];
 
 export const AI_STAGES = [

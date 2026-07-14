@@ -20,6 +20,8 @@ const STIG_META: Record<string, { name: string; platform: string; version: strin
   "stig-win2019": { name: "DISA STIG — Microsoft Windows Server 2019", platform: "Windows Server", version: "V3R5", priceCents: 119000 },
   "stig-win11": { name: "DISA STIG — Microsoft Windows 11", platform: "Windows", version: "V2R4", priceCents: 99000 },
   "stig-ubuntu2204": { name: "DISA STIG — Canonical Ubuntu 22.04 LTS", platform: "Linux", version: "V2R5", priceCents: 99000 },
+  "stig-k8s": { name: "DISA STIG — Kubernetes", platform: "Kubernetes", version: "V2R4", priceCents: 89000 },
+  "stig-macos14": { name: "DISA STIG — Apple macOS 14 (Sonoma)", platform: "macOS", version: "V2R4", priceCents: 89000 },
 };
 function stigFamily(code: string): string {
   const m = code.match(/^([A-Z0-9]+-[A-Z0-9]{2})/i);

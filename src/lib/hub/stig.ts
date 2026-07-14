@@ -28,6 +28,8 @@ export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platfor
   "stig-win2019": { slug: "stig-win2019", name: "DISA STIG — Microsoft Windows Server 2019", platform: "Windows Server", version: "V3R5" },
   "stig-win11": { slug: "stig-win11", name: "DISA STIG — Microsoft Windows 11", platform: "Windows", version: "V2R4" },
   "stig-ubuntu2204": { slug: "stig-ubuntu2204", name: "DISA STIG — Canonical Ubuntu 22.04 LTS", platform: "Linux", version: "V2R5" },
+  "stig-k8s": { slug: "stig-k8s", name: "DISA STIG — Kubernetes", platform: "Kubernetes", version: "V2R4" },
+  "stig-macos14": { slug: "stig-macos14", name: "DISA STIG — Apple macOS 14 (Sonoma)", platform: "macOS", version: "V2R4" },
 };
 
 const cache = new Map<string, StigDoc | null>();
