@@ -51,6 +51,8 @@ export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platfor
   "stig-f5-bigip-ndm": { slug: "stig-f5-bigip-ndm", name: "DISA STIG — F5 BIG-IP Device Management", platform: "Network", version: "V2R4" },
   "stig-vsphere8-vcenter": { slug: "stig-vsphere8-vcenter", name: "DISA STIG — VMware vSphere 8.0 vCenter", platform: "Virtualization", version: "V2R4" },
   "stig-chrome": { slug: "stig-chrome", name: "DISA STIG — Google Chrome (Windows)", platform: "Application", version: "V2R11" },
+  "stig-juniper-srx-ndm": { slug: "stig-juniper-srx-ndm", name: "DISA STIG — Juniper SRX Services Gateway (NDM)", platform: "Network", version: "V3R2" },
+  "stig-juniper-srx-alg": { slug: "stig-juniper-srx-alg", name: "DISA STIG — Juniper SRX Services Gateway (ALG)", platform: "Network", version: "V3R3" },
 };
 
 const cache = new Map<string, StigDoc | null>();

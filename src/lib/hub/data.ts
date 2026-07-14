@@ -64,6 +64,8 @@ export const PRODUCTS: Product[] = [
   { id: "stig-f5-bigip-ndm", framework: "DISA STIG", platform: "Network", name: "DISA STIG — F5 BIG-IP Device Management", version: "V2R4", blurb: "DoD STIG for F5 BIG-IP device management, mapped to NIST 800-53. Public-domain source.", controls: 75, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$9k", type: "Standard" },
   { id: "stig-vsphere8-vcenter", framework: "DISA STIG", platform: "AWS", name: "DISA STIG — VMware vSphere 8.0 vCenter", version: "V2R4", blurb: "DoD STIG for VMware vSphere 8.0 vCenter, mapped to NIST 800-53. Public-domain source.", controls: 67, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$9k", type: "Standard" },
   { id: "stig-chrome", framework: "DISA STIG", platform: "M365", name: "DISA STIG — Google Chrome (Windows)", version: "V2R11", blurb: "DoD STIG for Google Chrome on Windows, mapped to NIST 800-53. Public-domain source.", controls: 46, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$690", savings: "$5k", type: "Standard" },
+  { id: "stig-juniper-srx-ndm", framework: "DISA STIG", platform: "Network", name: "DISA STIG — Juniper SRX Services Gateway (NDM)", version: "V3R2", blurb: "DoD STIG for Juniper SRX network-device management, mapped to NIST 800-53. Public-domain source.", controls: 69, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$890", savings: "$9k", type: "Standard" },
+  { id: "stig-juniper-srx-alg", framework: "DISA STIG", platform: "Network", name: "DISA STIG — Juniper SRX Services Gateway (ALG)", version: "V3R3", blurb: "DoD STIG for Juniper SRX application-layer gateway (firewall), mapped to NIST 800-53. Public-domain source.", controls: 24, profiles: "CAT I–III", formats: "DOCX·PDF·XLSX", price: "$690", savings: "$5k", type: "Standard" },
 ];
 
 export const FAMILIES = [
@@ -71,12 +73,34 @@ export const FAMILIES = [
   { id: "standards", label: "Security Standards & Policies", desc: "Editable policies, procedures and compliance programs mapped to frameworks — sold as governance packs." },
 ];
 
+// STIG products grouped into sellable packs. Prices/savings are computed from the real
+// member products below, so packs stay accurate as the catalog grows.
+export const STIG_GROUPS: Record<string, string[]> = {
+  "Operating Systems": ["stig-rhel9", "stig-rhel8", "stig-rhel7", "stig-win2022", "stig-win2019", "stig-win2016", "stig-win11", "stig-win10", "stig-ubuntu2204", "stig-macos14"],
+  "Network & Firewall": ["stig-cisco-ios-rtr", "stig-cisco-switch-ndm", "stig-cisco-switch-l2s", "stig-cisco-asa-ndm", "stig-cisco-nxos-ndm", "stig-paloalto-ndm", "stig-f5-bigip-ndm", "stig-juniper-srx-ndm", "stig-juniper-srx-alg"],
+  Databases: ["stig-postgresql", "stig-mssql2016", "stig-oracle19c", "stig-mongodb7"],
+  "Containers & Virtualization": ["stig-k8s", "stig-docker", "stig-vsphere8-esxi", "stig-vsphere8-vcenter"],
+  "Web & Endpoint": ["stig-apache24", "stig-iis10", "stig-chrome"],
+};
+
+const _pn = (s: string) => Number(String(s).replace(/[^0-9.]/g, ""));
+const _byId = (id: string) => PRODUCTS.find((p) => p.id === id);
+function makePack(id: string, name: string, tagline: string, ids: string[], discountPct: number, featured = false): Bundle {
+  const members = ids.map(_byId).filter(Boolean) as Product[];
+  const sum = members.reduce((a, p) => a + _pn(p.price), 0);
+  const price = Math.round((sum * (1 - discountPct / 100)) / 10) * 10;
+  const savings = sum - price;
+  return { id, family: "hardening", framework: "PACK", name, tagline, price: "$" + price.toLocaleString("en-US"), count: members.length, savings: "$" + savings.toLocaleString("en-US"), featured, includes: members.map((p) => p.name) };
+}
+
 export const BUNDLES: Bundle[] = [
-  { id: "pk-hard-all", family: "hardening", framework: "PACK", name: "Complete Hardening Suite", tagline: "Every hardening guide across OS, cloud, containers, network and databases.", price: "$6,900", count: 42, savings: "$60k", featured: true, includes: ["Operating Systems Pack (12 guides)", "Cloud Hardening Pack (9 guides)", "Container & Orchestration Pack (5 guides)", "Network & Database Pack (8 guides)", "All future additions for 12 months"] },
-  { id: "pk-hard-os", family: "hardening", framework: "PACK", name: "Operating Systems Pack", tagline: "Windows Server, Windows 11, Ubuntu, RHEL, Debian and macOS baselines.", price: "$2,490", count: 12, savings: "$22k", includes: ["CIS Windows Server 2022 & 2019", "CIS Windows 11 Enterprise", "CIS Ubuntu 22.04 LTS", "DISA STIG — RHEL 9", "CIS Debian 12", "CIS macOS 14"] },
-  { id: "pk-hard-cloud", family: "hardening", framework: "PACK", name: "Cloud Hardening Pack", tagline: "Account-level baselines for the major cloud and SaaS platforms.", price: "$2,190", count: 9, savings: "$18k", includes: ["CIS AWS Foundations", "CIS Microsoft Azure", "CIS Microsoft 365", "CIS Google Cloud Platform"] },
-  { id: "pk-hard-cont", family: "hardening", framework: "PACK", name: "Container & Orchestration Pack", tagline: "Control-plane, node and runtime hardening for containerized workloads.", price: "$1,290", count: 5, savings: "$9k", includes: ["CIS Kubernetes Benchmark", "CIS Docker Benchmark", "DISA STIG — Kubernetes"] },
-  { id: "pk-hard-net", family: "hardening", framework: "PACK", name: "Network & Database Pack", tagline: "Network devices and database engines in a single hardening pack.", price: "$1,690", count: 8, savings: "$12k", includes: ["CIS Cisco IOS 17", "CIS Palo Alto PAN-OS", "CIS PostgreSQL 16", "CIS Microsoft SQL Server", "CIS Oracle MySQL"] },
+  makePack("pk-stig-all", "Complete STIG Suite", "Every DISA STIG we publish — operating systems, network, databases, web, containers and virtualization.", Object.values(STIG_GROUPS).flat(), 30, true),
+  makePack("pk-stig-os", "Operating Systems Pack", "RHEL 7/8/9, Windows 10/11 and Server 2016/2019/2022, Ubuntu 22.04 and macOS 14 baselines.", STIG_GROUPS["Operating Systems"], 20),
+  makePack("pk-stig-net", "Network & Firewall Pack", "Cisco (Router, Switch, ASA, NX-OS), Palo Alto, F5 BIG-IP and Juniper SRX device baselines.", STIG_GROUPS["Network & Firewall"], 20),
+  makePack("pk-stig-db", "Database Pack", "PostgreSQL, Microsoft SQL Server, Oracle Database and MongoDB baselines.", STIG_GROUPS["Databases"], 20),
+  makePack("pk-stig-virt", "Containers & Virtualization Pack", "Kubernetes, Docker Enterprise and VMware vSphere 8 (ESXi + vCenter) baselines.", STIG_GROUPS["Containers & Virtualization"], 20),
+  makePack("pk-stig-web", "Web & Endpoint Pack", "Apache HTTP Server, Microsoft IIS and Google Chrome baselines.", STIG_GROUPS["Web & Endpoint"], 20),
+  // Editable standards/policies packs (roadmap — CIS/NIST/PCI content, sold once licensed).
   { id: "pk-std-all", family: "standards", framework: "PACK", name: "Complete Standards Suite", tagline: "Every editable policy, procedure and compliance program we publish.", price: "$7,900", count: 38, savings: "$70k", featured: true, includes: ["Governance Standards Pack", "NIST 800-53 Compliance Pack", "NIST 800-171 / CMMC Pack", "PCI DSS Compliance Pack", "All future additions for 12 months"] },
   { id: "pk-std-gov", family: "standards", framework: "PACK", name: "Governance Standards Pack", tagline: "Policies + procedures for SCF, NIST CSF 2.0 and ISO 27001/27002.", price: "$2,990", count: 14, savings: "$26k", includes: ["Policies & Standards — Secure Controls Framework", "Policies & Standards — NIST CSF 2.0", "Policies & Standards — ISO 27001/27002", "Matching editable procedures", "Cybersecurity Business Plan (CBP)"] },
   { id: "pk-std-nist", family: "standards", framework: "PACK", name: "NIST 800-53 Compliance Pack", tagline: "Moderate and high baselines with policies, procedures and SSP.", price: "$2,490", count: 9, savings: "$20k", includes: ["Policies & Standards — NIST 800-53 R5 (moderate)", "Policies & Standards — NIST 800-53 R5 (high)", "Matching editable procedures", "System Security Program (SSP)"] },
@@ -85,13 +109,11 @@ export const BUNDLES: Bundle[] = [
 ];
 
 export const DIRECTORY: Record<string, { cat: string; items: string[] }[]> = {
-  hardening: [
-    { cat: "Operating Systems", items: ["CIS Windows Server 2022", "CIS Windows Server 2019", "CIS Windows 11 Enterprise", "CIS Ubuntu 22.04 LTS", "DISA STIG — RHEL 9", "CIS Debian 12", "CIS macOS 14"] },
-    { cat: "Cloud Platforms", items: ["CIS AWS Foundations", "CIS Microsoft Azure", "CIS Microsoft 365", "CIS Google Cloud Platform"] },
-    { cat: "Containers & Orchestration", items: ["CIS Kubernetes", "CIS Docker", "DISA STIG — Kubernetes"] },
-    { cat: "Network & Infrastructure", items: ["CIS Cisco IOS 17", "CIS Palo Alto PAN-OS", "CIS Juniper JunOS"] },
-    { cat: "Databases", items: ["CIS PostgreSQL 16", "CIS Microsoft SQL Server", "CIS Oracle MySQL"] },
-  ],
+  // Hardening directory is generated from the real STIG catalog groups.
+  hardening: Object.entries(STIG_GROUPS).map(([cat, ids]) => ({
+    cat,
+    items: ids.map((id) => _byId(id)?.name.replace(/^DISA STIG — /, "") || id),
+  })),
   standards: [
     { cat: "Editable Policies & Standards", items: ["Secure Controls Framework (SCF)", "NIST CSF 2.0", "ISO 27001 / 27002", "NIST 800-53 R5 (moderate)", "NIST 800-53 R5 (high)", "CORE Fundamentals"] },
     { cat: "Editable Procedures", items: ["Procedures — SCF", "Procedures — NIST CSF 2.0", "Procedures — ISO 27001/27002", "Procedures — NIST 800-53 R5"] },
