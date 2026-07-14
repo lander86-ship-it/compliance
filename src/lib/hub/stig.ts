@@ -42,6 +42,15 @@ export const STIG_PRODUCTS: Record<string, { slug: string; name: string; platfor
   "stig-cisco-switch-ndm": { slug: "stig-cisco-switch-ndm", name: "DISA STIG — Cisco IOS XE Switch (NDM)", platform: "Network", version: "V3R4" },
   "stig-cisco-switch-l2s": { slug: "stig-cisco-switch-l2s", name: "DISA STIG — Cisco IOS XE Switch (L2S)", platform: "Network", version: "V3R2" },
   "stig-vsphere8-esxi": { slug: "stig-vsphere8-esxi", name: "DISA STIG — VMware vSphere 8.0 ESXi", platform: "Virtualization", version: "V2R4" },
+  "stig-rhel7": { slug: "stig-rhel7", name: "DISA STIG — Red Hat Enterprise Linux 7", platform: "Linux", version: "V3R15" },
+  "stig-oracle19c": { slug: "stig-oracle19c", name: "DISA STIG — Oracle Database 19c", platform: "Database", version: "V1R5" },
+  "stig-mongodb7": { slug: "stig-mongodb7", name: "DISA STIG — MongoDB Enterprise Advanced 7.x", platform: "Database", version: "V1R2" },
+  "stig-cisco-asa-ndm": { slug: "stig-cisco-asa-ndm", name: "DISA STIG — Cisco ASA (NDM)", platform: "Network", version: "V2R5" },
+  "stig-cisco-nxos-ndm": { slug: "stig-cisco-nxos-ndm", name: "DISA STIG — Cisco NX-OS Switch (NDM)", platform: "Network", version: "V2R3" },
+  "stig-paloalto-ndm": { slug: "stig-paloalto-ndm", name: "DISA STIG — Palo Alto Networks (NDM)", platform: "Network", version: "V3R4" },
+  "stig-f5-bigip-ndm": { slug: "stig-f5-bigip-ndm", name: "DISA STIG — F5 BIG-IP Device Management", platform: "Network", version: "V2R4" },
+  "stig-vsphere8-vcenter": { slug: "stig-vsphere8-vcenter", name: "DISA STIG — VMware vSphere 8.0 vCenter", platform: "Virtualization", version: "V2R4" },
+  "stig-chrome": { slug: "stig-chrome", name: "DISA STIG — Google Chrome (Windows)", platform: "Application", version: "V2R11" },
 };
 
 const cache = new Map<string, StigDoc | null>();
