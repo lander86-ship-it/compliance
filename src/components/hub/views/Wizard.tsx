@@ -66,6 +66,63 @@ function Step1() {
   );
 }
 
+function TemplateUpload() {
+  const { s, setTemplate } = useHub();
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const onFile = (file: File | undefined) => {
+    setError(null);
+    if (!file) return;
+    const lower = file.name.toLowerCase();
+    const type: "docx" | "pdf" | null = lower.endsWith(".docx") ? "docx" : lower.endsWith(".pdf") ? "pdf" : null;
+    if (!type) { setError("Unsupported file. Upload a .docx (preferred) or .pdf template."); return; }
+    if (file.size > 15 * 1024 * 1024) { setError("File too large (max 15 MB)."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.includes(",") ? result.slice(result.indexOf(",") + 1) : result;
+      setTemplate({ base64, type, name: file.name });
+    };
+    reader.onerror = () => setError("Could not read the file. Try again.");
+    reader.readAsDataURL(file);
+  };
+
+  const tpl = s.template;
+  return (
+    <div style={css("margin-top:26px;border:1px solid #E7E6E5;border-radius:16px;padding:20px;background:#FBFAF9;")}>
+      <div style={css("display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;")}>
+        <div style={css("font-size:13.5px;font-weight:700;")}>House-style template <span style={css("font-weight:500;color:#79716B;")}>· optional</span></div>
+        <span style={css("font-size:11px;font-family:'Fragment Mono',monospace;background:#eef4fb;color:#0f4c9c;padding:3px 9px;border-radius:6px;")}>AI delivers in your format</span>
+      </div>
+      <p style={css("margin:0 0 14px;color:#57534E;font-size:12.5px;line-height:1.5;")}>
+        Upload your own <strong>.docx</strong> (preferred) or <strong>.pdf</strong> template and the AI-generated
+        standard is rendered inside it — your cover, headers/footers, fonts and branding are preserved. In a DOCX,
+        place a <code style={css("font-family:'Fragment Mono',monospace;background:#F1F2EA;padding:1px 5px;border-radius:4px;")}>{"{{POLICY_BODY}}"}</code> marker
+        where the standard should flow; optional inline fields: <code style={css("font-family:'Fragment Mono',monospace;background:#F1F2EA;padding:1px 5px;border-radius:4px;")}>{"{{ORG}} {{TITLE}} {{VERSION}} {{DATE}} {{CLASSIFICATION}} {{AUTHOR}} {{BENCHMARK}}"}</code>.
+      </p>
+      <input ref={inputRef} type="file" accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" onChange={(e) => onFile(e.target.files?.[0])} style={css("display:none;")} />
+      {!tpl ? (
+        <div onClick={() => inputRef.current?.click()} style={css("border:2px dashed #D8D6D3;border-radius:12px;padding:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:repeating-linear-gradient(45deg,#f7f9fc,#f7f9fc 10px,#f2f5f9 10px,#f2f5f9 20px);color:#79716B;cursor:pointer;")}>
+          <div style={css("font-size:22px;margin-bottom:4px;")}>↑</div>
+          <div style={css("font-size:13px;font-weight:600;color:#57534E;")}>Drop template or click to upload</div>
+          <div style={css("font-size:11px;font-family:'Fragment Mono',monospace;margin-top:4px;")}>DOCX · PDF · max 15 MB</div>
+        </div>
+      ) : (
+        <div style={css("display:flex;align-items:center;gap:12px;border:1px solid #cfe0d6;background:#f0f7f3;border-radius:10px;padding:12px 14px;")}>
+          <span style={css("font-size:11px;font-family:'Fragment Mono',monospace;background:#0f4c9c;color:#fff;padding:4px 8px;border-radius:6px;text-transform:uppercase;")}>{tpl.type}</span>
+          <div style={css("flex:1;min-width:0;")}>
+            <div style={css("font-size:13px;font-weight:600;color:#186340;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;")}>{tpl.name}</div>
+            <div style={css("font-size:11.5px;color:#57534E;")}>Policy standard will be delivered inside this template.</div>
+          </div>
+          <button onClick={() => { setTemplate(null); if (inputRef.current) inputRef.current.value = ""; }} style={css("background:#fff;border:1px solid #E7E6E5;color:#b4381f;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;")}>Remove</button>
+        </div>
+      )}
+      {error && <div style={css("margin-top:10px;font-size:12px;color:#b4381f;")}>{error}</div>}
+    </div>
+  );
+}
+
 function Step2() {
   const { s, setScope } = useHub();
   return (
@@ -100,6 +157,7 @@ function Step2() {
           <div style={css("font-size:13px;color:#57534E;margin-top:6px;")}>{s.scope.legal} · {s.scope.classification} · v{s.scope.docv}</div>
         </div>
       </div>
+      <TemplateUpload />
     </>
   );
 }
@@ -206,8 +264,46 @@ function Step5() {
   );
 }
 
+function PolicyPreview() {
+  const { s } = useHub();
+  const brand = s.scope.color;
+  return (
+    <div style={css("border:1px solid #E7E6E5;border-radius:16px;background:#fff;max-width:760px;margin-bottom:26px;overflow:hidden;")}>
+      <div style={css("display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #EFEEEC;background:#FBFAF9;")}>
+        <div style={css("font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#57534E;")}>Standard preview</div>
+        <div style={css("display:flex;gap:8px;align-items:center;")}>
+          {s.template && <span style={css("font-size:11px;font-family:'Fragment Mono',monospace;background:#eef4fb;color:#0f4c9c;padding:3px 9px;border-radius:6px;")}>in {s.template.type.toUpperCase()} template</span>}
+          <span style={css(`font-size:11px;font-family:'Fragment Mono',monospace;padding:3px 9px;border-radius:6px;${s.previewAi ? "background:#eaf6ef;color:#186340;" : "background:#F1F2EA;color:#79716B;"}`)}>{s.previewAi ? "AI narrative" : "static narrative"}</span>
+        </div>
+      </div>
+      <div style={css("padding:30px 34px;max-height:520px;overflow-y:auto;")}>
+        <div style={css(`font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:${brand};font-weight:700;`)}>{s.scope.legal}</div>
+        <div style={css(`font-size:26px;font-weight:700;color:${brand};margin:6px 0 4px;font-family:'DM Sans',serif;`)}>{(s.wizName || "Security").replace(/ — Security Baseline$/, "")} Hardening Standard</div>
+        <div style={css("font-size:12.5px;color:#79716B;margin-bottom:22px;")}>{s.scope.classification} · v{s.scope.docv} · {s.scope.owner}</div>
+        {s.previewBlocks.map((bl, i) => {
+          switch (bl.t) {
+            case "h1": return <div key={i} style={css(`font-size:18px;font-weight:700;color:${brand};margin:24px 0 8px;padding-bottom:6px;border-bottom:2px solid ${brand};`)}>{bl.text}</div>;
+            case "h2": return <div key={i} style={css("font-size:15px;font-weight:700;color:#1C1917;margin:18px 0 6px;")}>{bl.text}</div>;
+            case "h3": return <div key={i} style={css(`font-size:13.5px;font-weight:700;color:${brand};margin:14px 0 4px;font-family:'Fragment Mono',monospace;`)}>{bl.text}</div>;
+            case "p": return <p key={i} style={css("font-size:13px;line-height:1.6;color:#44403C;margin:0 0 10px;")}>{bl.text}</p>;
+            case "li": return <div key={i} style={css("font-size:13px;line-height:1.55;color:#44403C;margin:0 0 5px;padding-left:18px;position:relative;")}><span style={css(`position:absolute;left:2px;color:${brand};`)}>•</span>{bl.text}</div>;
+            case "kv": return <div key={i} style={css("font-size:12.5px;line-height:1.55;color:#57534E;margin:0 0 5px;")}><strong style={css("color:#1C1917;")}>{bl.label}.</strong> {bl.text}</div>;
+            case "role": return (
+              <div key={i} style={css("margin:0 0 12px;")}>
+                <div style={css("font-size:13px;font-weight:700;color:#1C1917;margin-bottom:4px;")}>{bl.role}</div>
+                {bl.resp.map((r, j) => <div key={j} style={css("font-size:12.5px;line-height:1.5;color:#44403C;margin:0 0 3px;padding-left:18px;position:relative;")}><span style={css(`position:absolute;left:2px;color:${brand};`)}>•</span>{r}</div>)}
+              </div>
+            );
+            default: return null;
+          }
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Step6() {
-  const { s, generate, go } = useHub();
+  const { s, generate, go, previewStandard } = useHub();
   const total = s.wizTotal || s.wizControls.length;
   const excluded = Object.keys(s.excluded).length;
   const included = total - excluded;
@@ -233,8 +329,33 @@ function Step6() {
           {["DOCX", "PDF", "XLSX", "POLICY"].map((f) => (
             <span key={f} style={css("font-size:12px;font-family:'Fragment Mono',monospace;background:#F1F2EA;color:#0f4c9c;padding:5px 12px;border-radius:6px;font-weight:600;")}>{f === "POLICY" ? "POLICY (AI)" : f}</span>
           ))}
-          <span style={css("font-size:12px;color:#57534E;padding:5px 0;")}>watermark + license ID · editable policy standard</span>
+          <span style={css("font-size:12px;color:#57534E;padding:5px 0;")}>watermark + license ID · editable policy standard{s.template ? ` · POLICY in your ${s.template.type.toUpperCase()} template` : ""}</span>
         </div>
+      </div>
+
+      {/* Live preview of the AI policy standard */}
+      <div style={css("margin-bottom:22px;")}>
+        {s.previewStatus === "idle" && (
+          <button onClick={() => previewStandard()} style={css("background:#fff;color:#0f4c9c;border:1px solid #0f4c9c;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;")}>Preview standard</button>
+        )}
+        {s.previewStatus === "loading" && (
+          <div style={css("display:flex;align-items:center;gap:12px;font-size:13px;color:#57534E;")}>
+            <div style={css("width:18px;height:18px;border:3px solid #dfe6ef;border-top-color:#0f4c9c;border-radius:50%;animation:hh-spin .8s linear infinite;")} />
+            Drafting the standard{s.template ? " in your template" : ""}…
+          </div>
+        )}
+        {s.previewStatus === "failed" && (
+          <div style={css("border:1px solid #e6c9b8;background:#fbf3ec;border-radius:12px;padding:14px 16px;max-width:520px;")}>
+            <div style={css("font-size:13px;font-weight:600;color:#b4381f;margin-bottom:8px;")}>Preview failed — {s.previewError}</div>
+            <button onClick={() => previewStandard()} style={css("background:#0f4c9c;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;")}>Retry</button>
+          </div>
+        )}
+        {s.previewStatus === "done" && (
+          <>
+            <PolicyPreview />
+            <button onClick={() => previewStandard()} style={css("background:#fff;color:#57534E;border:1px solid #E7E6E5;border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;margin-bottom:6px;")}>↻ Refresh preview</button>
+          </>
+        )}
       </div>
 
       {s.genStatus === "idle" && (

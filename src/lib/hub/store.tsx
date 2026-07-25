@@ -20,6 +20,13 @@ export type Scope = {
 
 export type GenArtifact = { format: string; url: string; hash: string; bytes: number };
 
+export type Template = { base64: string; type: "docx" | "pdf"; name: string };
+
+export type PreviewBlock =
+  | { t: "h1" | "h2" | "h3" | "p" | "li"; text: string }
+  | { t: "kv"; label: string; text: string }
+  | { t: "role"; role: string; resp: string[] };
+
 export type HubState = {
   view: string;
   family: string;
@@ -44,6 +51,11 @@ export type HubState = {
   genStatus: "idle" | "processing" | "done" | "failed";
   genArtifacts: GenArtifact[];
   genError: string | null;
+  template: Template | null;
+  previewStatus: "idle" | "loading" | "done" | "failed";
+  previewBlocks: PreviewBlock[];
+  previewAi: boolean;
+  previewError: string | null;
   coupon: string;
   pay: "card" | "po";
   justOrdered: boolean;
@@ -84,6 +96,11 @@ const initialState: HubState = {
   genStatus: "idle",
   genArtifacts: [],
   genError: null,
+  template: null,
+  previewStatus: "idle",
+  previewBlocks: [],
+  previewAi: false,
+  previewError: null,
   coupon: "",
   pay: "card",
   justOrdered: false,
@@ -101,6 +118,8 @@ type HubContextValue = {
   configure: (productId: string) => void;
   setScope: (k: keyof Scope, v: string) => void;
   setOdp: (k: string, v: string) => void;
+  setTemplate: (t: Template | null) => void;
+  previewStandard: () => Promise<void>;
   generate: () => Promise<void>;
   runAI: () => void;
   resetAI: () => void;
@@ -147,23 +166,47 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const setScope = useCallback((k: keyof Scope, v: string) => setS((p) => ({ ...p, scope: { ...p.scope, [k]: v } })), []);
   const setOdp = useCallback((k: string, v: string) => setS((p) => ({ ...p, odp: { ...p.odp, [k]: v } })), []);
+  const setTemplate = useCallback((t: Template | null) => setS((p) => ({ ...p, template: t })), []);
+
+  // Build the request body shared by preview + generate.
+  const genBody = useCallback((state: HubState) => ({
+    productId: state.wizardProductId,
+    scope: state.scope,
+    odp: state.odp,
+    excluded: Object.keys(state.excluded).map((id) => ({ controlId: id, reason: state.excluded[id] || "Excluded" })),
+    included: [] as string[],
+  }), []);
+
+  // Live preview of the AI policy standard (structured blocks rendered inline, no file).
+  const previewStandard = useCallback(async () => {
+    setS((p) => ({ ...p, previewStatus: "loading", previewError: null }));
+    try {
+      const state = sRef.current;
+      const res = await fetch("/api/preview", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...genBody(state), template: state.template ? { type: state.template.type, name: state.template.name } : undefined }),
+      });
+      if (!res.ok) throw new Error(`Preview failed (${res.status})`);
+      const data = await res.json();
+      setS((p) => ({ ...p, previewStatus: "done", previewBlocks: data.blocks || [], previewAi: !!data.aiUsed }));
+    } catch (e) {
+      setS((p) => ({ ...p, previewStatus: "failed", previewError: e instanceof Error ? e.message : "Preview failed" }));
+    }
+  }, [genBody]);
 
   // Real generation: POST scope to the engine, receive downloadable artifacts.
   const generate = useCallback(async () => {
     setS((p) => ({ ...p, genStatus: "processing", genError: null }));
     try {
       const state = sRef.current;
-      const excludedList = Object.keys(state.excluded).map((id) => ({ controlId: id, reason: state.excluded[id] || "Excluded" }));
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          productId: state.wizardProductId,
-          scope: state.scope,
-          odp: state.odp,
-          excluded: excludedList,
-          included: [],
+          ...genBody(state),
           formats: ["DOCX", "PDF", "XLSX", "POLICY"],
+          template: state.template || undefined,
         }),
       });
       if (!res.ok) throw new Error(`Generation failed (${res.status})`);
@@ -172,7 +215,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       setS((p) => ({ ...p, genStatus: "failed", genError: e instanceof Error ? e.message : "Generation failed" }));
     }
-  }, []);
+  }, [genBody]);
 
   const runAI = useCallback(() => {
     setS((p) => ({ ...p, aiStatus: "analyzing", aiStage: 0 }));
@@ -189,7 +232,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, previewStandard, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 

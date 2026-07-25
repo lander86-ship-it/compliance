@@ -15,6 +15,8 @@ import { WINDOWS_CONTROLS, substituteOdp, type FullControl } from "./hub/control
 import { isStigProduct, loadStig, toFullControl, STIG_PRODUCTS } from "./hub/stig";
 import { buildPolicyDocx } from "./policy";
 import { resolveNarrative } from "./policyNarrative";
+import { injectPolicyIntoDocx, injectPolicyIntoPdf } from "./policyTemplate";
+import { policyBlocks, type Block, type PolicyMeta } from "./policyContent";
 
 export type GenInput = {
   productId: string;
@@ -28,6 +30,8 @@ export type GenInput = {
   excluded: { controlId: string; reason: string }[];
   included: string[];
   formats: string[];
+  // Optional customer house-style template: the POLICY deliverable is rendered inside it.
+  template?: { base64: string; type: "docx" | "pdf"; name?: string };
 };
 
 export type ResolvedRow = FullControl & { status: "included" | "excluded"; reason?: string; remediationResolved: string };
@@ -302,10 +306,12 @@ async function buildXlsx(input: GenInput, rows: ResolvedRow[], licenseId: string
 
 const EXT: Record<string, string> = { DOCX: "docx", PDF: "pdf", XLSX: "xlsx", POLICY: "policy.docx" };
 
-// Build the editable policy/standard document (ported from the /cis policy engine).
-async function buildPolicy(input: GenInput, rows: ResolvedRow[], generatedAt: string): Promise<{ buffer: Buffer; aiUsed: boolean }> {
+// Resolve the policy meta + narrative + in-scope controls shared by the built-in generator,
+// the customer-template injector and the live preview — one place, one behaviour.
+async function resolvePolicy(input: GenInput, rows: ResolvedRow[], generatedAt: string): Promise<{ policyMeta: PolicyMeta; included: FullControl[]; narrative: Awaited<ReturnType<typeof resolveNarrative>>["narrative"]; aiUsed: boolean }> {
   const meta = docMeta(input.productId);
-  const included = rows.filter((r) => r.status === "included");
+  // Substitute ODP values into remediation text so the standard reflects the customer's parameters.
+  const included: FullControl[] = rows.filter((r) => r.status === "included").map((r) => ({ ...r, remediation: r.remediationResolved }));
   const sectionTitles = [...new Set(included.map((c) => c.family).filter(Boolean))];
   const { narrative, aiUsed } = await resolveNarrative({
     org: input.scope.legal,
@@ -315,23 +321,48 @@ async function buildPolicy(input: GenInput, rows: ResolvedRow[], generatedAt: st
     controlCount: included.length,
     sectionTitles,
   });
-  const buffer = await buildPolicyDocx(
-    {
-      org: input.scope.legal,
-      title: `${(meta.title || "Security").replace(/ — Security Baseline$/, "")} Hardening Standard`,
-      version: input.scope.docv,
-      author: input.scope.owner,
-      date: generatedAt,
-      color: input.scope.color,
-      classification: input.scope.classification,
-      platform: STIG_PRODUCTS[input.productId]?.platform || "",
-      benchTitle: meta.benchmark,
-      benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
-    },
-    included,
-    narrative,
-  );
-  return { buffer, aiUsed };
+  const policyMeta: PolicyMeta = {
+    org: input.scope.legal,
+    title: `${(meta.title || "Security").replace(/ — Security Baseline$/, "")} Hardening Standard`,
+    version: input.scope.docv,
+    author: input.scope.owner,
+    date: generatedAt,
+    color: input.scope.color,
+    classification: input.scope.classification,
+    platform: STIG_PRODUCTS[input.productId]?.platform || "",
+    benchTitle: meta.benchmark,
+    benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
+  };
+  return { policyMeta, included, narrative, aiUsed };
+}
+
+// Structured live preview of the policy standard (no file rendered) for the "Generate standard" UI.
+export async function policyPreview(input: GenInput): Promise<{ blocks: Block[]; meta: PolicyMeta; aiUsed: boolean; templated: null | "docx" | "pdf" }> {
+  const rows = resolve(input);
+  const generatedAt = new Date().toISOString().slice(0, 10);
+  const { policyMeta, included, narrative, aiUsed } = await resolvePolicy(input, rows, generatedAt);
+  const blocks = policyBlocks(policyMeta, included, narrative);
+  return { blocks, meta: policyMeta, aiUsed, templated: input.template?.type ?? null };
+}
+
+// Build the editable policy/standard document (ported from the /cis policy engine).
+// When the customer supplied a house-style template, the deliverable is rendered inside it
+// (DOCX preferred, PDF supported) so the output carries their cover, headers/footers and brand.
+async function buildPolicy(input: GenInput, rows: ResolvedRow[], generatedAt: string): Promise<{ buffer: Buffer; ext: string; aiUsed: boolean }> {
+  const { policyMeta, included, narrative, aiUsed } = await resolvePolicy(input, rows, generatedAt);
+
+  if (input.template?.base64) {
+    const tpl = Buffer.from(input.template.base64, "base64");
+    if (input.template.type === "pdf") {
+      const buffer = await injectPolicyIntoPdf(tpl, policyMeta, included, narrative);
+      return { buffer, ext: "policy.pdf", aiUsed };
+    }
+    const buffer = await injectPolicyIntoDocx(tpl, policyMeta, included, narrative);
+    return { buffer, ext: "policy.docx", aiUsed };
+  }
+
+  const buffer = await buildPolicyDocx(policyMeta, included, narrative);
+  return { buffer, ext: "policy.docx", aiUsed };
 }
 
 // Orchestrate generation for all requested formats; persist artifacts + return metadata (FR-G-03).
@@ -341,20 +372,20 @@ export async function generateArtifacts(input: GenInput, jobId: string): Promise
   const generatedAt = new Date().toISOString().slice(0, 10);
   await fs.mkdir(STORAGE, { recursive: true });
 
-  const builders: Record<string, () => Promise<Buffer>> = {
-    DOCX: () => buildDocx(input, rows, licenseId, generatedAt),
-    PDF: () => buildPdf(input, rows, licenseId, generatedAt),
-    XLSX: () => buildXlsx(input, rows, licenseId, generatedAt),
-    POLICY: async () => (await buildPolicy(input, rows, generatedAt)).buffer,
+  const builders: Record<string, () => Promise<{ buffer: Buffer; ext: string }>> = {
+    DOCX: async () => ({ buffer: await buildDocx(input, rows, licenseId, generatedAt), ext: EXT.DOCX }),
+    PDF: async () => ({ buffer: await buildPdf(input, rows, licenseId, generatedAt), ext: EXT.PDF }),
+    XLSX: async () => ({ buffer: await buildXlsx(input, rows, licenseId, generatedAt), ext: EXT.XLSX }),
+    POLICY: async () => { const r = await buildPolicy(input, rows, generatedAt); return { buffer: r.buffer, ext: r.ext }; },
   };
 
   const out: ArtifactMeta[] = [];
   for (const fmt of input.formats) {
     const build = builders[fmt];
     if (!build) continue;
-    const buffer = await build();
+    const { buffer, ext } = await build();
     const hash = crypto.createHash("sha256").update(buffer).digest("hex");
-    const fileName = `${jobId}.${EXT[fmt]}`;
+    const fileName = `${jobId}.${ext}`;
     await fs.writeFile(path.join(STORAGE, fileName), buffer);
     out.push({ format: fmt, fileName, url: `/api/artifact/${fileName}`, hash, bytes: buffer.length, licenseId });
   }
