@@ -163,7 +163,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
           odp: state.odp,
           excluded: excludedList,
           included: [],
-          formats: ["DOCX", "PDF", "XLSX"],
+          formats: ["DOCX", "PDF", "XLSX", "POLICY"],
         }),
       });
       if (!res.ok) throw new Error(`Generation failed (${res.status})`);

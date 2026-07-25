@@ -22,7 +22,7 @@ const schema = z.object({
   odp: z.record(z.string()).default({}),
   excluded: z.array(z.object({ controlId: z.string(), reason: z.string() })).default([]),
   included: z.array(z.string()).default([]),
-  formats: z.array(z.enum(["DOCX", "PDF", "XLSX"])).default(["DOCX", "PDF", "XLSX"]),
+  formats: z.array(z.enum(["DOCX", "PDF", "XLSX", "POLICY"])).default(["DOCX", "PDF", "XLSX"]),
 });
 
 export async function POST(req: Request) {

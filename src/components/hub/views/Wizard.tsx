@@ -229,11 +229,11 @@ function Step6() {
       </div>
       <div style={css("border:1px solid #E7E6E5;border-radius:9px;padding:16px;background:#FBFAF9;margin-bottom:26px;")}>
         <div style={css("font-size:11px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;")}>Output formats</div>
-        <div style={css("display:flex;gap:10px;align-items:center;")}>
-          {["DOCX", "PDF", "XLSX"].map((f) => (
-            <span key={f} style={css("font-size:12px;font-family:'Fragment Mono',monospace;background:#F1F2EA;color:#0f4c9c;padding:5px 12px;border-radius:6px;font-weight:600;")}>{f}</span>
+        <div style={css("display:flex;gap:10px;align-items:center;flex-wrap:wrap;")}>
+          {["DOCX", "PDF", "XLSX", "POLICY"].map((f) => (
+            <span key={f} style={css("font-size:12px;font-family:'Fragment Mono',monospace;background:#F1F2EA;color:#0f4c9c;padding:5px 12px;border-radius:6px;font-weight:600;")}>{f === "POLICY" ? "POLICY (AI)" : f}</span>
           ))}
-          <span style={css("font-size:12px;color:#57534E;padding:5px 0;")}>watermark + license ID embedded</span>
+          <span style={css("font-size:12px;color:#57534E;padding:5px 0;")}>watermark + license ID · editable policy standard</span>
         </div>
       </div>
 

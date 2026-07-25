@@ -13,6 +13,8 @@ import { PDFDocument, StandardFonts, rgb, degrees, type PDFFont } from "pdf-lib"
 import ExcelJS from "exceljs";
 import { WINDOWS_CONTROLS, substituteOdp, type FullControl } from "./hub/controlContent";
 import { isStigProduct, loadStig, toFullControl, STIG_PRODUCTS } from "./hub/stig";
+import { buildPolicyDocx } from "./policy";
+import { resolveNarrative } from "./policyNarrative";
 
 export type GenInput = {
   productId: string;
@@ -298,7 +300,39 @@ async function buildXlsx(input: GenInput, rows: ResolvedRow[], licenseId: string
   return Buffer.from(buf as ArrayBuffer);
 }
 
-const EXT: Record<string, string> = { DOCX: "docx", PDF: "pdf", XLSX: "xlsx" };
+const EXT: Record<string, string> = { DOCX: "docx", PDF: "pdf", XLSX: "xlsx", POLICY: "policy.docx" };
+
+// Build the editable policy/standard document (ported from the /cis policy engine).
+async function buildPolicy(input: GenInput, rows: ResolvedRow[], generatedAt: string): Promise<{ buffer: Buffer; aiUsed: boolean }> {
+  const meta = docMeta(input.productId);
+  const included = rows.filter((r) => r.status === "included");
+  const sectionTitles = [...new Set(included.map((c) => c.family).filter(Boolean))];
+  const { narrative, aiUsed } = await resolveNarrative({
+    org: input.scope.legal,
+    platform: STIG_PRODUCTS[input.productId]?.platform || "the in-scope technology",
+    benchTitle: meta.benchmark,
+    benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
+    controlCount: included.length,
+    sectionTitles,
+  });
+  const buffer = await buildPolicyDocx(
+    {
+      org: input.scope.legal,
+      title: `${(meta.title || "Security").replace(/ — Security Baseline$/, "")} Hardening Standard`,
+      version: input.scope.docv,
+      author: input.scope.owner,
+      date: generatedAt,
+      color: input.scope.color,
+      classification: input.scope.classification,
+      platform: STIG_PRODUCTS[input.productId]?.platform || "",
+      benchTitle: meta.benchmark,
+      benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
+    },
+    included,
+    narrative,
+  );
+  return { buffer, aiUsed };
+}
 
 // Orchestrate generation for all requested formats; persist artifacts + return metadata (FR-G-03).
 export async function generateArtifacts(input: GenInput, jobId: string): Promise<ArtifactMeta[]> {
@@ -311,6 +345,7 @@ export async function generateArtifacts(input: GenInput, jobId: string): Promise
     DOCX: () => buildDocx(input, rows, licenseId, generatedAt),
     PDF: () => buildPdf(input, rows, licenseId, generatedAt),
     XLSX: () => buildXlsx(input, rows, licenseId, generatedAt),
+    POLICY: async () => (await buildPolicy(input, rows, generatedAt)).buffer,
   };
 
   const out: ArtifactMeta[] = [];
