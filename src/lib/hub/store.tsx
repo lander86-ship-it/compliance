@@ -5,6 +5,11 @@ import { PRODUCTS, type SourceId } from "./data";
 
 export type GuideRef = { source: SourceId; ref: string; name: string; label: string; controls: number };
 
+export type AuthUser = { id: string; email: string; role: string; name: string | null };
+export function isAdminRole(role: string | undefined | null): boolean {
+  return role === "admin" || role === "owner";
+}
+
 export type WizControl = { id: string; title: string; family: string; severity: string; cat?: string };
 
 export type Scope = {
@@ -67,6 +72,12 @@ export type HubState = {
   guideAvailable: boolean;
   guideDetail: string;
   selectedGuide: GuideRef | null;
+  // Session / auth
+  user: AuthUser | null;
+  authStatus: "loading" | "anon" | "authed";
+  authMode: "login" | "signup";
+  authError: string | null;
+  authBusy: boolean;
   coupon: string;
   pay: "card" | "po";
   justOrdered: boolean;
@@ -120,6 +131,11 @@ const initialState: HubState = {
   guideAvailable: true,
   guideDetail: "",
   selectedGuide: null,
+  user: null,
+  authStatus: "loading",
+  authMode: "login",
+  authError: null,
+  authBusy: false,
   coupon: "",
   pay: "card",
   justOrdered: false,
@@ -138,6 +154,11 @@ type HubContextValue = {
   setScope: (k: keyof Scope, v: string) => void;
   setOdp: (k: string, v: string) => void;
   setTemplate: (t: Template | null) => void;
+  loadMe: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
+  setAuthMode: (m: "login" | "signup") => void;
   setSource: (s: SourceId) => void;
   searchGuides: (q: string) => Promise<void>;
   selectGuide: (g: GuideRef | null) => void;
@@ -155,6 +176,17 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     sRef.current = s;
   }, [s]);
+
+  // Load the current session once on mount.
+  const bootRef = useRef(false);
+  useEffect(() => {
+    if (bootRef.current) return;
+    bootRef.current = true;
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setS((p) => ({ ...p, user: d.user || null, authStatus: d.user ? "authed" : "anon" })))
+      .catch(() => setS((p) => ({ ...p, authStatus: "anon" })));
+  }, []);
 
   const set = useCallback<HubContextValue["set"]>((patch) => {
     setS((prev) => ({ ...prev, ...(typeof patch === "function" ? patch(prev) : patch) }));
@@ -189,6 +221,36 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   const setScope = useCallback((k: keyof Scope, v: string) => setS((p) => ({ ...p, scope: { ...p.scope, [k]: v } })), []);
   const setOdp = useCallback((k: string, v: string) => setS((p) => ({ ...p, odp: { ...p.odp, [k]: v } })), []);
   const setTemplate = useCallback((t: Template | null) => setS((p) => ({ ...p, template: t })), []);
+
+  // ── Session / auth ──
+  const setAuthMode = useCallback((m: "login" | "signup") => setS((p) => ({ ...p, authMode: m, authError: null })), []);
+  const loadMe = useCallback(async () => {
+    try {
+      const r = await fetch("/api/auth/me");
+      const d = await r.json();
+      setS((p) => ({ ...p, user: d.user || null, authStatus: d.user ? "authed" : "anon" }));
+    } catch {
+      setS((p) => ({ ...p, user: null, authStatus: "anon" }));
+    }
+  }, []);
+  const authRequest = useCallback(async (path: string, body: Record<string, string>) => {
+    setS((p) => ({ ...p, authBusy: true, authError: null }));
+    try {
+      const r = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(typeof d.error === "string" ? d.error : "Authentication failed");
+      setS((p) => ({ ...p, user: d.user, authStatus: "authed", authBusy: false, authError: null, view: isAdminRole(d.user.role) ? "admin-dashboard" : "generator" }));
+    } catch (e) {
+      setS((p) => ({ ...p, authBusy: false, authError: e instanceof Error ? e.message : "Authentication failed" }));
+    }
+  }, []);
+  const login = useCallback((email: string, password: string) => authRequest("/api/auth/login", { email, password }), [authRequest]);
+  const signup = useCallback((email: string, password: string, name: string) => authRequest("/api/auth/signup", { email, password, name }), [authRequest]);
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    setS((p) => ({ ...p, user: null, authStatus: "anon", view: "storefront", selectedGuide: null }));
+  }, []);
+
   const setSource = useCallback((s: SourceId) => setS((p) => ({ ...p, source: s, guideResults: [], guideStatus: "idle", selectedGuide: null })), []);
   const selectGuide = useCallback((g: GuideRef | null) => setS((p) => ({ ...p, selectedGuide: g, previewStatus: "idle", previewBlocks: [], genStatus: "idle", genArtifacts: [] })), []);
 
@@ -274,7 +336,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 

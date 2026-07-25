@@ -17,8 +17,10 @@ export function domainOf(view: string): string {
 }
 
 export function TopBar() {
-  const { s, go } = useHub();
+  const { s, go, logout } = useHub();
   const domain = domainOf(s.view);
+  const isAdmin = s.user?.role === "admin" || s.user?.role === "owner";
+  const tabs = tabDef.filter(([d]) => d !== "admin" || isAdmin);
 
   return (
     <header style={css("height:62px;background:#FBFAF9;color:#1C1917;display:flex;align-items:center;padding:0 22px;gap:26px;position:sticky;top:0;z-index:50;border-bottom:1px solid #E7E6E5;")}>
@@ -30,7 +32,7 @@ export function TopBar() {
         <span style={css("font-size:10px;font-family:'Fragment Mono',monospace;color:#79716B;border:1px solid #E7E6E5;border-radius:20px;padding:2px 8px;margin-left:2px;")}>v0.1</span>
       </div>
       <nav style={css("display:flex;gap:4px;")}>
-        {tabDef.map(([d, label, view]) => (
+        {tabs.map(([d, label, view]) => (
           <button
             key={d}
             onClick={() => go(view)}
@@ -51,7 +53,18 @@ export function TopBar() {
           <span style={css("position:absolute;top:-7px;right:-7px;background:#E4544B;color:#fff;font-size:10px;font-weight:700;border-radius:16px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;")}>{s.cart.length}</span>
         )}
       </button>
-      <div style={css("width:34px;height:34px;border-radius:50%;background:#0f4c9c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Fragment Mono',monospace;")}>MT</div>
+      {s.authStatus === "authed" && s.user ? (
+        <div style={css("display:flex;align-items:center;gap:10px;")}>
+          <div style={css("text-align:right;line-height:1.2;")}>
+            <div style={css("font-size:12.5px;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;")}>{s.user.name || s.user.email}</div>
+            <div style={css("font-size:10.5px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;")}>{isAdmin ? "Admin" : "Customer"}</div>
+          </div>
+          <div title={s.user.email} style={css("width:34px;height:34px;border-radius:50%;background:#0f4c9c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Fragment Mono',monospace;")}>{(s.user.name || s.user.email).slice(0, 2).toUpperCase()}</div>
+          <button onClick={() => logout()} style={css("background:#FBFAF9;border:1px solid #E7E6E5;color:#57534E;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;")}>Sign out</button>
+        </div>
+      ) : (
+        <button onClick={() => go("auth")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;")}>Sign in</button>
+      )}
     </header>
   );
 }
