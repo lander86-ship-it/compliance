@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.env
+.env*.local
+prisma/dev.db
+prisma/prod.db
+prisma/*.db-journal
+storage/*
+!storage/.gitkeep
+scratchpad
+demo
+*.tsbuildinfo
+npm-debug.log*

@@ -1,0 +1,130 @@
+// Node wrapper around the `cis-bench` CLI — the same tool the /cis service uses to
+// connect to CIS WorkBench (list / search / export benchmarks as XCCDF). Ported from
+// /cis app/cis.py: every call uses an explicit argv array (never a shell string), so
+// user input cannot inject commands. Degrades gracefully when the CLI or an
+// authenticated CIS WorkBench session is not available.
+
+import { spawn } from "node:child_process";
+import { promises as fs } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+const CIS_BIN = process.env.CIS_BENCH_BIN || "cis-bench";
+const WORK_DIR = process.env.CIS_WORK_DIR || path.join(os.tmpdir(), "cis-work");
+const DEFAULT_TIMEOUT = Number(process.env.CIS_BENCH_TIMEOUT || "600") * 1000;
+
+const VALID_FORMATS = new Set(["yaml", "csv", "json", "markdown", "xccdf"]);
+const VALID_STYLES = new Set(["cis", "disa", "stig"]);
+
+export type CisResult = {
+  ok: boolean;
+  code: number;
+  stdout: string;
+  stderr: string;
+  command: string;
+};
+
+// Run `cis-bench <args>` safely (argv array, no shell), capturing output.
+export function run(args: string[], timeout = DEFAULT_TIMEOUT): Promise<CisResult> {
+  const command = [CIS_BIN, ...args].join(" ");
+  return new Promise((resolve) => {
+    let child;
+    try {
+      child = spawn(CIS_BIN, args, { cwd: WORK_DIR, env: process.env });
+    } catch {
+      resolve({ ok: false, code: 127, stdout: "", stderr: `'${CIS_BIN}' not found. Is cis-bench installed and on PATH?`, command });
+      return;
+    }
+    let stdout = "";
+    let stderr = "";
+    let done = false;
+    const finish = (r: CisResult) => { if (!done) { done = true; resolve(r); } };
+    const timer = setTimeout(() => { try { child.kill("SIGKILL"); } catch { /* noop */ } finish({ ok: false, code: 124, stdout, stderr: `Command timed out after ${timeout / 1000}s.`, command }); }, timeout);
+    child.stdout?.on("data", (d) => (stdout += d.toString()));
+    child.stderr?.on("data", (d) => (stderr += d.toString()));
+    child.on("error", (e: NodeJS.ErrnoException) => {
+      clearTimeout(timer);
+      const msg = e.code === "ENOENT" ? `'${CIS_BIN}' not found. Is cis-bench installed and on PATH?` : String(e.message || e);
+      finish({ ok: false, code: 127, stdout, stderr: msg, command });
+    });
+    child.on("close", (code) => { clearTimeout(timer); finish({ ok: code === 0, code: code ?? 1, stdout, stderr, command }); });
+  });
+}
+
+async function ensureWorkDir(): Promise<void> {
+  await fs.mkdir(WORK_DIR, { recursive: true }).catch(() => {});
+}
+
+// Is the cis-bench executable reachable? Best-effort (runs `--version`).
+export async function cliAvailable(): Promise<boolean> {
+  const res = await run(["--version"], 30_000);
+  return res.ok || res.code !== 127;
+}
+
+// Authenticated CIS WorkBench session? Mirrors `cis-bench auth status`.
+export async function authStatus(): Promise<CisResult> {
+  return run(["auth", "status"], 60_000);
+}
+
+// Load a Netscape cookies.txt (e.g. decoded from CIS_COOKIES_B64) into cis-bench.
+export async function loginWithCookies(cookiesTxt: string): Promise<CisResult> {
+  await ensureWorkDir();
+  const dest = path.join(WORK_DIR, "cookies.txt");
+  await fs.writeFile(dest, cookiesTxt);
+  try {
+    return await run(["auth", "login", "--cookies", dest], 120_000);
+  } finally {
+    await fs.unlink(dest).catch(() => {});
+  }
+}
+
+// Bootstrap auth from the CIS_COOKIES_B64 env secret (like /cis). Non-fatal.
+export async function bootstrapAuth(): Promise<boolean> {
+  const blob = process.env.CIS_COOKIES_B64;
+  if (!blob) return false;
+  try {
+    const res = await loginWithCookies(Buffer.from(blob, "base64").toString("utf8"));
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function search(query: string): Promise<CisResult> {
+  const base = ["search"];
+  if (query) base.push(query);
+  const res = await run([...base, "--output-format", "json"], 120_000);
+  return res.ok ? res : run(base, 120_000);
+}
+
+export async function listCatalog(): Promise<CisResult> {
+  return run(["list", "--output-format", "json"], 120_000);
+}
+
+export async function catalogRefresh(): Promise<CisResult> {
+  return run(["catalog", "refresh"]);
+}
+
+// Export a benchmark by numeric id (export) or text query (get) into WORK_DIR,
+// returning the raw bytes. `style` only applies to XCCDF (cis|disa|stig).
+export async function exportBytes(identifier: string, fmt = "xccdf", style?: string): Promise<{ res: CisResult; data: Buffer | null }> {
+  fmt = fmt.toLowerCase().trim();
+  if (!VALID_FORMATS.has(fmt)) return { res: { ok: false, code: 2, stdout: "", stderr: `Unsupported format: ${fmt}`, command: "" }, data: null };
+  await ensureWorkDir();
+  const ext = ({ yaml: "yaml", csv: "csv", json: "json", markdown: "md", xccdf: "xml" } as Record<string, string>)[fmt];
+  const safe = identifier.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 40).replace(/^_+|_+$/g, "") || "benchmark";
+  const outName = `.src-${safe}.${ext}`;
+  const outPath = path.join(WORK_DIR, outName);
+  const isId = /^\d+$/.test(identifier.trim());
+  if (isId) await run(["download", identifier.trim()]).catch(() => {});
+  const args = [isId ? "export" : "get", identifier.trim(), "--format", fmt, "-o", outPath];
+  if (fmt === "xccdf" && style && VALID_STYLES.has(style)) args.push("--style", style);
+  const res = await run(args);
+  try {
+    const data = await fs.readFile(outPath);
+    await fs.unlink(outPath).catch(() => {});
+    return { res, data };
+  } catch {
+    return { res, data: null };
+  }
+}
