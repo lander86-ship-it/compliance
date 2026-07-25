@@ -10,6 +10,7 @@ import { Product } from "@/components/hub/views/Product";
 import { Cart } from "@/components/hub/views/Cart";
 import { Checkout } from "@/components/hub/views/Checkout";
 import { Wizard } from "@/components/hub/views/Wizard";
+import { Generator } from "@/components/hub/views/Generator";
 import { Library } from "@/components/hub/views/Library";
 import { License } from "@/components/hub/views/License";
 import { AdminDashboard } from "@/components/hub/views/AdminDashboard";
@@ -25,6 +26,7 @@ const VIEWS: Record<string, React.ComponentType> = {
   cart: Cart,
   checkout: Checkout,
   wizard: Wizard,
+  generator: Generator,
   library: Library,
   license: License,
   "admin-dashboard": AdminDashboard,

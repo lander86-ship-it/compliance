@@ -66,7 +66,7 @@ function Step1() {
   );
 }
 
-function TemplateUpload() {
+export function TemplateUpload() {
   const { s, setTemplate } = useHub();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -264,7 +264,7 @@ function Step5() {
   );
 }
 
-function PolicyPreview() {
+export function PolicyPreview() {
   const { s } = useHub();
   const brand = s.scope.color;
   return (
@@ -278,7 +278,7 @@ function PolicyPreview() {
       </div>
       <div style={css("padding:30px 34px;max-height:520px;overflow-y:auto;")}>
         <div style={css(`font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:${brand};font-weight:700;`)}>{s.scope.legal}</div>
-        <div style={css(`font-size:26px;font-weight:700;color:${brand};margin:6px 0 4px;font-family:'DM Sans',serif;`)}>{(s.wizName || "Security").replace(/ — Security Baseline$/, "")} Hardening Standard</div>
+        <div style={css(`font-size:26px;font-weight:700;color:${brand};margin:6px 0 4px;font-family:'DM Sans',serif;`)}>{((s.selectedGuide?.name || s.wizName || "Security").replace(/ — Security Baseline$/, "").replace(/ Security Technical Implementation Guide.*$/, ""))} Hardening Standard</div>
         <div style={css("font-size:12.5px;color:#79716B;margin-bottom:22px;")}>{s.scope.classification} · v{s.scope.docv} · {s.scope.owner}</div>
         {s.previewBlocks.map((bl, i) => {
           switch (bl.t) {

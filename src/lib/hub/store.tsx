@@ -1,7 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
-import { PRODUCTS } from "./data";
+import { PRODUCTS, type SourceId } from "./data";
+
+export type GuideRef = { source: SourceId; ref: string; name: string; label: string; controls: number };
 
 export type WizControl = { id: string; title: string; family: string; severity: string; cat?: string };
 
@@ -56,6 +58,15 @@ export type HubState = {
   previewBlocks: PreviewBlock[];
   previewAi: boolean;
   previewError: string | null;
+  // Live source guide picker (Generator flow)
+  source: SourceId;
+  guideQuery: string;
+  guideResults: GuideRef[];
+  guideStatus: "idle" | "loading" | "done" | "failed";
+  guideError: string | null;
+  guideAvailable: boolean;
+  guideDetail: string;
+  selectedGuide: GuideRef | null;
   coupon: string;
   pay: "card" | "po";
   justOrdered: boolean;
@@ -101,6 +112,14 @@ const initialState: HubState = {
   previewBlocks: [],
   previewAi: false,
   previewError: null,
+  source: "disa",
+  guideQuery: "",
+  guideResults: [],
+  guideStatus: "idle",
+  guideError: null,
+  guideAvailable: true,
+  guideDetail: "",
+  selectedGuide: null,
   coupon: "",
   pay: "card",
   justOrdered: false,
@@ -119,6 +138,9 @@ type HubContextValue = {
   setScope: (k: keyof Scope, v: string) => void;
   setOdp: (k: string, v: string) => void;
   setTemplate: (t: Template | null) => void;
+  setSource: (s: SourceId) => void;
+  searchGuides: (q: string) => Promise<void>;
+  selectGuide: (g: GuideRef | null) => void;
   previewStandard: () => Promise<void>;
   generate: () => Promise<void>;
   runAI: () => void;
@@ -167,15 +189,35 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   const setScope = useCallback((k: keyof Scope, v: string) => setS((p) => ({ ...p, scope: { ...p.scope, [k]: v } })), []);
   const setOdp = useCallback((k: string, v: string) => setS((p) => ({ ...p, odp: { ...p.odp, [k]: v } })), []);
   const setTemplate = useCallback((t: Template | null) => setS((p) => ({ ...p, template: t })), []);
+  const setSource = useCallback((s: SourceId) => setS((p) => ({ ...p, source: s, guideResults: [], guideStatus: "idle", selectedGuide: null })), []);
+  const selectGuide = useCallback((g: GuideRef | null) => setS((p) => ({ ...p, selectedGuide: g, previewStatus: "idle", previewBlocks: [], genStatus: "idle", genArtifacts: [] })), []);
+
+  // Live search of a source's benchmark catalog (DISA public / CIS via WorkBench).
+  const searchGuides = useCallback(async (q: string) => {
+    setS((p) => ({ ...p, guideQuery: q, guideStatus: "loading", guideError: null }));
+    try {
+      const source = sRef.current.source;
+      const res = await fetch(`/api/sources/${source}/guides?q=${encodeURIComponent(q)}`);
+      if (!res.ok) throw new Error(`Search failed (${res.status})`);
+      const d = await res.json();
+      setS((p) => ({ ...p, guideStatus: "done", guideResults: d.guides || [], guideAvailable: d.available !== false, guideDetail: d.detail || "" }));
+    } catch (e) {
+      setS((p) => ({ ...p, guideStatus: "failed", guideError: e instanceof Error ? e.message : "Search failed" }));
+    }
+  }, []);
 
   // Build the request body shared by preview + generate.
-  const genBody = useCallback((state: HubState) => ({
-    productId: state.wizardProductId,
-    scope: state.scope,
-    odp: state.odp,
-    excluded: Object.keys(state.excluded).map((id) => ({ controlId: id, reason: state.excluded[id] || "Excluded" })),
-    included: [] as string[],
-  }), []);
+  const genBody = useCallback((state: HubState) => {
+    const g = state.selectedGuide;
+    return {
+      productId: state.wizardProductId,
+      scope: state.scope,
+      odp: state.odp,
+      excluded: Object.keys(state.excluded).map((id) => ({ controlId: id, reason: state.excluded[id] || "Excluded" })),
+      included: [] as string[],
+      ...(g ? { source: g.source, guideRef: g.ref, guideName: g.name } : {}),
+    };
+  }, []);
 
   // Live preview of the AI policy standard (structured blocks rendered inline, no file).
   const previewStandard = useCallback(async () => {
@@ -232,7 +274,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, previewStandard, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 
