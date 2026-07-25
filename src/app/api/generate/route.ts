@@ -23,6 +23,10 @@ const schema = z.object({
   excluded: z.array(z.object({ controlId: z.string(), reason: z.string() })).default([]),
   included: z.array(z.string()).default([]),
   formats: z.array(z.enum(["DOCX", "PDF", "XLSX", "POLICY"])).default(["DOCX", "PDF", "XLSX"]),
+  // Live source selection (preferred over productId).
+  source: z.enum(["cis", "disa"]).optional(),
+  guideRef: z.string().optional(),
+  guideName: z.string().optional(),
   // Optional customer house-style template (base64). ~15 MB cap on the decoded payload.
   template: z
     .object({

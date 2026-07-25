@@ -22,6 +22,9 @@ const schema = z.object({
   odp: z.record(z.string()).default({}),
   excluded: z.array(z.object({ controlId: z.string(), reason: z.string() })).default([]),
   included: z.array(z.string()).default([]),
+  source: z.enum(["cis", "disa"]).optional(),
+  guideRef: z.string().optional(),
+  guideName: z.string().optional(),
   template: z
     .object({ base64: z.string().optional(), type: z.enum(["docx", "pdf"]), name: z.string().optional() })
     .optional(),

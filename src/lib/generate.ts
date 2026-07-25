@@ -17,6 +17,8 @@ import { buildPolicyDocx } from "./policy";
 import { resolveNarrative } from "./policyNarrative";
 import { injectPolicyIntoDocx, injectPolicyIntoPdf } from "./policyTemplate";
 import { policyBlocks, type Block, type PolicyMeta } from "./policyContent";
+import { connector } from "./sources";
+import type { SourceId } from "./hub/data";
 
 export type GenInput = {
   productId: string;
@@ -32,7 +34,14 @@ export type GenInput = {
   formats: string[];
   // Optional customer house-style template: the POLICY deliverable is rendered inside it.
   template?: { base64: string; type: "docx" | "pdf"; name?: string };
+  // Live source selection (preferred). When present, controls are fetched on demand
+  // from the source connector instead of the baked productId dataset.
+  source?: SourceId;
+  guideRef?: string; // opaque id the connector understands
+  guideName?: string;
 };
+
+export type DocMeta = { title: string; benchmark: string; source: string };
 
 export type ResolvedRow = FullControl & { status: "included" | "excluded"; reason?: string; remediationResolved: string };
 export type ArtifactMeta = { format: string; url: string; fileName: string; hash: string; bytes: number; licenseId: string };
@@ -72,24 +81,59 @@ export function docMeta(productId: string): { title: string; benchmark: string; 
   };
 }
 
+// Load the control set + document meta for a job: from the live source connector
+// (preferred) or the baked productId dataset (demo/legacy).
+async function loadJob(input: GenInput): Promise<{ controls: FullControl[]; meta: DocMeta; platform: string; benchVersion: string }> {
+  if (input.source && input.guideRef) {
+    const g = await connector(input.source).fetch(input.guideRef);
+    const bench = `${g.benchTitle}${g.label ? ` ${g.label}` : ""}`;
+    const src =
+      input.source === "disa"
+        ? "Sourced live from the DISA Security Technical Implementation Guide (U.S. Government, public domain) and cross-mapped to NIST 800-53."
+        : "Sourced live from the CIS Benchmark via CIS WorkBench under your organisation's SecureSuite licence.";
+    return {
+      controls: g.controls,
+      meta: { title: `${g.benchTitle} — Security Baseline`, benchmark: bench, source: src },
+      platform: g.benchTitle,
+      benchVersion: g.label,
+    };
+  }
+  return {
+    controls: sourceControls(input.productId),
+    meta: docMeta(input.productId),
+    platform: STIG_PRODUCTS[input.productId]?.platform || "",
+    benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
+  };
+}
+
 // Step 1: resolve applicability (FR-A-11) + Step 2: substitute ODP values.
-export function resolve(input: GenInput): ResolvedRow[] {
+function applicability(input: GenInput, controls: FullControl[]): ResolvedRow[] {
   const exMap = new Map(input.excluded.map((e) => [e.controlId, e.reason]));
-  return sourceControls(input.productId).map((c) => {
+  return controls.map((c) => {
     const excluded = exMap.has(c.id);
     return {
       ...c,
       status: excluded ? "excluded" : "included",
       reason: excluded ? exMap.get(c.id) : undefined,
       remediationResolved: substituteOdp(c.remediation, input.odp),
-    };
+    } as ResolvedRow;
   });
 }
 
+// Baked-only synchronous resolve (kept for compatibility with legacy callers).
+export function resolve(input: GenInput): ResolvedRow[] {
+  return applicability(input, sourceControls(input.productId));
+}
+
+// Full async resolve: fetches controls (live or baked) + document meta, then applies scope.
+async function resolveRows(input: GenInput): Promise<{ rows: ResolvedRow[]; meta: DocMeta; platform: string; benchVersion: string }> {
+  const job = await loadJob(input);
+  return { rows: applicability(input, job.controls), meta: job.meta, platform: job.platform, benchVersion: job.benchVersion };
+}
+
 // ─────────────────────────── DOCX ───────────────────────────
-async function buildDocx(input: GenInput, rows: ResolvedRow[], licenseId: string, generatedAt: string): Promise<Buffer> {
+async function buildDocx(input: GenInput, rows: ResolvedRow[], meta: DocMeta, licenseId: string, generatedAt: string): Promise<Buffer> {
   const brand = input.scope.color.replace("#", "");
-  const meta = docMeta(input.productId);
   const included = rows.filter((r) => r.status === "included");
   const excluded = rows.filter((r) => r.status === "excluded");
 
@@ -145,9 +189,8 @@ async function buildDocx(input: GenInput, rows: ResolvedRow[], licenseId: string
 }
 
 // ─────────────────────────── PDF ───────────────────────────
-async function buildPdf(input: GenInput, rows: ResolvedRow[], licenseId: string, generatedAt: string): Promise<Buffer> {
+async function buildPdf(input: GenInput, rows: ResolvedRow[], meta: DocMeta, licenseId: string, generatedAt: string): Promise<Buffer> {
   const pdf = await PDFDocument.create();
-  const meta = docMeta(input.productId);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const brand = hexToRgb(input.scope.color);
@@ -245,10 +288,9 @@ async function buildPdf(input: GenInput, rows: ResolvedRow[], licenseId: string,
 }
 
 // ─────────────────────────── XLSX ───────────────────────────
-async function buildXlsx(input: GenInput, rows: ResolvedRow[], licenseId: string, generatedAt: string): Promise<Buffer> {
+async function buildXlsx(input: GenInput, rows: ResolvedRow[], meta: DocMeta, licenseId: string, generatedAt: string): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "HardenHub";
-  const meta = docMeta(input.productId);
 
   const cover = wb.addWorksheet("Summary");
   cover.columns = [{ width: 26 }, { width: 70 }];
@@ -308,16 +350,15 @@ const EXT: Record<string, string> = { DOCX: "docx", PDF: "pdf", XLSX: "xlsx", PO
 
 // Resolve the policy meta + narrative + in-scope controls shared by the built-in generator,
 // the customer-template injector and the live preview — one place, one behaviour.
-async function resolvePolicy(input: GenInput, rows: ResolvedRow[], generatedAt: string): Promise<{ policyMeta: PolicyMeta; included: FullControl[]; narrative: Awaited<ReturnType<typeof resolveNarrative>>["narrative"]; aiUsed: boolean }> {
-  const meta = docMeta(input.productId);
+async function resolvePolicy(input: GenInput, rows: ResolvedRow[], meta: DocMeta, platform: string, benchVersion: string, generatedAt: string): Promise<{ policyMeta: PolicyMeta; included: FullControl[]; narrative: Awaited<ReturnType<typeof resolveNarrative>>["narrative"]; aiUsed: boolean }> {
   // Substitute ODP values into remediation text so the standard reflects the customer's parameters.
   const included: FullControl[] = rows.filter((r) => r.status === "included").map((r) => ({ ...r, remediation: r.remediationResolved }));
   const sectionTitles = [...new Set(included.map((c) => c.family).filter(Boolean))];
   const { narrative, aiUsed } = await resolveNarrative({
     org: input.scope.legal,
-    platform: STIG_PRODUCTS[input.productId]?.platform || "the in-scope technology",
+    platform: platform || "the in-scope technology",
     benchTitle: meta.benchmark,
-    benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
+    benchVersion: benchVersion || "",
     controlCount: included.length,
     sectionTitles,
   });
@@ -329,18 +370,18 @@ async function resolvePolicy(input: GenInput, rows: ResolvedRow[], generatedAt: 
     date: generatedAt,
     color: input.scope.color,
     classification: input.scope.classification,
-    platform: STIG_PRODUCTS[input.productId]?.platform || "",
+    platform: platform || "",
     benchTitle: meta.benchmark,
-    benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
+    benchVersion: benchVersion || "",
   };
   return { policyMeta, included, narrative, aiUsed };
 }
 
 // Structured live preview of the policy standard (no file rendered) for the "Generate standard" UI.
 export async function policyPreview(input: GenInput): Promise<{ blocks: Block[]; meta: PolicyMeta; aiUsed: boolean; templated: null | "docx" | "pdf" }> {
-  const rows = resolve(input);
   const generatedAt = new Date().toISOString().slice(0, 10);
-  const { policyMeta, included, narrative, aiUsed } = await resolvePolicy(input, rows, generatedAt);
+  const { rows, meta, platform, benchVersion } = await resolveRows(input);
+  const { policyMeta, included, narrative, aiUsed } = await resolvePolicy(input, rows, meta, platform, benchVersion, generatedAt);
   const blocks = policyBlocks(policyMeta, included, narrative);
   return { blocks, meta: policyMeta, aiUsed, templated: input.template?.type ?? null };
 }
@@ -348,8 +389,8 @@ export async function policyPreview(input: GenInput): Promise<{ blocks: Block[];
 // Build the editable policy/standard document (ported from the /cis policy engine).
 // When the customer supplied a house-style template, the deliverable is rendered inside it
 // (DOCX preferred, PDF supported) so the output carries their cover, headers/footers and brand.
-async function buildPolicy(input: GenInput, rows: ResolvedRow[], generatedAt: string): Promise<{ buffer: Buffer; ext: string; aiUsed: boolean }> {
-  const { policyMeta, included, narrative, aiUsed } = await resolvePolicy(input, rows, generatedAt);
+async function buildPolicy(input: GenInput, rows: ResolvedRow[], meta: DocMeta, platform: string, benchVersion: string, generatedAt: string): Promise<{ buffer: Buffer; ext: string; aiUsed: boolean }> {
+  const { policyMeta, included, narrative, aiUsed } = await resolvePolicy(input, rows, meta, platform, benchVersion, generatedAt);
 
   if (input.template?.base64) {
     const tpl = Buffer.from(input.template.base64, "base64");
@@ -367,16 +408,16 @@ async function buildPolicy(input: GenInput, rows: ResolvedRow[], generatedAt: st
 
 // Orchestrate generation for all requested formats; persist artifacts + return metadata (FR-G-03).
 export async function generateArtifacts(input: GenInput, jobId: string): Promise<ArtifactMeta[]> {
-  const rows = resolve(input);
+  const { rows, meta, platform, benchVersion } = await resolveRows(input);
   const licenseId = "HH-LIC-" + crypto.createHash("sha1").update(jobId).digest("hex").slice(0, 8).toUpperCase();
   const generatedAt = new Date().toISOString().slice(0, 10);
   await fs.mkdir(STORAGE, { recursive: true });
 
   const builders: Record<string, () => Promise<{ buffer: Buffer; ext: string }>> = {
-    DOCX: async () => ({ buffer: await buildDocx(input, rows, licenseId, generatedAt), ext: EXT.DOCX }),
-    PDF: async () => ({ buffer: await buildPdf(input, rows, licenseId, generatedAt), ext: EXT.PDF }),
-    XLSX: async () => ({ buffer: await buildXlsx(input, rows, licenseId, generatedAt), ext: EXT.XLSX }),
-    POLICY: async () => { const r = await buildPolicy(input, rows, generatedAt); return { buffer: r.buffer, ext: r.ext }; },
+    DOCX: async () => ({ buffer: await buildDocx(input, rows, meta, licenseId, generatedAt), ext: EXT.DOCX }),
+    PDF: async () => ({ buffer: await buildPdf(input, rows, meta, licenseId, generatedAt), ext: EXT.PDF }),
+    XLSX: async () => ({ buffer: await buildXlsx(input, rows, meta, licenseId, generatedAt), ext: EXT.XLSX }),
+    POLICY: async () => { const r = await buildPolicy(input, rows, meta, platform, benchVersion, generatedAt); return { buffer: r.buffer, ext: r.ext }; },
   };
 
   const out: ArtifactMeta[] = [];
