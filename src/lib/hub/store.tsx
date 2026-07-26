@@ -253,7 +253,8 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
       const r = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json();
       if (!r.ok) throw new Error(typeof d.error === "string" ? d.error : "Authentication failed");
-      setS((p) => ({ ...p, user: d.user, authStatus: "authed", authBusy: false, authError: null, view: isAdminRole(d.user.role) ? "admin-dashboard" : "generator" }));
+      // Return to checkout if a purchase was in progress; else land in the role's home.
+      setS((p) => ({ ...p, user: d.user, authStatus: "authed", authBusy: false, authError: null, view: p.cart.length > 0 ? "checkout" : isAdminRole(d.user.role) ? "admin-dashboard" : "generator" }));
       const er = await fetch("/api/entitlements").then((r2) => (r2.ok ? r2.json() : null)).catch(() => null);
       if (er) setS((p) => ({ ...p, entitlements: er.entitlements || null, entAdmin: !!er.admin }));
     } catch (e) {
