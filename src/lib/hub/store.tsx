@@ -78,6 +78,9 @@ export type HubState = {
   authMode: "login" | "signup";
   authError: string | null;
   authBusy: boolean;
+  entitlements: { bundleIds: string[]; sources: SourceId[]; categories: string[]; all: boolean } | null;
+  entAdmin: boolean;
+  purchaseBusy: boolean;
   coupon: string;
   pay: "card" | "po";
   justOrdered: boolean;
@@ -136,6 +139,9 @@ const initialState: HubState = {
   authMode: "login",
   authError: null,
   authBusy: false,
+  entitlements: null,
+  entAdmin: false,
+  purchaseBusy: false,
   coupon: "",
   pay: "card",
   justOrdered: false,
@@ -159,6 +165,8 @@ type HubContextValue = {
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   setAuthMode: (m: "login" | "signup") => void;
+  loadEntitlements: () => Promise<void>;
+  purchase: (bundleIds: string[]) => Promise<boolean>;
   setSource: (s: SourceId) => void;
   searchGuides: (q: string) => Promise<void>;
   selectGuide: (g: GuideRef | null) => void;
@@ -184,7 +192,13 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     bootRef.current = true;
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d) => setS((p) => ({ ...p, user: d.user || null, authStatus: d.user ? "authed" : "anon" })))
+      .then(async (d) => {
+        setS((p) => ({ ...p, user: d.user || null, authStatus: d.user ? "authed" : "anon" }));
+        if (d.user) {
+          const er = await fetch("/api/entitlements").then((r) => (r.ok ? r.json() : null)).catch(() => null);
+          if (er) setS((p) => ({ ...p, entitlements: er.entitlements || null, entAdmin: !!er.admin }));
+        }
+      })
       .catch(() => setS((p) => ({ ...p, authStatus: "anon" })));
   }, []);
 
@@ -240,6 +254,8 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
       const d = await r.json();
       if (!r.ok) throw new Error(typeof d.error === "string" ? d.error : "Authentication failed");
       setS((p) => ({ ...p, user: d.user, authStatus: "authed", authBusy: false, authError: null, view: isAdminRole(d.user.role) ? "admin-dashboard" : "generator" }));
+      const er = await fetch("/api/entitlements").then((r2) => (r2.ok ? r2.json() : null)).catch(() => null);
+      if (er) setS((p) => ({ ...p, entitlements: er.entitlements || null, entAdmin: !!er.admin }));
     } catch (e) {
       setS((p) => ({ ...p, authBusy: false, authError: e instanceof Error ? e.message : "Authentication failed" }));
     }
@@ -248,7 +264,32 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   const signup = useCallback((email: string, password: string, name: string) => authRequest("/api/auth/signup", { email, password, name }), [authRequest]);
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-    setS((p) => ({ ...p, user: null, authStatus: "anon", view: "storefront", selectedGuide: null }));
+    setS((p) => ({ ...p, user: null, authStatus: "anon", view: "storefront", selectedGuide: null, entitlements: null, entAdmin: false }));
+  }, []);
+
+  const loadEntitlements = useCallback(async () => {
+    try {
+      const r = await fetch("/api/entitlements");
+      if (!r.ok) { setS((p) => ({ ...p, entitlements: null, entAdmin: false })); return; }
+      const d = await r.json();
+      setS((p) => ({ ...p, entitlements: d.entitlements || null, entAdmin: !!d.admin }));
+    } catch {
+      setS((p) => ({ ...p, entitlements: null }));
+    }
+  }, []);
+
+  const purchase = useCallback(async (bundleIds: string[]): Promise<boolean> => {
+    setS((p) => ({ ...p, purchaseBusy: true }));
+    try {
+      const r = await fetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ bundleIds }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Checkout failed");
+      setS((p) => ({ ...p, purchaseBusy: false, entitlements: d.entitlements, cart: [] }));
+      return true;
+    } catch {
+      setS((p) => ({ ...p, purchaseBusy: false }));
+      return false;
+    }
   }, []);
 
   const setSource = useCallback((s: SourceId) => setS((p) => ({ ...p, source: s, guideResults: [], guideStatus: "idle", selectedGuide: null })), []);
@@ -336,7 +377,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, loadEntitlements, purchase, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 

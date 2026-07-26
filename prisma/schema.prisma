@@ -206,6 +206,30 @@ model User {
   mfaEnabled   Boolean  @default(false)
   createdAt    DateTime @default(now())
   organization Organization? @relation(fields: [orgId], references: [id])
+  entitlements Entitlement[]
+}
+
+// A purchased bundle grants a user the right to generate its sources/categories.
+model Entitlement {
+  id        String   @id @default(cuid())
+  userId    String
+  bundleId  String
+  grantedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bundleId])
+}
+
+// Audit trail of every guide generated (for the admin usage dashboard).
+model GenerationEvent {
+  id         String   @id @default(cuid())
+  userId     String?
+  userEmail  String?
+  source     String // cis | disa
+  guideRef   String?
+  guideName  String?
+  formats    String? // comma-separated
+  createdAt  DateTime @default(now())
 }
 
 model Order {

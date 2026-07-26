@@ -13,8 +13,14 @@ const billingFields = [
 ];
 
 export function Checkout() {
-  const { s, set, go } = useHub();
+  const { s, set, go, purchase } = useHub();
   const rows = s.cart.map((id) => findItem(id)).filter(Boolean) as (Bundle & { price: string; name: string })[];
+
+  const placeOrder = async () => {
+    if (s.authStatus !== "authed") { go("auth"); return; }
+    const ok = await purchase(s.cart);
+    if (ok) set({ view: "generator", justOrdered: true });
+  };
   const subtotal = rows.reduce((a, p) => a + priceNum(p.price), 0);
   const discount = s.coupon === "HARDEN25" ? Math.round(subtotal * 0.25) : 0;
   const vat = Math.round((subtotal - discount) * 0.21);
@@ -81,7 +87,7 @@ export function Checkout() {
           ))}
           <div style={css("display:flex;justify-content:space-between;font-size:13px;padding:6px 0;color:#57534E;border-top:1px solid #EFEEEC;margin-top:8px;")}><span>VAT (reverse-charge)</span><span style={css("font-family:'Fragment Mono',monospace;")}>{fmt(vat)}</span></div>
           <div style={css("display:flex;justify-content:space-between;font-size:17px;font-weight:700;padding:10px 0 4px;color:#1C1917;")}><span>Total</span><span style={css("font-family:'Fragment Mono',monospace;")}>{fmt(total)}</span></div>
-          <button onClick={() => set({ view: "library", justOrdered: true })} style={css("width:100%;background:#1f7a4d;color:#fff;border:none;border-radius:999px;padding:13px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px;")}>Pay &amp; place order</button>
+          <button onClick={placeOrder} disabled={s.purchaseBusy || s.cart.length === 0} style={css(`width:100%;background:${s.purchaseBusy ? "#7fb195" : "#1f7a4d"};color:#fff;border:none;border-radius:999px;padding:13px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px;`)}>{s.purchaseBusy ? "Processing…" : s.authStatus !== "authed" ? "Sign in to purchase" : "Pay & unlock generation"}</button>
           <div style={css("font-size:11px;color:#79716B;text-align:center;margin-top:10px;line-height:1.5;")}>By ordering you accept the per-organization license terms.</div>
         </div>
       </div>

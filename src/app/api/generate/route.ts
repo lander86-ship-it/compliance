@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { z } from "zod";
 import { generateArtifacts, type GenInput } from "@/lib/generate";
+import { getSessionUser } from "@/lib/auth";
+import { entitlementsFor, entitlementsForRole, canGenerate } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
 
@@ -49,6 +51,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
   }
 
+  // Entitlement enforcement for live-source generation (baked demo productId is open).
+  const user = await getSessionUser().catch(() => null);
+  if (parsed.data.source) {
+    if (!user) return NextResponse.json({ error: "Sign in to generate guides." }, { status: 401 });
+    const ent = entitlementsForRole(user.role) || (await entitlementsFor(user.id));
+    if (!canGenerate(ent, parsed.data.source, parsed.data.guideName)) {
+      return NextResponse.json({ error: "Your plan does not include this source or category. Purchase the matching bundle to generate it." }, { status: 403 });
+    }
+  }
+
   const jobId = crypto.randomUUID();
   try {
     const artifacts = await generateArtifacts(parsed.data as GenInput, jobId);
@@ -62,7 +74,17 @@ export async function POST(req: Request) {
           data: { id: `${jobId}-${a.format}`, scopeProfileId: jobId, format: a.format, status: "done", artifactPath: a.fileName, hash: a.hash, finishedAt: new Date() },
         }).catch(() => {});
       }
-      await audit("system", "generate", "GenerationJob", jobId, { productId: parsed.data.productId, formats: artifacts.map((a) => a.format) }).catch(() => {});
+      await audit(user?.email || "system", "generate", "GenerationJob", jobId, { productId: parsed.data.productId, formats: artifacts.map((a) => a.format) }).catch(() => {});
+      await prisma.generationEvent.create({
+        data: {
+          userId: user?.id || null,
+          userEmail: user?.email || null,
+          source: parsed.data.source || "baked",
+          guideRef: parsed.data.guideRef || null,
+          guideName: parsed.data.guideName || parsed.data.productId || null,
+          formats: artifacts.map((a) => a.format).join(","),
+        },
+      }).catch(() => {});
     } catch {
       /* DB not migrated — generation still succeeds */
     }

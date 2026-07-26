@@ -3,22 +3,40 @@
 import React from "react";
 import { useHub } from "@/lib/hub/store";
 import { css } from "@/lib/hub/theme";
-import { SOURCES } from "@/lib/hub/data";
+import { SOURCES, classifyGuide, type SourceId } from "@/lib/hub/data";
 import { TemplateUpload, PolicyPreview } from "./Wizard";
 
 const COLORS = ["#0f4c9c", "#6a2f6a", "#1f6a4d", "#b4381f", "#1C1917"];
 
+// Client-side mirror of the server entitlement check, for pre-filtering the UI.
+function useAllowed() {
+  const { s } = useHub();
+  const ent = s.entitlements;
+  const admin = s.entAdmin || ent?.all;
+  const sourceAllowed = (id: SourceId) => !!admin || !!ent?.sources.includes(id);
+  const guideAllowed = (source: SourceId, name: string) => {
+    if (admin) return true;
+    if (!ent?.sources.includes(source)) return false;
+    const cat = classifyGuide(name);
+    return cat === "Other" || !!ent?.categories.includes(cat);
+  };
+  return { ent, admin, sourceAllowed, guideAllowed };
+}
+
 function SourcePicker() {
   const { s, setSource } = useHub();
+  const { sourceAllowed } = useAllowed();
   return (
     <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;")}>
       {SOURCES.map((src) => {
         const on = s.source === src.id;
+        const allowed = sourceAllowed(src.id);
         return (
-          <button key={src.id} onClick={() => setSource(src.id)} style={css(`text-align:left;border:2px solid ${on ? src.color : "#E7E6E5"};background:${on ? src.color + "0c" : "#fff"};border-radius:14px;padding:16px;cursor:pointer;`)}>
+          <button key={src.id} disabled={!allowed} onClick={() => allowed && setSource(src.id)} style={css(`text-align:left;border:2px solid ${on ? src.color : "#E7E6E5"};background:${on ? src.color + "0c" : "#fff"};border-radius:14px;padding:16px;cursor:${allowed ? "pointer" : "not-allowed"};opacity:${allowed ? 1 : 0.55};position:relative;`)}>
             <div style={css("display:flex;align-items:center;gap:10px;margin-bottom:6px;")}>
               <span style={css(`width:12px;height:12px;border-radius:50%;background:${src.color};`)} />
               <span style={css("font-size:15px;font-weight:700;")}>{src.name}</span>
+              {!allowed && <span style={css("font-size:10px;font-family:'Fragment Mono',monospace;background:#F1F2EA;color:#79716B;padding:2px 7px;border-radius:6px;margin-left:auto;")}>🔒 not in plan</span>}
             </div>
             <div style={css("font-size:12px;color:#57534E;line-height:1.5;")}>{src.connection}</div>
             <div style={css(`font-size:11px;color:${src.id === "disa" ? "#186340" : "#8a5a00"};margin-top:8px;font-weight:600;`)}>{src.license}</div>
@@ -31,8 +49,10 @@ function SourcePicker() {
 
 function GuideSearch() {
   const { s, searchGuides, selectGuide } = useHub();
+  const { guideAllowed } = useAllowed();
   const [q, setQ] = React.useState("");
   const submit = () => searchGuides(q.trim());
+  const results = s.guideResults.filter((g) => guideAllowed(g.source, g.name));
   return (
     <>
       <div style={css("display:flex;gap:10px;margin-bottom:14px;")}>
@@ -60,12 +80,12 @@ function GuideSearch() {
       {s.guideStatus === "failed" && (
         <div style={css("font-size:13px;color:#b4381f;padding:8px 0;")}>Search failed — {s.guideError}</div>
       )}
-      {s.guideStatus === "done" && s.guideResults.length === 0 && s.guideAvailable && (
-        <div style={css("font-size:13px;color:#79716B;padding:8px 0;")}>No benchmarks matched. Try a broader term.</div>
+      {s.guideStatus === "done" && results.length === 0 && s.guideAvailable && (
+        <div style={css("font-size:13px;color:#79716B;padding:8px 0;")}>{s.guideResults.length > 0 ? "Matches found, but none are in your purchased categories." : "No benchmarks matched. Try a broader term."}</div>
       )}
-      {s.guideResults.length > 0 && (
+      {results.length > 0 && (
         <div style={css("border:1px solid #E7E6E5;border-radius:14px;overflow:hidden;max-height:340px;overflow-y:auto;")}>
-          {s.guideResults.map((g) => {
+          {results.map((g) => {
             const sel = s.selectedGuide?.ref === g.ref;
             return (
               <div key={g.ref} onClick={() => selectGuide(g)} style={css(`display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #EFEEEC;cursor:pointer;background:${sel ? "#eef4fb" : "#fff"};`)}>
@@ -109,11 +129,25 @@ function OrgFields() {
 
 export function Generator() {
   const { s, previewStandard, generate, go } = useHub();
+  const { admin, ent } = useAllowed();
   const g = s.selectedGuide;
+  const hasAccess = admin || (ent && (ent.all || ent.sources.length > 0));
+
   return (
     <div style={css("max-width:900px;margin:0 auto;padding:30px 40px;")}>
       <h2 style={css("margin:0 0 4px;font-size:24px;font-weight:800;")}>Generate a hardening guide</h2>
       <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Connect to your source, pick a benchmark, and the AI drafts a customised standard in your own template — on demand, always the current release.</p>
+
+      {!hasAccess && (
+        <div style={css("border:1px solid #e6c9b8;background:#fbf3ec;border-radius:14px;padding:20px;margin-bottom:22px;")}>
+          <div style={css("font-size:15px;font-weight:700;color:#8a5a00;margin-bottom:4px;")}>You don’t have generation access yet</div>
+          <div style={css("font-size:13px;color:#57534E;margin-bottom:14px;line-height:1.5;")}>Purchase an access bundle to generate CIS and DISA guides for the platforms you need. Your account unlocks generation for the categories you buy.</div>
+          <button onClick={() => go("storefront")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;")}>Browse access bundles →</button>
+        </div>
+      )}
+      {hasAccess && ent && !ent.all && !admin && (
+        <div style={css("font-size:12px;color:#57534E;margin-bottom:14px;")}>Your plan: <strong>{ent.sources.map((x) => x.toUpperCase()).join(" + ")}</strong>{ent.categories.length ? ` · ${ent.categories.join(", ")}` : ""}.</div>
+      )}
 
       <SourcePicker />
       <GuideSearch />

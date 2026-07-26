@@ -30,6 +30,8 @@ export type Bundle = {
   includes: string[];
   // Which live sources this bundle unlocks for on-demand generation.
   sources?: SourceId[];
+  // Which platform categories the bundle entitles the buyer to generate.
+  categories?: string[];
 };
 
 // ── Live sources the platform connects to (the tool generates guides on demand,
@@ -166,12 +168,36 @@ export const STIG_GROUPS: Record<string, string[]> = {
 
 const _pn = (s: string) => Number(String(s).replace(/[^0-9.]/g, ""));
 const _byId = (id: string) => PRODUCTS.find((p) => p.id === id);
+
+// Reverse index: product id → its STIG category (for deriving bundle categories).
+const ID_TO_CATEGORY: Record<string, string> = {};
+for (const [cat, ids] of Object.entries(STIG_GROUPS)) for (const id of ids) ID_TO_CATEGORY[id] = cat;
+
 function makePack(id: string, name: string, tagline: string, ids: string[], discountPct: number, featured = false): Bundle {
   const members = ids.map(_byId).filter(Boolean) as Product[];
   const sum = members.reduce((a, p) => a + _pn(p.price), 0);
   const price = Math.round((sum * (1 - discountPct / 100)) / 10) * 10;
   const savings = sum - price;
-  return { id, family: "hardening", framework: "PACK", name, tagline, price: "$" + price.toLocaleString("en-US"), count: members.length, savings: "$" + savings.toLocaleString("en-US"), featured, includes: members.map((p) => p.name), sources: ["cis", "disa"] };
+  const categories = [...new Set(ids.map((i) => ID_TO_CATEGORY[i]).filter(Boolean))];
+  return { id, family: "hardening", framework: "PACK", name, tagline, price: "$" + price.toLocaleString("en-US"), count: members.length, savings: "$" + savings.toLocaleString("en-US"), featured, includes: members.map((p) => p.name), sources: ["cis", "disa"], categories };
+}
+
+// Keyword → category classifier for a live benchmark name (from CIS/DISA search),
+// so entitlements can gate which guides a buyer may generate.
+export const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  "Operating Systems": ["rhel", "red hat", "windows", "ubuntu", "suse", "sles", "solaris", "aix", "macos", "oracle linux", "z/os", "zos", "debian", "centos", "fedora", "unix", "linux"],
+  "Network & Firewall": ["cisco", "juniper", "palo alto", "f5", "big-ip", "arista", "fortinet", "aruba", "brocade", "riverbed", "bind", "dns", "aaa", "vpn", "firewall", "router", "switch", "nsx", "load balancer", "netscaler"],
+  Databases: ["sql server", "oracle database", "postgres", "mysql", "mariadb", "mongodb", "db2", "database", "crunchy"],
+  "Containers & Virtualization": ["kubernetes", "docker", "openshift", "vmware", "vsphere", "esxi", "vcenter", "nutanix", "container", "photon", "hyper-v"],
+  "Web & Endpoint": ["apache", "tomcat", "iis", "nginx", "chrome", "edge", "firefox", "office", "exchange", "sharepoint", "acrobat", "java", "tanium", "splunk", "mcafee", "defender", "endpoint", "browser", "jboss", "weblogic", "websphere", "ios", "android", "adobe"],
+};
+
+export function classifyGuide(name: string): string {
+  const n = (name || "").toLowerCase();
+  for (const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (kws.some((k) => n.includes(k))) return cat;
+  }
+  return "Other";
 }
 
 export const BUNDLES: Bundle[] = [

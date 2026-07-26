@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { policyPreview, type GenInput } from "@/lib/generate";
+import { getSessionUser } from "@/lib/auth";
+import { entitlementsFor, entitlementsForRole, canGenerate } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
 
@@ -40,6 +42,14 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+  }
+  if (parsed.data.source) {
+    const user = await getSessionUser().catch(() => null);
+    if (!user) return NextResponse.json({ error: "Sign in to preview guides." }, { status: 401 });
+    const ent = entitlementsForRole(user.role) || (await entitlementsFor(user.id));
+    if (!canGenerate(ent, parsed.data.source, parsed.data.guideName)) {
+      return NextResponse.json({ error: "Your plan does not include this source or category." }, { status: 403 });
+    }
   }
   try {
     const input = { ...parsed.data, formats: [] } as unknown as GenInput;
