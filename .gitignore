@@ -39,3 +39,4 @@ yarn-error.log*
 
 # render-check temp
 *.full.html
+prisma/prisma/

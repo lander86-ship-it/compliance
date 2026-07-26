@@ -15,6 +15,7 @@ import { Auth } from "@/components/hub/views/Auth";
 import { Library } from "@/components/hub/views/Library";
 import { License } from "@/components/hub/views/License";
 import { AdminDashboard } from "@/components/hub/views/AdminDashboard";
+import { AdminUsage } from "@/components/hub/views/AdminUsage";
 import { AdminIngest } from "@/components/hub/views/AdminIngest";
 import { AdminEditor } from "@/components/hub/views/AdminEditor";
 import { AdminCatalog } from "@/components/hub/views/AdminCatalog";
@@ -32,6 +33,7 @@ const VIEWS: Record<string, React.ComponentType> = {
   library: Library,
   license: License,
   "admin-dashboard": AdminDashboard,
+  "admin-usage": AdminUsage,
   "admin-ingest": AdminIngest,
   "admin-editor": AdminEditor,
   "admin-catalog": AdminCatalog,

@@ -24,6 +24,7 @@ const navDefs: Record<string, [string, string][]> = {
   ],
   admin: [
     ["Dashboard", "admin-dashboard"],
+    ["Usage & customers", "admin-usage"],
     ["AI Generator", "admin-ingest"],
     ["Control editor", "admin-editor"],
     ["Catalog & pricing", "admin-catalog"],
