@@ -12,7 +12,6 @@ import {
 import { PDFDocument, StandardFonts, rgb, degrees, type PDFFont } from "pdf-lib";
 import ExcelJS from "exceljs";
 import { WINDOWS_CONTROLS, substituteOdp, type FullControl } from "./hub/controlContent";
-import { isStigProduct, loadStig, toFullControl, STIG_PRODUCTS } from "./hub/stig";
 import { buildPolicyDocx } from "./policy";
 import { resolveNarrative } from "./policyNarrative";
 import { injectPolicyIntoDocx, injectPolicyIntoPdf } from "./policyTemplate";
@@ -54,26 +53,14 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r: ((n >> 16) & 255) / 255, g: ((n >> 8) & 255) / 255, b: (n & 255) / 255 };
 }
 
-// The control source for a product: real DISA STIG data, or the demo CIS-mapped set.
-export function sourceControls(productId: string): FullControl[] {
-  if (isStigProduct(productId)) {
-    const doc = loadStig(STIG_PRODUCTS[productId].slug);
-    if (doc) return doc.controls.map(toFullControl);
-  }
+// Baked demo control set (no pre-bundled STIG data — real generation is live via
+// the source connectors). Used only for the legacy demo productId fallback.
+export function sourceControls(_productId: string): FullControl[] {
   return WINDOWS_CONTROLS;
 }
 
-// Deliverable title + benchmark line + provenance note, per product.
-export function docMeta(productId: string): { title: string; benchmark: string; source: string } {
-  if (isStigProduct(productId)) {
-    const p = STIG_PRODUCTS[productId];
-    const doc = loadStig(p.slug);
-    return {
-      title: `${p.name.replace(/^DISA STIG — /, "")} — Security Baseline`,
-      benchmark: `${doc?.benchTitle || p.name} ${p.version}`,
-      source: "Sourced from the DISA Security Technical Implementation Guide (U.S. Government, public domain) and cross-mapped to NIST 800-53.",
-    };
-  }
+// Deliverable title + benchmark line + provenance note for the demo fallback.
+export function docMeta(_productId: string): { title: string; benchmark: string; source: string } {
   return {
     title: "Windows Server 2022 Hardening Standard",
     benchmark: "CIS Windows Server 2022 Benchmark v2.0.0",
@@ -101,8 +88,8 @@ async function loadJob(input: GenInput): Promise<{ controls: FullControl[]; meta
   return {
     controls: sourceControls(input.productId),
     meta: docMeta(input.productId),
-    platform: STIG_PRODUCTS[input.productId]?.platform || "",
-    benchVersion: STIG_PRODUCTS[input.productId]?.version || "",
+    platform: "Windows Server 2022",
+    benchVersion: "v2.0.0",
   };
 }
 
