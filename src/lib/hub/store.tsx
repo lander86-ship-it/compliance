@@ -35,6 +35,7 @@ export type PreviewBlock =
   | { t: "role"; role: string; resp: string[] };
 
 export type HubState = {
+  isMobile: boolean;
   view: string;
   family: string;
   aiUrl: string;
@@ -87,6 +88,7 @@ export type HubState = {
 };
 
 const initialState: HubState = {
+  isMobile: false,
   view: "storefront",
   family: "hardening",
   aiUrl: "https://www.cisecurity.org/benchmark/microsoft_windows_server",
@@ -184,6 +186,14 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     sRef.current = s;
   }, [s]);
+
+  // Track viewport size for responsive layouts.
+  useEffect(() => {
+    const onResize = () => setS((p) => (p.isMobile === window.innerWidth < 820 ? p : { ...p, isMobile: window.innerWidth < 820 }));
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // Load the current session once on mount.
   const bootRef = useRef(false);

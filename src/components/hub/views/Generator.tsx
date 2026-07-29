@@ -27,7 +27,7 @@ function SourcePicker() {
   const { s, setSource } = useHub();
   const { sourceAllowed } = useAllowed();
   return (
-    <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;")}>
+    <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 1fr"};gap:14px;margin-bottom:22px;`)}>
       {SOURCES.map((src) => {
         const on = s.source === src.id;
         const allowed = sourceAllowed(src.id);
@@ -109,7 +109,7 @@ function OrgFields() {
   return (
     <div style={css("margin-top:8px;")}>
       <div style={css("font-size:13px;font-weight:700;margin-bottom:10px;")}>Your organisation</div>
-      <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:12px;")}>
+      <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 1fr"};gap:12px;`)}>
         {f.map(([k, label]) => (
           <div key={k}>
             <label style={css("font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:6px;")}>{label}</label>
@@ -134,7 +134,7 @@ export function Generator() {
   const hasAccess = admin || (ent && (ent.all || ent.sources.length > 0));
 
   return (
-    <div style={css("max-width:900px;margin:0 auto;padding:30px 40px;")}>
+    <div style={css(`max-width:900px;margin:0 auto;${s.isMobile ? "padding:20px 16px;" : "padding:30px 40px;"}`)}>
       <h2 style={css("margin:0 0 4px;font-size:24px;font-weight:800;")}>Generate a hardening guide</h2>
       <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Connect to your source, pick a benchmark, and the AI drafts a customised standard in your own template — on demand, always the current release.</p>
 

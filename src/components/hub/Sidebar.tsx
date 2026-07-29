@@ -40,10 +40,13 @@ export function Sidebar() {
   const { s, go } = useHub();
   const domain = domainOf(s.view);
   const items = navDefs[domain];
+  const m = s.isMobile;
 
   return (
-    <aside style={css("width:236px;background:#F1F2EA;border-right:1px solid #E7E6E5;padding:18px 0;display:flex;flex-direction:column;flex-shrink:0;")}>
-      <div style={css("padding:0 20px 10px;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#79716B;")}>{titles[domain]}</div>
+    <aside style={css(m
+      ? "width:100%;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:8px 6px;display:flex;flex-direction:row;gap:4px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;"
+      : "width:236px;background:#F1F2EA;border-right:1px solid #E7E6E5;padding:18px 0;display:flex;flex-direction:column;flex-shrink:0;")}>
+      {!m && <div style={css("padding:0 20px 10px;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#79716B;")}>{titles[domain]}</div>}
       {items.map(([label, view], i) => {
         const active = s.view === view || (view === "storefront" && s.view === "product");
         const badge = label === "Cart" && s.cart.length ? String(s.cart.length) : label === "Orders" ? "3" : "";
@@ -51,7 +54,9 @@ export function Sidebar() {
           <button
             key={`${label}-${i}`}
             onClick={() => go(view)}
-            style={css(`display:flex;align-items:center;justify-content:space-between;width:calc(100% - 12px);margin:1px 6px;text-align:left;background:${active ? "#F1F2EA" : "transparent"};color:${active ? "#1C1917" : "#57534E"};border:none;border-left:3px solid ${active ? "#0f4c9c" : "transparent"};border-radius:0 6px 6px 0;padding:9px 14px;font-size:13.5px;font-weight:${active ? 600 : 500};cursor:pointer;`)}
+            style={css(m
+              ? `display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;background:${active ? "#fff" : "transparent"};color:${active ? "#1C1917" : "#57534E"};border:1px solid ${active ? "#c3d2ea" : "transparent"};border-radius:999px;padding:8px 14px;font-size:13px;font-weight:${active ? 600 : 500};cursor:pointer;`
+              : `display:flex;align-items:center;justify-content:space-between;width:calc(100% - 12px);margin:1px 6px;text-align:left;background:${active ? "#F1F2EA" : "transparent"};color:${active ? "#1C1917" : "#57534E"};border:none;border-left:3px solid ${active ? "#0f4c9c" : "transparent"};border-radius:0 6px 6px 0;padding:9px 14px;font-size:13.5px;font-weight:${active ? 600 : 500};cursor:pointer;`)}
           >
             <span style={css("display:flex;align-items:center;gap:11px;")}>
               <span style={css("display:inline-flex;color:#79716B;")}>
@@ -63,11 +68,13 @@ export function Sidebar() {
           </button>
         );
       })}
-      <div style={css("flex:1;")} />
-      <div style={css("margin:0 16px;padding:12px 14px;background:#F1F2EA;border:1px solid #E7E6E5;border-radius:8px;")}>
-        <div style={css("font-size:12px;font-weight:600;color:#0f4c9c;margin-bottom:3px;")}>CIS SecureSuite</div>
-        <div style={css("font-size:11px;line-height:1.45;color:#57534E;")}>Commercial license active — derivatives permitted.</div>
-      </div>
+      {!m && <>
+        <div style={css("flex:1;")} />
+        <div style={css("margin:0 16px;padding:12px 14px;background:#F1F2EA;border:1px solid #E7E6E5;border-radius:8px;")}>
+          <div style={css("font-size:12px;font-weight:600;color:#0f4c9c;margin-bottom:3px;")}>CIS SecureSuite</div>
+          <div style={css("font-size:11px;line-height:1.45;color:#57534E;")}>Commercial license active — derivatives permitted.</div>
+        </div>
+      </>}
     </aside>
   );
 }

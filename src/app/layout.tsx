@@ -1,10 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "HardenHub — Audit-ready hardening standards",
   description:
     "HardenHub turns CIS Benchmarks and DISA STIGs into branded, scoped, board-ready security documents — mapped to NIST 800-53, NIST CSF and ISO 27002, exported to DOCX, PDF and XLSX.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

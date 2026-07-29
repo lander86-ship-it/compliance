@@ -55,12 +55,13 @@ function Shell() {
     else if (view.startsWith(ADMIN_PREFIX) && !isAdmin) view = "auth";
   }
   const View = VIEWS[view] || Storefront;
+  const m = s.isMobile;
   return (
     <div style={css("min-height:100vh;display:flex;flex-direction:column;background:#F7F7F5;")}>
       <TopBar />
-      <div style={css("flex:1;display:flex;min-height:0;")}>
+      <div style={css(`flex:1;display:flex;min-height:0;${m ? "flex-direction:column;" : ""}`)}>
         <Sidebar />
-        <main style={css("flex:1;min-width:0;overflow-y:auto;height:calc(100vh - 62px);")}>
+        <main style={css(`flex:1;min-width:0;${m ? "" : "overflow-y:auto;height:calc(100vh - 62px);"}`)}>
           <div key={view} style={css("animation:hh-fade .28s ease;")}>
             <View />
           </div>

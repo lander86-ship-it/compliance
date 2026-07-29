@@ -3,6 +3,7 @@
 import React from "react";
 import { css } from "@/lib/hub/theme";
 import { BUNDLES } from "@/lib/hub/data";
+import { useHub } from "@/lib/hub/store";
 
 type UsageUser = { id: string; email: string; name: string | null; role: string; createdAt: string; bundles: string[] };
 type UsageEvent = { id: string; userEmail: string | null; source: string; guideName: string | null; formats: string | null; createdAt: string };
@@ -12,6 +13,7 @@ const bundleName = (id: string) => BUNDLES.find((b) => b.id === id)?.name || id;
 const fmtDate = (s: string) => { try { return new Date(s).toISOString().slice(0, 16).replace("T", " "); } catch { return s; } };
 
 export function AdminUsage() {
+  const { s } = useHub();
   const [data, setData] = React.useState<Usage | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -31,7 +33,7 @@ export function AdminUsage() {
   const td = "font-size:13px;padding:10px 12px;border-bottom:1px solid #EFEEEC;vertical-align:top;";
 
   return (
-    <div style={css("padding:26px 34px 60px;max-width:1180px;")}>
+    <div style={css(`max-width:1180px;${s.isMobile ? "padding:18px 14px 48px;" : "padding:26px 34px 60px;"}`)}>
       <div style={css("display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;")}>
         <h1 style={css("margin:0;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>Usage &amp; customers</h1>
         <button onClick={load} style={css("background:#fff;border:1px solid #E7E6E5;color:#57534E;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;")}>↻ Refresh</button>
@@ -42,7 +44,7 @@ export function AdminUsage() {
 
       {data && (
         <>
-          <div style={css("display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;")}>
+          <div style={css(`display:grid;grid-template-columns:repeat(${s.isMobile ? 1 : 3},1fr);gap:16px;margin-bottom:24px;`)}>
             {[["Customers", data.totals.users], ["Guides generated", data.totals.generations], ["Active entitlements", data.totals.entitlements]].map(([k, v]) => (
               <div key={k} style={css(card)}>
                 <div style={css("font-size:12px;color:#79716B;margin-bottom:8px;")}>{k}</div>

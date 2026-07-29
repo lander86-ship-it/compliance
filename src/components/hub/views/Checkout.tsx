@@ -32,16 +32,16 @@ export function Checkout() {
   ];
 
   return (
-    <div style={css("padding:26px 34px 60px;max-width:1020px;")}>
+    <div style={css(`max-width:1020px;${s.isMobile ? "padding:20px 16px 48px;" : "padding:26px 34px 60px;"}`)}>
       <div style={css("font-size:12px;color:#79716B;margin-bottom:8px;font-family:'Fragment Mono',monospace;")}>
         <span onClick={() => go("cart")} style={css("cursor:pointer;color:#1663d6;")}>Cart</span> / Checkout
       </div>
       <h1 style={css("margin:0 0 22px;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>Checkout</h1>
-      <div style={css("display:grid;grid-template-columns:1fr 320px;gap:26px;align-items:start;")}>
+      <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 320px"};gap:${s.isMobile ? "18px" : "26px"};align-items:start;`)}>
         <div style={css("display:flex;flex-direction:column;gap:20px;")}>
           <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:22px;")}>
             <h3 style={css("margin:0 0 16px;font-size:15px;font-weight:600;")}>Billing details</h3>
-            <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:12px;")}>
+            <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 1fr"};gap:12px;`)}>
               {billingFields.map((f) => (
                 <div key={f.label} style={f.full ? css("grid-column:1/3;") : undefined}>
                   <label style={css("font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:5px;")}>{f.label}</label>

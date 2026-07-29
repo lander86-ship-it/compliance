@@ -7,7 +7,11 @@ body {
   color: #1C1917;
   background: #F7F7F5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* never scroll sideways on mobile */
 }
+/* Media/inputs stay within the viewport on small screens. */
+img, svg, video, canvas { max-width: 100%; }
+input, textarea, select { max-width: 100%; }
 h1, h2, h3 { font-family: 'DM Sans', 'Inter', sans-serif; letter-spacing: -.02em; }
 a { color: #C9443A; text-decoration: none; }
 a:hover { color: #A5372F; }

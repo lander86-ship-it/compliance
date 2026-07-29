@@ -23,11 +23,11 @@ export function Product() {
   const buyNow = () => set((p) => ({ cart: p.cart.includes(base.id) ? p.cart : [...p.cart, base.id], view: "cart" }));
 
   return (
-    <div style={css("padding:20px 34px 60px;max-width:1120px;")}>
+    <div style={css(`max-width:1120px;${s.isMobile ? "padding:16px 16px 48px;" : "padding:20px 34px 60px;"}`)}>
       <div style={css("font-size:12px;color:#79716B;margin-bottom:16px;font-family:'Fragment Mono',monospace;")}>
         <span onClick={() => go("storefront")} style={css("cursor:pointer;color:#1663d6;")}>Catalog</span> / {framework} / {platform}
       </div>
-      <div style={css("display:grid;grid-template-columns:1fr 336px;gap:30px;align-items:start;")}>
+      <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 336px"};gap:${s.isMobile ? "20px" : "30px"};align-items:start;`)}>
         <div>
           <span style={css(fwStyle(framework))}>{framework}</span>
           <h1 style={css("margin:12px 0 8px;font-size:27px;font-weight:700;letter-spacing:-.4px;line-height:1.2;")}>{base.name}</h1>

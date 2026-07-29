@@ -15,6 +15,7 @@ const heroFeatures = [
 
 export function Storefront() {
   const { s, set, open } = useHub();
+  const m = s.isMobile;
   const family = s.family;
   const af = FAMILIES.find((f) => f.id === family)!;
   const bundles = BUNDLES.filter((b) => b.family === family);
@@ -24,15 +25,15 @@ export function Storefront() {
   return (
     <>
       {/* HERO */}
-      <div style={css("background:#F1F2EA;color:#1C1917;padding:54px 34px 48px;position:relative;overflow:hidden;border-bottom:1px solid #E7E6E5;")}>
+      <div style={css(`background:#F1F2EA;color:#1C1917;position:relative;overflow:hidden;border-bottom:1px solid #E7E6E5;${m ? "padding:30px 18px 30px;" : "padding:54px 34px 48px;"}`)}>
         <div style={css("position:absolute;inset:0;opacity:.6;pointer-events:none;background-image:radial-gradient(#E1E0D8 1px,transparent 1px);background-size:22px 22px;")} />
         <div style={css("max-width:1180px;position:relative;")}>
           <div style={css("display:flex;align-items:center;gap:9px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C9443A;margin-bottom:18px;font-family:'Fragment Mono',monospace;")}>
             <Icon name="shield" size={15} />
             Security configuration baselines
           </div>
-          <h1 style={css("margin:0 0 16px;font-size:42px;font-weight:700;letter-spacing:-.03em;line-height:1.06;max-width:760px;color:#1C1917;")}>Audit-ready hardening standards for every platform you run</h1>
-          <p style={css("margin:0 0 30px;font-size:16px;line-height:1.6;color:#57534E;max-width:650px;")}>HardenHub turns CIS Benchmarks and DISA STIGs into branded, scoped, board-ready security documents — mapped to NIST 800-53, NIST CSF and ISO 27002, and exported to DOCX, PDF and XLSX in minutes instead of weeks.</p>
+          <h1 style={css(`margin:0 0 16px;font-weight:700;letter-spacing:-.03em;line-height:1.06;max-width:760px;color:#1C1917;${m ? "font-size:27px;" : "font-size:42px;"}`)}>Audit-ready hardening standards for every platform you run</h1>
+          <p style={css(`margin:0 0 30px;line-height:1.6;color:#57534E;max-width:650px;${m ? "font-size:14px;" : "font-size:16px;"}`)}>HardenHub turns CIS Benchmarks and DISA STIGs into branded, scoped, board-ready security documents — mapped to NIST 800-53, NIST CSF and ISO 27002, and exported to DOCX, PDF and XLSX in minutes instead of weeks.</p>
           <div style={css("display:flex;flex-wrap:wrap;gap:11px;")}>
             {heroFeatures.map((hf) => (
               <div key={hf.label} style={css("display:flex;align-items:center;gap:9px;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:999px;padding:10px 17px 10px 14px;font-size:13px;font-weight:500;color:#57534E;box-shadow:0 1px 2px rgba(28,25,23,.04);")}>
@@ -46,12 +47,12 @@ export function Storefront() {
         </div>
       </div>
 
-      <div style={css("padding:26px 34px 60px;max-width:1180px;")}>
+      <div style={css(`max-width:1180px;${m ? "padding:20px 16px 48px;" : "padding:26px 34px 60px;"}`)}>
         <h1 style={css("margin:0 0 4px;font-size:26px;font-weight:700;letter-spacing:-.4px;")}>Catalog</h1>
         <p style={css("margin:0 0 20px;color:#57534E;font-size:14px;")}>Two product lines, sold as packages. Pick a family, then a pack.</p>
 
         {/* family selector */}
-        <div style={css("display:flex;gap:14px;background:#e3e9f1;border-radius:22px;padding:8px;margin-bottom:26px;")}>
+        <div style={css(`display:flex;gap:${m ? "6px" : "14px"};background:#e3e9f1;border-radius:22px;padding:8px;margin-bottom:26px;`)}>
           {FAMILIES.map((f) => {
             const on = family === f.id;
             return (
@@ -73,7 +74,7 @@ export function Storefront() {
         </div>
 
         {/* bundle grid */}
-        <div style={css("display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:40px;")}>
+        <div style={css(`display:grid;grid-template-columns:repeat(${m ? 1 : 3},1fr);gap:18px;margin-bottom:40px;`)}>
           {bundles.map((b) => (
             <div
               key={b.id}
@@ -116,7 +117,7 @@ export function Storefront() {
           <h2 style={css("margin:0;font-size:16px;font-weight:600;")}>Everything included in {af.label}</h2>
           <span style={css("font-size:12px;color:#79716B;")}>available across the packages above</span>
         </div>
-        <div style={css("display:grid;grid-template-columns:repeat(3,1fr);gap:28px 34px;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:26px 28px;")}>
+        <div style={css(`display:grid;grid-template-columns:repeat(${m ? 1 : 3},1fr);gap:28px 34px;background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;${m ? "padding:20px 18px;" : "padding:26px 28px;"}`)}>
           {directory.map((c) => (
             <div key={c.cat}>
               <div style={css("font-size:13px;font-weight:600;color:#1C1917;border-left:3px solid #0f4c9c;padding-left:10px;margin-bottom:12px;")}>{c.cat}</div>

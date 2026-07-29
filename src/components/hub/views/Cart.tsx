@@ -15,9 +15,9 @@ export function Cart() {
   const total = taxable + vat;
 
   return (
-    <div style={css("padding:26px 34px 60px;max-width:1020px;")}>
+    <div style={css(`max-width:1020px;${s.isMobile ? "padding:20px 16px 48px;" : "padding:26px 34px 60px;"}`)}>
       <h1 style={css("margin:0 0 22px;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>Cart</h1>
-      <div style={css("display:grid;grid-template-columns:1fr 320px;gap:26px;align-items:start;")}>
+      <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 320px"};gap:${s.isMobile ? "18px" : "26px"};align-items:start;`)}>
         <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;")}>
           {rows.map((p) => {
             const item = p as Bundle & { price: string; framework: string; name: string; count?: number; profiles?: string };

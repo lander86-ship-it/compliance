@@ -3,14 +3,17 @@
 import React from "react";
 import { css } from "@/lib/hub/theme";
 import { KPIS, TOP_PRODUCTS, REV_BY_FW } from "@/lib/hub/data";
+import { useHub } from "@/lib/hub/store";
 
 export function AdminDashboard() {
+  const { s } = useHub();
+  const m = s.isMobile;
   return (
-    <div style={css("padding:26px 34px 60px;max-width:1180px;")}>
+    <div style={css(`max-width:1180px;${m ? "padding:18px 14px 48px;" : "padding:26px 34px 60px;"}`)}>
       <h1 style={css("margin:0 0 22px;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>
         Dashboard
       </h1>
-      <div style={css("display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;")}>
+      <div style={css(`display:grid;grid-template-columns:repeat(${m ? 2 : 4},1fr);gap:16px;margin-bottom:22px;`)}>
         {KPIS.map((k) => (
           <div key={k.k} style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;padding:18px;")}>
             <div style={css("font-size:12px;color:#79716B;margin-bottom:8px;")}>{k.k}</div>
@@ -23,7 +26,7 @@ export function AdminDashboard() {
           </div>
         ))}
       </div>
-      <div style={css("display:grid;grid-template-columns:1.6fr 1fr;gap:18px;")}>
+      <div style={css(`display:grid;grid-template-columns:${m ? "1fr" : "1.6fr 1fr"};gap:18px;`)}>
         <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:20px;")}>
           <h3 style={css("margin:0 0 16px;font-size:15px;font-weight:600;")}>Best-selling products</h3>
           {TOP_PRODUCTS.map((p) => (

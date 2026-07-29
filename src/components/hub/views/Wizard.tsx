@@ -54,7 +54,7 @@ function Step1() {
     <>
       <h2 style={css("margin:0 0 4px;font-size:22px;font-weight:700;")}>Organization details</h2>
       <p style={css("margin:0 0 26px;color:#57534E;font-size:14px;")}>These fields populate the cover page, headers, and version-control block of every generated document.</p>
-      <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:16px;")}>
+      <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 1fr"};gap:16px;`)}>
         {fields.map(([k, label, full]) => (
           <div key={k} style={full ? css("grid-column:1/3;") : undefined}>
             <label style={css(labelStyle)}>{label}</label>
@@ -129,7 +129,7 @@ function Step2() {
     <>
       <h2 style={css("margin:0 0 4px;font-size:22px;font-weight:700;")}>Branding</h2>
       <p style={css("margin:0 0 26px;color:#57534E;font-size:14px;")}>Applied to the cover page, headers, and footer of the deliverable.</p>
-      <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:24px;")}>
+      <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 1fr"};gap:24px;`)}>
         <div>
           <label style={css("font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:8px;")}>Organization logo</label>
           <div style={css("border:2px dashed #D8D6D3;border-radius:16px;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:repeating-linear-gradient(45deg,#f7f9fc,#f7f9fc 10px,#f2f5f9 10px,#f2f5f9 20px);color:#79716B;cursor:pointer;")}>
@@ -311,7 +311,7 @@ function Step6() {
     <>
       <h2 style={css("margin:0 0 4px;font-size:22px;font-weight:700;")}>Review &amp; generate</h2>
       <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Confirm the configuration. Generation runs asynchronously — you&apos;ll be emailed when the artifact is ready.</p>
-      <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;")}>
+      <div style={css(`display:grid;grid-template-columns:${s.isMobile ? "1fr" : "1fr 1fr"};gap:14px;margin-bottom:24px;`)}>
         <div style={css("border:1px solid #E7E6E5;border-radius:9px;padding:16px;background:#FBFAF9;")}>
           <div style={css("font-size:11px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;")}>Organization</div>
           <div style={css("font-size:14px;font-weight:600;")}>{s.scope.legal}</div>
@@ -397,14 +397,16 @@ export function Wizard() {
   const { s, set } = useHub();
   const step = s.wizardStep;
   const StepComp = [Step1, Step2, Step3, Step4, Step5, Step6][step - 1];
+  const m = s.isMobile;
   return (
-    <div style={css("display:flex;min-height:calc(100vh - 62px);")}>
-      <StepRail />
+    <div style={css(`display:flex;min-height:calc(100vh - 62px);${m ? "flex-direction:column;" : ""}`)}>
+      {!m && <StepRail />}
       <div style={css("flex:1;min-width:0;display:flex;flex-direction:column;")}>
-        <div style={css("flex:1;overflow-y:auto;padding:30px 40px;max-width:900px;")}>
+        {m && <div style={css("font-size:12px;font-weight:600;color:#57534E;padding:12px 16px 0;")}>Step {step} of 6 — {s.wizName}</div>}
+        <div style={css(`flex:1;overflow-y:auto;max-width:900px;${m ? "padding:16px 16px;" : "padding:30px 40px;"}`)}>
           <StepComp />
         </div>
-        <div style={css("border-top:1px solid #E7E6E5;background:#FBFAF9;padding:14px 40px;display:flex;justify-content:space-between;align-items:center;")}>
+        <div style={css(`border-top:1px solid #E7E6E5;background:#FBFAF9;display:flex;justify-content:space-between;align-items:center;${m ? "padding:12px 16px;" : "padding:14px 40px;"}`)}>
           <button onClick={() => set((p) => ({ wizardStep: Math.max(1, p.wizardStep - 1) }))} style={css("background:#FBFAF9;border:1px solid #E7E6E5;color:#57534E;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;")}>Back</button>
           <div style={css("font-size:12px;color:#79716B;font-family:'Fragment Mono',monospace;")}>Step {step} of 6</div>
           {step !== 6 ? (
