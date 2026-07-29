@@ -207,6 +207,16 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
         if (d.user) {
           const er = await fetch("/api/entitlements").then((r) => (r.ok ? r.json() : null)).catch(() => null);
           if (er) setS((p) => ({ ...p, entitlements: er.entitlements || null, entAdmin: !!er.admin }));
+          // Returning from Stripe Checkout → confirm the purchase and grant access.
+          const params = new URLSearchParams(window.location.search);
+          const sid = params.get("session_id");
+          if (sid) {
+            const cr = await fetch(`/api/checkout/confirm?session_id=${encodeURIComponent(sid)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+            if (cr?.ok) setS((p) => ({ ...p, entitlements: cr.entitlements, cart: [], view: "generator" }));
+            window.history.replaceState({}, "", window.location.pathname);
+          } else if (params.get("checkout") === "cancel") {
+            window.history.replaceState({}, "", window.location.pathname);
+          }
         }
       })
       .catch(() => setS((p) => ({ ...p, authStatus: "anon" })));
@@ -295,6 +305,9 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
       const r = await fetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ bundleIds }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Checkout failed");
+      // Real payment → redirect to Stripe Checkout (cart is cleared on confirmed return).
+      if (d.checkoutUrl) { window.location.href = d.checkoutUrl; return true; }
+      // Stub/demo grant.
       setS((p) => ({ ...p, purchaseBusy: false, entitlements: d.entitlements, cart: [] }));
       return true;
     } catch {

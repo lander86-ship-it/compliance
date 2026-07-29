@@ -12,11 +12,24 @@ type Usage = { users: UsageUser[]; events: UsageEvent[]; totals: { users: number
 const bundleName = (id: string) => BUNDLES.find((b) => b.id === id)?.name || id;
 const fmtDate = (s: string) => { try { return new Date(s).toISOString().slice(0, 16).replace("T", " "); } catch { return s; } };
 
+type DemoAccount = { role: string; email: string; password: string };
+
 export function AdminUsage() {
   const { s } = useHub();
   const [data, setData] = React.useState<Usage | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [demo, setDemo] = React.useState<DemoAccount[] | null>(null);
+  const [seeding, setSeeding] = React.useState(false);
+
+  const seedDemo = React.useCallback(() => {
+    setSeeding(true);
+    fetch("/api/admin/seed-demo", { method: "POST" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Failed"))))
+      .then((d) => setDemo(d.accounts || []))
+      .catch(() => setDemo(null))
+      .finally(() => setSeeding(false));
+  }, []);
 
   const load = React.useCallback(() => {
     setLoading(true);
@@ -34,10 +47,25 @@ export function AdminUsage() {
 
   return (
     <div style={css(`max-width:1180px;${s.isMobile ? "padding:18px 14px 48px;" : "padding:26px 34px 60px;"}`)}>
-      <div style={css("display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;")}>
+      <div style={css("display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap;")}>
         <h1 style={css("margin:0;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>Usage &amp; customers</h1>
-        <button onClick={load} style={css("background:#fff;border:1px solid #E7E6E5;color:#57534E;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;")}>↻ Refresh</button>
+        <div style={css("display:flex;gap:8px;")}>
+          <button onClick={seedDemo} disabled={seeding} style={css("background:#0f4c9c;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;")}>{seeding ? "Creating…" : "Create demo accounts"}</button>
+          <button onClick={load} style={css("background:#fff;border:1px solid #E7E6E5;color:#57534E;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;")}>↻ Refresh</button>
+        </div>
       </div>
+
+      {demo && (
+        <div style={css("border:1px solid #cfe0d6;background:#f0f7f3;border-radius:12px;padding:16px 18px;margin-bottom:20px;")}>
+          <div style={css("font-size:13px;font-weight:700;color:#186340;margin-bottom:10px;")}>Demo accounts ready — sign out and log in with these to test each view:</div>
+          {demo.map((a) => (
+            <div key={a.email} style={css("font-size:12.5px;color:#1C1917;margin-bottom:6px;font-family:'Fragment Mono',monospace;")}>
+              <strong>{a.role}:</strong> {a.email} / {a.password}
+            </div>
+          ))}
+          <div style={css("font-size:11.5px;color:#57534E;margin-top:8px;")}>The client already owns a full (simulated) purchase, so you can go straight to “Generate a guide”. Real new users pay via Stripe.</div>
+        </div>
+      )}
 
       {loading && <div style={css("color:#79716B;font-size:14px;")}>Loading usage…</div>}
       {error && <div style={css("border:1px solid #e6c9b8;background:#fbf3ec;border-radius:12px;padding:16px;color:#b4381f;font-size:14px;")}>{error}</div>}
