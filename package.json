@@ -24,7 +24,7 @@
     "bcryptjs": "2.4.3",
     "docx": "8.5.0",
     "exceljs": "4.4.0",
-    "next": "14.2.15",
+    "next": "^14.2.35",
     "papaparse": "5.4.1",
     "pdf-lib": "1.17.1",
     "prisma": "5.22.0",
@@ -39,7 +39,7 @@
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
-    "postcss": "8.4.38",
+    "postcss": "^8.5.24",
     "tailwindcss": "3.4.4",
     "tsx": "4.16.2",
     "typescript": "5.5.3"
