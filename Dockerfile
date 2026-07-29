@@ -28,7 +28,8 @@ WORKDIR /app
 # required on Debian 12's externally-managed Python; this is a single-purpose image.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 python3-pip ca-certificates libxml2 libxslt1.1 \
- && pip3 install --no-cache-dir --break-system-packages "cis-bench==0.5.2" \
+ && (pip3 install --no-cache-dir --break-system-packages "cis-bench==0.5.2" \
+     || echo "WARN: cis-bench could not be installed — the CIS source is disabled; DISA still works.") \
  && apt-get purge -y python3-pip && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /data/.cis-bench /work
