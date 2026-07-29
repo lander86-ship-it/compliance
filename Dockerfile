@@ -42,9 +42,12 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/data ./data
 COPY --from=build /app/next.config.mjs ./next.config.mjs
 
+# Generate the Prisma client for the runtime image (schema is now present).
+RUN npx prisma generate
 RUN cis-bench --version || true
 
 EXPOSE 3000
-# Bind to $PORT (Railway/Render/Fly set it); default 3000. Push the DB schema
-# (best-effort) then start Next. cis-bench auth bootstraps from CIS_COOKIES_B64.
-CMD ["sh", "-c", "export DATABASE_URL=\"${DATABASE_URL:-file:./prisma/prod.db}\"; npx prisma db push --skip-generate --accept-data-loss || true; npx next start -H 0.0.0.0 -p ${PORT:-3000}"]
+# Bind to $PORT (Railway/Render/Fly set it); default 3000. Sync the Postgres schema
+# (additive, best-effort) then start Next. DATABASE_URL is provided by the Railway
+# Postgres plugin; cis-bench auth bootstraps from CIS_COOKIES_B64 if set.
+CMD ["sh", "-c", "npx prisma db push --skip-generate || true; npx next start -H 0.0.0.0 -p ${PORT:-3000}"]
