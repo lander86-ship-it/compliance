@@ -11,13 +11,14 @@ export async function GET() {
   if (!user || !isBackOffice(user.role)) return NextResponse.json({ error: "Admin access required." }, { status: 403 });
 
   const [purchases, activeSubs, users, generations] = await Promise.all([
-    prisma.purchase.findMany({ select: { amountCents: true, currency: true, status: true } }).catch(() => []),
+    prisma.purchase.findMany({ select: { amountCents: true, currency: true, status: true, method: true } }).catch(() => []),
     prisma.entitlement.count().catch(() => 0),
     prisma.user.count().catch(() => 0),
     prisma.generationEvent.count().catch(() => 0),
   ]);
 
-  const paid = purchases.filter((p) => p.status === "paid");
+  // Real revenue = paid orders through a real payment method; demo/stub don't count.
+  const paid = purchases.filter((p) => p.status === "paid" && (p.method === "stripe" || p.method === "po"));
   const revenueCents = paid.reduce((s, p) => s + p.amountCents, 0);
   const currency = paid[0]?.currency || "USD";
 
