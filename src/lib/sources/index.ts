@@ -55,18 +55,19 @@ const cisConnector: SourceConnector = {
   async search(query) {
     const auth = await cisbench.ensureAuth();
     if (!auth.ok) return [];
-    const items = await cisbench.getCatalogItems();
-    const q = query.trim().toLowerCase();
+    // cis-bench `search <query>` ranks catalog results server-side; empty query
+    // returns the full latest-version catalog. Fields per cis-bench 0.5.x JSON:
+    // benchmark_id / title / version / platform / platform_type / community.
+    const items = await cisbench.searchCatalog(query.trim());
     const refs = items
       .map((o): GuideRef | null => {
-        const id = String(o.id ?? o.benchmark_id ?? o.identifier ?? o.workbench_id ?? o.number ?? "");
+        const id = String(o.benchmark_id ?? o.id ?? o.identifier ?? o.workbench_id ?? o.number ?? "");
         const name = String(o.title ?? o.name ?? o.benchmark_title ?? id);
         if (!id) return null;
         return { source: "cis", ref: id, name, label: String(o.version ?? o.benchmark_version ?? o.latest_version ?? ""), controls: Number(o.controls ?? o.rule_count ?? o.num_rules ?? 0) };
       })
       .filter((x): x is GuideRef => x !== null);
-    const filtered = q ? refs.filter((g) => g.name.toLowerCase().includes(q) || g.ref.toLowerCase().includes(q)) : refs;
-    return filtered.slice(0, 200);
+    return refs.slice(0, 200);
   },
   async fetch(ref) {
     const auth = await cisbench.ensureAuth();

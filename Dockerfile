@@ -21,7 +21,9 @@ ENV NODE_ENV=production \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     CIS_WORK_DIR=/work \
-    HOME=/data
+    HOME=/data \
+    PATH=/usr/local/bin:/usr/bin:/bin \
+    CIS_BENCH_BIN=/usr/local/bin/cis-bench
 WORKDIR /app
 
 # Node 20 (to run Next) + the shared libs cis-bench/lxml need + the cis-bench CLI.
@@ -46,7 +48,8 @@ COPY --from=build /app/next.config.mjs ./next.config.mjs
 
 # Generate the Prisma client for the runtime image (schema is now present).
 RUN npx prisma generate
-RUN cis-bench --version || true
+# Fail the build (not runtime) if cis-bench didn't install at the pinned path.
+RUN /usr/local/bin/cis-bench --version
 
 EXPOSE 3000
 # Bind to $PORT (Railway/Render/Fly set it); default 3000. Sync the Postgres schema

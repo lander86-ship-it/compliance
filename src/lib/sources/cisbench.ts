@@ -122,15 +122,18 @@ export async function ensureAuth(): Promise<{ ok: boolean; detail: string }> {
   return { ok: false, detail: "Connect your CIS WorkBench (set CIS_WORKBENCH_USERNAME/PASSWORD or CIS_COOKIES_B64)." };
 }
 
+// Search the CIS catalog. IMPORTANT: cis-bench's top-level `list` shows only
+// *downloaded* benchmarks — the browsable catalog (1400+ benchmarks) is reached
+// via `search <query>` / `catalog search`, both of which support JSON output.
 export async function search(query: string): Promise<CisResult> {
-  const base = ["search"];
-  if (query) base.push(query);
+  const base = query ? ["search", query] : ["catalog", "search", "--latest"];
   const res = await run([...base, "--output-format", "json"], 120_000);
   return res.ok ? res : run(base, 120_000);
 }
 
+// Full catalog (latest versions) as JSON — used when browsing without a query.
 export async function listCatalog(): Promise<CisResult> {
-  return run(["list", "--output-format", "json"], 120_000);
+  return run(["catalog", "search", "--latest", "--output-format", "json"], 120_000);
 }
 
 export async function catalogRefresh(): Promise<CisResult> {
@@ -154,20 +157,30 @@ function parseList(stdout: string): Record<string, unknown>[] {
 
 let _catalogRefreshed = false;
 
-// Return the full benchmark catalog as parsed objects, refreshing it once if empty.
-export async function getCatalogItems(): Promise<Record<string, unknown>[]> {
-  let items = parseList((await listCatalog()).stdout);
-  if (!items.length && !_catalogRefreshed) {
-    _catalogRefreshed = true;
-    await catalogRefresh();
-    items = parseList((await listCatalog()).stdout);
-  }
-  return items;
+// Ensure the local catalog is populated (scrape once if empty). cis-bench needs
+// `catalog refresh` before any search returns results.
+async function ensureCatalog(): Promise<void> {
+  if (_catalogRefreshed) return;
+  const probe = parseList((await listCatalog()).stdout);
+  if (!probe.length) await catalogRefresh();
+  _catalogRefreshed = true;
 }
 
-// Raw list output (for diagnostics only).
+// Search the catalog, returning matching benchmarks as parsed objects. Empty
+// query returns the full latest-version catalog. Refreshes once if needed.
+export async function searchCatalog(query: string): Promise<Record<string, unknown>[]> {
+  await ensureCatalog();
+  return parseList((await search(query)).stdout);
+}
+
+// Return the full benchmark catalog as parsed objects (latest versions).
+export async function getCatalogItems(): Promise<Record<string, unknown>[]> {
+  return searchCatalog("");
+}
+
+// Raw search output (for diagnostics only).
 export async function rawList(): Promise<string> {
-  if (!_catalogRefreshed) { _catalogRefreshed = true; await catalogRefresh(); }
+  await ensureCatalog();
   return (await listCatalog()).stdout.slice(0, 4000);
 }
 
