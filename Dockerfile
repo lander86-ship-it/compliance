@@ -14,8 +14,8 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# ---- Stage 2: runtime with Node + Python + cis-bench ----
-FROM node:20-slim AS runtime
+# ---- Stage 2: runtime on Python 3.12 (cis-bench needs >=3.12) + Node 20 ----
+FROM python:3.12-slim AS runtime
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PYTHONUNBUFFERED=1 \
@@ -24,13 +24,14 @@ ENV NODE_ENV=production \
     HOME=/data
 WORKDIR /app
 
-# Python 3 + the shared libs cis-bench/lxml need. --break-system-packages is
-# required on Debian 12's externally-managed Python; this is a single-purpose image.
+# Node 20 (to run Next) + the shared libs cis-bench/lxml need + the cis-bench CLI.
+# cis-bench requires Python >=3.12, which this base provides.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends python3 python3-pip ca-certificates libxml2 libxslt1.1 \
- && (pip3 install --no-cache-dir --break-system-packages "cis-bench==0.5.2" \
-     || echo "WARN: cis-bench could not be installed — the CIS source is disabled; DISA still works.") \
- && apt-get purge -y python3-pip && apt-get autoremove -y \
+ && apt-get install -y --no-install-recommends curl ca-certificates gnupg libxml2 libxslt1.1 \
+ && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y --no-install-recommends nodejs \
+ && pip install --no-cache-dir --break-system-packages "cis-bench==0.5.2" \
+ && apt-get purge -y curl gnupg && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /data/.cis-bench /work
 
