@@ -44,17 +44,6 @@ const disaConnector: SourceConnector = {
 };
 
 // ── CIS (via cis-bench + CIS WorkBench: form login → export XCCDF → parse) ──
-function pickList(items: unknown): Record<string, unknown>[] {
-  if (Array.isArray(items)) return items as Record<string, unknown>[];
-  if (items && typeof items === "object") {
-    for (const k of ["benchmarks", "results", "items", "data", "records"]) {
-      const v = (items as Record<string, unknown>)[k];
-      if (Array.isArray(v)) return v as Record<string, unknown>[];
-    }
-  }
-  return [];
-}
-
 const cisConnector: SourceConnector = {
   id: "cis",
   async status() {
@@ -64,19 +53,20 @@ const cisConnector: SourceConnector = {
     return { id: "cis", available: auth.ok, detail: auth.ok ? "Live — authenticated to CIS WorkBench." : auth.detail };
   },
   async search(query) {
-    await cisbench.ensureAuth();
-    const res = await cisbench.search(query);
-    if (!res.ok) return [];
-    let items: unknown = [];
-    try { items = JSON.parse(res.stdout); } catch { return []; }
-    return pickList(items)
+    const auth = await cisbench.ensureAuth();
+    if (!auth.ok) return [];
+    const items = await cisbench.getCatalogItems();
+    const q = query.trim().toLowerCase();
+    const refs = items
       .map((o): GuideRef | null => {
-        const id = String(o.id ?? o.benchmark_id ?? o.identifier ?? o.workbench_id ?? "");
-        const name = String(o.title ?? o.name ?? id);
+        const id = String(o.id ?? o.benchmark_id ?? o.identifier ?? o.workbench_id ?? o.number ?? "");
+        const name = String(o.title ?? o.name ?? o.benchmark_title ?? id);
         if (!id) return null;
-        return { source: "cis", ref: id, name, label: String(o.version ?? o.benchmark_version ?? ""), controls: Number(o.controls ?? o.rule_count ?? 0) };
+        return { source: "cis", ref: id, name, label: String(o.version ?? o.benchmark_version ?? o.latest_version ?? ""), controls: Number(o.controls ?? o.rule_count ?? o.num_rules ?? 0) };
       })
       .filter((x): x is GuideRef => x !== null);
+    const filtered = q ? refs.filter((g) => g.name.toLowerCase().includes(q) || g.ref.toLowerCase().includes(q)) : refs;
+    return filtered.slice(0, 200);
   },
   async fetch(ref) {
     const auth = await cisbench.ensureAuth();

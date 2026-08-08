@@ -137,6 +137,40 @@ export async function catalogRefresh(): Promise<CisResult> {
   return run(["catalog", "refresh"]);
 }
 
+function parseList(stdout: string): Record<string, unknown>[] {
+  try {
+    const data = JSON.parse(stdout);
+    if (Array.isArray(data)) return data.filter((x) => x && typeof x === "object");
+    if (data && typeof data === "object") {
+      for (const k of ["benchmarks", "results", "items", "data", "catalog", "records"]) {
+        const v = (data as Record<string, unknown>)[k];
+        if (Array.isArray(v)) return v.filter((x) => x && typeof x === "object");
+      }
+      for (const v of Object.values(data)) if (Array.isArray(v) && v.length && typeof v[0] === "object") return v as Record<string, unknown>[];
+    }
+  } catch { /* not json */ }
+  return [];
+}
+
+let _catalogRefreshed = false;
+
+// Return the full benchmark catalog as parsed objects, refreshing it once if empty.
+export async function getCatalogItems(): Promise<Record<string, unknown>[]> {
+  let items = parseList((await listCatalog()).stdout);
+  if (!items.length && !_catalogRefreshed) {
+    _catalogRefreshed = true;
+    await catalogRefresh();
+    items = parseList((await listCatalog()).stdout);
+  }
+  return items;
+}
+
+// Raw list output (for diagnostics only).
+export async function rawList(): Promise<string> {
+  if (!_catalogRefreshed) { _catalogRefreshed = true; await catalogRefresh(); }
+  return (await listCatalog()).stdout.slice(0, 4000);
+}
+
 // Export a benchmark by numeric id (export) or text query (get) into WORK_DIR,
 // returning the raw bytes. `style` only applies to XCCDF (cis|disa|stig).
 export async function exportBytes(identifier: string, fmt = "xccdf", style?: string): Promise<{ res: CisResult; data: Buffer | null }> {
