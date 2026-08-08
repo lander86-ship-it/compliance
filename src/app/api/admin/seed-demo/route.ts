@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser, isBackOffice, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { grantBundles, entitlementsFor } from "@/lib/entitlements";
+import { recordPurchase } from "@/lib/purchases";
 
 export const runtime = "nodejs";
 
@@ -31,6 +32,9 @@ export async function POST() {
       create: { email: DEMO.client.email, name: DEMO.client.name, role: DEMO.client.role, passwordHash: await hashPassword(DEMO.client.password) },
     });
     await grantBundles(client.id, [DEMO.client.bundle]);
+    // Record the simulated purchase once, so the demo client has a subscription + invoice.
+    const already = await prisma.purchase.count({ where: { userId: client.id } }).catch(() => 0);
+    if (!already) await recordPurchase({ userId: client.id, userEmail: DEMO.client.email, bundleIds: [DEMO.client.bundle], method: "demo", currency: "USD" });
     const clientEntitlements = await entitlementsFor(client.id);
 
     return NextResponse.json({

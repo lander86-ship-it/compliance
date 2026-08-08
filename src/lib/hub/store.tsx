@@ -27,6 +27,10 @@ export type Scope = {
 
 export type GenArtifact = { format: string; url: string; hash: string; bytes: number };
 
+export type PurchaseBundle = { id: string; name: string; price: string; sources: string[]; categories: string[] };
+export type Purchase = { id: string; invoiceNumber: string; createdAt: string; status: string; method: string; currency: string; amountCents: number; bundles: PurchaseBundle[] };
+export type Generation = { id: string; source: string; guideName: string | null; guideRef: string | null; formats: string[]; createdAt: string };
+
 export type Template = { base64: string; type: "docx" | "pdf"; name: string };
 
 export type PreviewBlock =
@@ -85,6 +89,11 @@ export type HubState = {
   coupon: string;
   pay: "card" | "po";
   justOrdered: boolean;
+  // Buyer account data (Subscriptions / Invoices / Library)
+  purchases: Purchase[] | null;
+  purchasesStatus: "idle" | "loading" | "done";
+  generations: Generation[] | null;
+  generationsStatus: "idle" | "loading" | "done";
 };
 
 const initialState: HubState = {
@@ -147,6 +156,10 @@ const initialState: HubState = {
   coupon: "",
   pay: "card",
   justOrdered: false,
+  purchases: null,
+  purchasesStatus: "idle",
+  generations: null,
+  generationsStatus: "idle",
 };
 
 type HubContextValue = {
@@ -168,6 +181,8 @@ type HubContextValue = {
   logout: () => Promise<void>;
   setAuthMode: (m: "login" | "signup") => void;
   loadEntitlements: () => Promise<void>;
+  loadPurchases: () => Promise<void>;
+  loadGenerations: () => Promise<void>;
   purchase: (bundleIds: string[]) => Promise<boolean>;
   setSource: (s: SourceId) => void;
   searchGuides: (q: string) => Promise<void>;
@@ -299,6 +314,28 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const loadPurchases = useCallback(async () => {
+    setS((p) => ({ ...p, purchasesStatus: "loading" }));
+    try {
+      const r = await fetch("/api/purchases");
+      const d = r.ok ? await r.json() : { purchases: [] };
+      setS((p) => ({ ...p, purchases: d.purchases || [], purchasesStatus: "done" }));
+    } catch {
+      setS((p) => ({ ...p, purchases: [], purchasesStatus: "done" }));
+    }
+  }, []);
+
+  const loadGenerations = useCallback(async () => {
+    setS((p) => ({ ...p, generationsStatus: "loading" }));
+    try {
+      const r = await fetch("/api/generations");
+      const d = r.ok ? await r.json() : { generations: [] };
+      setS((p) => ({ ...p, generations: d.generations || [], generationsStatus: "done" }));
+    } catch {
+      setS((p) => ({ ...p, generations: [], generationsStatus: "done" }));
+    }
+  }, []);
+
   const purchase = useCallback(async (bundleIds: string[]): Promise<boolean> => {
     setS((p) => ({ ...p, purchaseBusy: true }));
     try {
@@ -401,7 +438,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, loadEntitlements, purchase, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, loadEntitlements, loadPurchases, loadGenerations, purchase, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 

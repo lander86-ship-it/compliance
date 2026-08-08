@@ -220,6 +220,25 @@ model Entitlement {
   @@unique([userId, bundleId])
 }
 
+// A completed purchase (one per checkout). Drives the buyer's Subscriptions and
+// Invoices views and the admin Orders/revenue dashboard. Access itself is still
+// granted via Entitlement; this row is the financial/audit record.
+model Purchase {
+  id              String   @id @default(cuid())
+  userId          String
+  userEmail       String?
+  bundleIds       String   // comma-separated bundle ids purchased in this order
+  amountCents     Int      @default(0)
+  currency        String   @default("USD")
+  status          String   @default("paid") // paid | pending | refunded
+  method          String   @default("stub") // stripe | stub | demo | po
+  stripeSessionId String?
+  invoiceNumber   String   @unique
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
 // Audit trail of every guide generated (for the admin usage dashboard).
 model GenerationEvent {
   id         String   @id @default(cuid())

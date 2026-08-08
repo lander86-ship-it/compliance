@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { grantBundles, entitlementsFor } from "@/lib/entitlements";
+import { recordPurchase } from "@/lib/purchases";
 import { stripeEnabled, getStripe, appBaseUrl } from "@/lib/stripe";
 import { BUNDLES, priceNum } from "@/lib/hub/data";
 
@@ -49,9 +50,10 @@ export async function POST(req: Request) {
     }
   }
 
-  // Stub / demo path: grant immediately.
+  // Stub / demo path: grant immediately and record the (simulated) purchase.
   try {
     await grantBundles(user.id, bundleIds);
+    await recordPurchase({ userId: user.id, userEmail: user.email, bundleIds, method: isDemo ? "demo" : "stub", currency: "USD" });
     const entitlements = await entitlementsFor(user.id);
     return NextResponse.json({ ok: true, stub: true, entitlements });
   } catch (e) {

@@ -17,10 +17,9 @@ const navDefs: Record<string, [string, string][]> = {
   customer: [
     ["Generate a guide", "generator"],
     ["Library", "library"],
-    ["Licenses", "license"],
-    ["Subscriptions", "library"],
-    ["Invoices", "library"],
-    ["Account", "library"],
+    ["Subscriptions", "subscriptions"],
+    ["Invoices", "invoices"],
+    ["Account", "account"],
   ],
   admin: [
     ["Dashboard", "admin-dashboard"],
@@ -49,7 +48,7 @@ export function Sidebar() {
       {!m && <div style={css("padding:0 20px 10px;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#79716B;")}>{titles[domain]}</div>}
       {items.map(([label, view], i) => {
         const active = s.view === view || (view === "storefront" && s.view === "product");
-        const badge = label === "Cart" && s.cart.length ? String(s.cart.length) : label === "Orders" ? "3" : "";
+        const badge = label === "Cart" && s.cart.length ? String(s.cart.length) : "";
         return (
           <button
             key={`${label}-${i}`}

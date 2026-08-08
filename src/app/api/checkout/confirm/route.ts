@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { grantBundles, entitlementsFor } from "@/lib/entitlements";
+import { recordPurchase } from "@/lib/purchases";
 import { stripeEnabled, getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -25,7 +26,18 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "This purchase belongs to another account." }, { status: 403 });
     }
     const bundleIds = (session.metadata?.bundleIds || "").split(",").map((s) => s.trim()).filter(Boolean);
-    if (bundleIds.length) await grantBundles(user.id, bundleIds);
+    if (bundleIds.length) {
+      await grantBundles(user.id, bundleIds);
+      await recordPurchase({
+        userId: user.id,
+        userEmail: user.email,
+        bundleIds,
+        method: "stripe",
+        amountCents: session.amount_total ?? undefined,
+        currency: (session.currency || "usd").toUpperCase(),
+        stripeSessionId: session.id,
+      });
+    }
     const entitlements = await entitlementsFor(user.id);
     return NextResponse.json({ ok: true, entitlements });
   } catch (e) {

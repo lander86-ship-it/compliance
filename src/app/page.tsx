@@ -14,6 +14,9 @@ import { Generator } from "@/components/hub/views/Generator";
 import { Auth } from "@/components/hub/views/Auth";
 import { Library } from "@/components/hub/views/Library";
 import { License } from "@/components/hub/views/License";
+import { Subscriptions } from "@/components/hub/views/Subscriptions";
+import { Invoices } from "@/components/hub/views/Invoices";
+import { Account } from "@/components/hub/views/Account";
 import { AdminDashboard } from "@/components/hub/views/AdminDashboard";
 import { AdminUsage } from "@/components/hub/views/AdminUsage";
 import { AdminIngest } from "@/components/hub/views/AdminIngest";
@@ -32,6 +35,9 @@ const VIEWS: Record<string, React.ComponentType> = {
   auth: Auth,
   library: Library,
   license: License,
+  subscriptions: Subscriptions,
+  invoices: Invoices,
+  account: Account,
   "admin-dashboard": AdminDashboard,
   "admin-usage": AdminUsage,
   "admin-ingest": AdminIngest,
