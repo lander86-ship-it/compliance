@@ -72,11 +72,24 @@ const cisConnector: SourceConnector = {
   async fetch(ref) {
     const auth = await cisbench.ensureAuth();
     if (!auth.ok) throw new Error(`CIS not connected: ${auth.detail}`);
-    const { data } = await cisbench.exportBytes(ref, "xccdf", "cis");
-    if (!data) throw new Error("cis-bench could not export this CIS benchmark (check the benchmark id / your CIS licence).");
+    const { res, data } = await cisbench.exportBytes(ref, "xccdf", "cis");
+    if (!data) {
+      const why = (res.stderr || res.stdout || "").trim().slice(0, 300);
+      throw new Error(`cis-bench could not export this CIS benchmark${why ? `: ${why}` : " (check the benchmark id / your CIS licence)."}`);
+    }
     const parsed = parseXccdf(data);
     if (!parsed.controls.length) throw new Error("No controls parsed from the CIS benchmark export.");
-    return { benchTitle: parsed.benchTitle, label: parsed.version, controls: parsed.controls };
+    // The XCCDF export omits the human title/version — enrich from the catalog.
+    let benchTitle = parsed.benchTitle;
+    let label = parsed.version;
+    try {
+      const hit = (await cisbench.getCatalogItems()).find((o) => String(o.benchmark_id ?? o.id) === ref);
+      if (hit) {
+        benchTitle = String(hit.title ?? hit.name ?? benchTitle);
+        label = String(hit.version ?? label) || label;
+      }
+    } catch { /* keep parsed values */ }
+    return { benchTitle, label, controls: parsed.controls };
   },
 };
 

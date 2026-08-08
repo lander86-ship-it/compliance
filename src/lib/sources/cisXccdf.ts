@@ -12,6 +12,16 @@ const parser = new XMLParser({
   removeNSPrefix: true,
   textNodeName: "#text",
   trimValues: true,
+  // Real CIS XCCDF exports embed thousands of predefined entities (&lt; &gt;
+  // &amp; inside the HTML descriptions), which trips fast-xml-parser's default
+  // anti-DoS caps (1000 expansions / 100 KB). The input is a trusted export
+  // from an authenticated CIS WorkBench session, so lift the caps generously.
+  processEntities: {
+    enabled: true,
+    maxTotalExpansions: 5_000_000,
+    maxExpandedLength: 100_000_000,
+    maxEntityCount: 1_000_000,
+  },
 });
 
 type Node = Record<string, unknown>;
@@ -69,9 +79,13 @@ function ruleToControl(rule: Node, section: string): FullControl {
   const audit = check ? firstText(check, "check-content") || text(check) : "";
   const sev = String(rule["@severity"] || "unknown").toLowerCase();
   const profile = levelFrom(title, idAttr);
+  // CIS XCCDF exports encode group titles as empty <GroupDescription/>, so the
+  // human section name is unavailable. Derive a stable section number from the
+  // control id (e.g. "1.1.3" → "1.1") so controls still group sensibly.
+  const sectionNum = /^\d+(?:\.\d+)+$/.test(id) ? id.split(".").slice(0, 2).join(".") : "";
   return {
     id,
-    family: section || "General",
+    family: section || (sectionNum ? `Section ${sectionNum}` : "General"),
     title: title.replace(/^(\d+(?:\.\d+)+)\s*/, "") || id,
     severity: SEV[sev] || "Medium",
     profile,
@@ -92,7 +106,10 @@ export function parseXccdf(data: Buffer | string): ParsedBenchmark {
   if (!bench) return { benchTitle: "CIS Benchmark", version: "", controls: [] };
 
   const benchTitle = firstText(bench, "title") || "CIS Benchmark";
-  const version = firstText(bench, "version") || firstText(bench, "status") || "";
+  // Note: CIS XCCDF exports usually omit a Benchmark-level <version> and only
+  // carry <status> (e.g. "draft"); the real version lives in the catalog, so
+  // don't fall back to status here — the connector enriches title/version.
+  const version = firstText(bench, "version") || "";
   const controls: FullControl[] = [];
 
   const walk = (group: Node, inherited: string) => {

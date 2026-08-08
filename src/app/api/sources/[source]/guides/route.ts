@@ -19,6 +19,14 @@ export async function GET(req: Request, { params }: { params: { source: string }
     await cisbench.ensureAuth();
     return NextResponse.json({ raw: await cisbench.rawList().catch((e) => String(e)) });
   }
+  // Diagnostic: exercise the real export path and surface cis-bench stderr/stdout.
+  if (source === "cis" && url.searchParams.get("debug") === "cis-export") {
+    const ref = url.searchParams.get("ref") || "";
+    const auth = await cisbench.ensureAuth();
+    if (!auth.ok) return NextResponse.json({ step: "auth", ok: false, detail: auth.detail });
+    const { res, data } = await cisbench.exportBytes(ref, "xccdf", "cis").catch((e) => ({ res: { ok: false, code: -1, stdout: "", stderr: String(e), command: "" }, data: null }));
+    return NextResponse.json({ step: "export", ref, ok: !!data, bytes: data ? data.length : 0, code: res.code, command: res.command, stdout: (res.stdout || "").slice(0, 1500), stderr: (res.stderr || "").slice(0, 1500) });
+  }
   try {
     const c = connector(source);
     const status = await c.status();
