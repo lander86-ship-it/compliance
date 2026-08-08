@@ -158,8 +158,11 @@ function parseList(stdout: string): Record<string, unknown>[] {
 let _catalogRefreshed = false;
 
 // Ensure the local catalog is populated (scrape once if empty). cis-bench needs
-// `catalog refresh` before any search returns results.
-async function ensureCatalog(): Promise<void> {
+// `catalog refresh` before any search OR export works — export loads benchmarks
+// "from database" (catalog.db), which does not exist until the first refresh.
+// On hosts without a persistent volume (catalog.db is ephemeral) this rebuilds
+// the catalog after each cold start.
+export async function ensureCatalog(): Promise<void> {
   if (_catalogRefreshed) return;
   const probe = parseList((await listCatalog()).stdout);
   if (!probe.length) await catalogRefresh();
@@ -189,6 +192,9 @@ export async function rawList(): Promise<string> {
 export async function exportBytes(identifier: string, fmt = "xccdf", style?: string): Promise<{ res: CisResult; data: Buffer | null }> {
   fmt = fmt.toLowerCase().trim();
   if (!VALID_FORMATS.has(fmt)) return { res: { ok: false, code: 2, stdout: "", stderr: `Unsupported format: ${fmt}`, command: "" }, data: null };
+  // export/get read from catalog.db ("Loading benchmark … from database"), which
+  // only exists after a catalog refresh — build it first if needed.
+  await ensureCatalog();
   await ensureWorkDir();
   const ext = ({ yaml: "yaml", csv: "csv", json: "json", markdown: "md", xccdf: "xml" } as Record<string, string>)[fmt];
   const safe = identifier.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 40).replace(/^_+|_+$/g, "") || "benchmark";
