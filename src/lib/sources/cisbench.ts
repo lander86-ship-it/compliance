@@ -8,6 +8,7 @@ import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { workbenchLogin } from "./workbenchLogin";
 
 const CIS_BIN = process.env.CIS_BENCH_BIN || "cis-bench";
 const WORK_DIR = process.env.CIS_WORK_DIR || path.join(os.tmpdir(), "cis-work");
@@ -88,6 +89,37 @@ export async function bootstrapAuth(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+let _authed = false;
+
+// Ensure cis-bench has an authenticated CIS WorkBench session. Tries, in order:
+// an existing session, CIS_COOKIES_B64, then CIS_WORKBENCH_USERNAME/PASSWORD form login.
+export async function ensureAuth(): Promise<{ ok: boolean; detail: string }> {
+  if (_authed) return { ok: true, detail: "Authenticated to CIS WorkBench." };
+  if (!(await cliAvailable())) return { ok: false, detail: "cis-bench CLI not installed in this runtime." };
+
+  const status = await authStatus();
+  if (status.ok) { _authed = true; return { ok: true, detail: "Authenticated to CIS WorkBench." }; }
+
+  if (process.env.CIS_COOKIES_B64) {
+    try {
+      const r = await loginWithCookies(Buffer.from(process.env.CIS_COOKIES_B64, "base64").toString("utf8"));
+      if (r.ok) { _authed = true; return { ok: true, detail: "Authenticated to CIS WorkBench (cookies)." }; }
+    } catch { /* fall through */ }
+  }
+
+  const u = process.env.CIS_WORKBENCH_USERNAME;
+  const p = process.env.CIS_WORKBENCH_PASSWORD;
+  if (u && p) {
+    const login = await workbenchLogin(u, p);
+    if (!login.cookiesTxt) return { ok: false, detail: login.error };
+    const r = await loginWithCookies(login.cookiesTxt);
+    if (r.ok) { _authed = true; return { ok: true, detail: "Authenticated to CIS WorkBench." }; }
+    return { ok: false, detail: (r.stderr || "cis-bench rejected the session").slice(0, 200) };
+  }
+
+  return { ok: false, detail: "Connect your CIS WorkBench (set CIS_WORKBENCH_USERNAME/PASSWORD or CIS_COOKIES_B64)." };
 }
 
 export async function search(query: string): Promise<CisResult> {
