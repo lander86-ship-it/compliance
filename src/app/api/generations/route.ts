@@ -12,14 +12,25 @@ export async function GET() {
   const rows = await prisma.generationEvent
     .findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 100 })
     .catch(() => []);
+  const EXT: Record<string, string> = { DOCX: "docx", PDF: "pdf", XLSX: "xlsx", POLICY: "docx" };
   return NextResponse.json({
-    generations: rows.map((g) => ({
-      id: g.id,
-      source: g.source,
-      guideName: g.guideName,
-      guideRef: g.guideRef,
-      formats: (g.formats || "").split(",").filter(Boolean),
-      createdAt: g.createdAt.toISOString(),
-    })),
+    generations: rows.map((g) => {
+      const files = (g.artifacts || "").split(",").filter(Boolean);
+      const formats = (g.formats || "").split(",").filter(Boolean);
+      // Pair each format with its stored filename (download URL) when available.
+      const downloads = formats.map((fmt, i) => {
+        const file = files[i] || files.find((f) => f.toLowerCase().endsWith("." + (EXT[fmt] || "")));
+        return { format: fmt, url: file ? `/api/artifact/${file}` : null };
+      });
+      return {
+        id: g.id,
+        source: g.source,
+        guideName: g.guideName,
+        guideRef: g.guideRef,
+        formats,
+        downloads,
+        createdAt: g.createdAt.toISOString(),
+      };
+    }),
   });
 }

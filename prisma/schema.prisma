@@ -248,7 +248,18 @@ model GenerationEvent {
   guideRef   String?
   guideName  String?
   formats    String? // comma-separated
+  artifacts  String? // comma-separated artifact filenames (for re-download)
   createdAt  DateTime @default(now())
+}
+
+// A buyer's saved house-style template, uploaded once and reused for every
+// generation (so they don't re-upload each time).
+model UserTemplate {
+  userId    String   @id
+  name      String
+  type      String // docx | pdf
+  data      String // base64-encoded template bytes
+  updatedAt DateTime @default(now())
 }
 
 model Order {

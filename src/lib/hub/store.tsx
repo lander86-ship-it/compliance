@@ -29,7 +29,8 @@ export type GenArtifact = { format: string; url: string; hash: string; bytes: nu
 
 export type PurchaseBundle = { id: string; name: string; price: string; sources: string[]; categories: string[] };
 export type Purchase = { id: string; invoiceNumber: string; createdAt: string; status: string; method: string; currency: string; amountCents: number; bundles: PurchaseBundle[] };
-export type Generation = { id: string; source: string; guideName: string | null; guideRef: string | null; formats: string[]; createdAt: string };
+export type Generation = { id: string; source: string; guideName: string | null; guideRef: string | null; formats: string[]; downloads?: { format: string; url: string | null }[]; createdAt: string };
+export type SavedTemplate = { name: string; type: string; updatedAt?: string };
 
 export type Template = { base64: string; type: "docx" | "pdf"; name: string };
 
@@ -94,6 +95,8 @@ export type HubState = {
   purchasesStatus: "idle" | "loading" | "done";
   generations: Generation[] | null;
   generationsStatus: "idle" | "loading" | "done";
+  savedTemplate: SavedTemplate | null;
+  savedTemplateStatus: "idle" | "loading" | "done";
 };
 
 const initialState: HubState = {
@@ -160,6 +163,8 @@ const initialState: HubState = {
   purchasesStatus: "idle",
   generations: null,
   generationsStatus: "idle",
+  savedTemplate: null,
+  savedTemplateStatus: "idle",
 };
 
 type HubContextValue = {
@@ -184,6 +189,9 @@ type HubContextValue = {
   loadPurchases: () => Promise<void>;
   loadGenerations: () => Promise<void>;
   updateAccount: (patch: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<{ ok: boolean; error?: string }>;
+  loadSavedTemplate: () => Promise<void>;
+  saveTemplate: (t: Template) => Promise<{ ok: boolean; error?: string }>;
+  removeSavedTemplate: () => Promise<void>;
   purchase: (bundleIds: string[]) => Promise<boolean>;
   setSource: (s: SourceId) => void;
   searchGuides: (q: string) => Promise<void>;
@@ -349,6 +357,34 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const loadSavedTemplate = useCallback(async () => {
+    setS((p) => ({ ...p, savedTemplateStatus: "loading" }));
+    try {
+      const r = await fetch("/api/account/template");
+      const d = r.ok ? await r.json() : { template: null };
+      setS((p) => ({ ...p, savedTemplate: d.template || null, savedTemplateStatus: "done" }));
+    } catch {
+      setS((p) => ({ ...p, savedTemplate: null, savedTemplateStatus: "done" }));
+    }
+  }, []);
+
+  const saveTemplate = useCallback(async (t: Template): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const r = await fetch("/api/account/template", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(t) });
+      const d = await r.json();
+      if (!r.ok) return { ok: false, error: d.error || "Save failed" };
+      setS((p) => ({ ...p, savedTemplate: { name: t.name, type: t.type } }));
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : "Save failed" };
+    }
+  }, []);
+
+  const removeSavedTemplate = useCallback(async () => {
+    await fetch("/api/account/template", { method: "DELETE" }).catch(() => {});
+    setS((p) => ({ ...p, savedTemplate: null }));
+  }, []);
+
   const purchase = useCallback(async (bundleIds: string[]): Promise<boolean> => {
     setS((p) => ({ ...p, purchaseBusy: true }));
     try {
@@ -451,7 +487,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, loadEntitlements, loadPurchases, loadGenerations, updateAccount, purchase, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, loadEntitlements, loadPurchases, loadGenerations, updateAccount, loadSavedTemplate, saveTemplate, removeSavedTemplate, purchase, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 

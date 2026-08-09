@@ -47,23 +47,28 @@ function SourcePicker() {
   );
 }
 
-function GuideSearch() {
+function GuideBrowse() {
   const { s, searchGuides, selectGuide } = useHub();
   const { guideAllowed } = useAllowed();
   const [q, setQ] = React.useState("");
-  const submit = () => searchGuides(q.trim());
-  const results = s.guideResults.filter((g) => guideAllowed(g.source, g.name));
+
+  // Load the source's catalog directly (no manual search) whenever the source
+  // changes; the list is then filtered to what the subscription allows.
+  React.useEffect(() => {
+    if (s.guideStatus === "idle") searchGuides("");
+  }, [s.source, s.guideStatus, searchGuides]);
+
+  const allowed = s.guideResults.filter((g) => guideAllowed(g.source, g.name));
+  const ql = q.trim().toLowerCase();
+  const results = ql ? allowed.filter((g) => g.name.toLowerCase().includes(ql)) : allowed;
+
   return (
     <>
-      <div style={css("display:flex;gap:10px;margin-bottom:14px;")}>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
-          placeholder={`Search ${s.source === "cis" ? "CIS Benchmarks" : "DISA STIGs"} — e.g. "RHEL", "Windows", "Cisco"…`}
-          style={css("flex:1;border:1px solid #E7E6E5;border-radius:9px;padding:12px 14px;font-size:14px;outline:none;")}
-        />
-        <button onClick={submit} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:9px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;")}>Search</button>
+      <div style={css("display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;")}>
+        <div style={css("font-size:13px;font-weight:700;")}>Guides you can generate{allowed.length ? ` (${allowed.length})` : ""}</div>
+        {allowed.length > 6 && (
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter…" style={css("border:1px solid #E7E6E5;border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:180px;")} />
+        )}
       </div>
 
       {!s.guideAvailable && (
@@ -74,17 +79,17 @@ function GuideSearch() {
       {s.guideStatus === "loading" && (
         <div style={css("display:flex;align-items:center;gap:12px;font-size:13px;color:#57534E;padding:12px 0;")}>
           <div style={css("width:18px;height:18px;border:3px solid #dfe6ef;border-top-color:#0f4c9c;border-radius:50%;animation:hh-spin .8s linear infinite;")} />
-          Searching the live catalog…
+          Loading the {s.source === "cis" ? "CIS" : "DISA"} catalog you can generate…
         </div>
       )}
       {s.guideStatus === "failed" && (
-        <div style={css("font-size:13px;color:#b4381f;padding:8px 0;")}>Search failed — {s.guideError}</div>
+        <div style={css("font-size:13px;color:#b4381f;padding:8px 0;")}>Could not load the catalog — {s.guideError}</div>
       )}
       {s.guideStatus === "done" && results.length === 0 && s.guideAvailable && (
-        <div style={css("font-size:13px;color:#79716B;padding:8px 0;")}>{s.guideResults.length > 0 ? "Matches found, but none are in your purchased categories." : "No benchmarks matched. Try a broader term."}</div>
+        <div style={css("font-size:13px;color:#79716B;padding:8px 0;")}>{s.guideResults.length > 0 ? "No guides in your purchased categories for this source. Buy the matching bundle to unlock more." : "No benchmarks available for this source."}</div>
       )}
       {results.length > 0 && (
-        <div style={css("border:1px solid #E7E6E5;border-radius:14px;overflow:hidden;max-height:340px;overflow-y:auto;")}>
+        <div style={css("border:1px solid #E7E6E5;border-radius:14px;overflow:hidden;max-height:420px;overflow-y:auto;")}>
           {results.map((g) => {
             const sel = s.selectedGuide?.ref === g.ref;
             return (
@@ -136,7 +141,7 @@ export function Generator() {
   return (
     <div style={css(`max-width:900px;margin:0 auto;${s.isMobile ? "padding:20px 16px;" : "padding:30px 40px;"}`)}>
       <h2 style={css("margin:0 0 4px;font-size:24px;font-weight:800;")}>Generate a hardening guide</h2>
-      <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Connect to your source, pick a benchmark, and the AI drafts a customised standard in your own template — on demand, always the current release.</p>
+      <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Pick a source and choose from the benchmarks your subscription covers — the AI drafts a customised standard in your own template, always the current release.</p>
 
       {!hasAccess && (
         <div style={css("border:1px solid #e6c9b8;background:#fbf3ec;border-radius:14px;padding:20px;margin-bottom:22px;")}>
@@ -150,7 +155,7 @@ export function Generator() {
       )}
 
       <SourcePicker />
-      <GuideSearch />
+      <GuideBrowse />
 
       {g && (
         <div style={css("margin-top:26px;border-top:1px solid #E7E6E5;padding-top:24px;")}>

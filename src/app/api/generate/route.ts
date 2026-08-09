@@ -61,6 +61,15 @@ export async function POST(req: Request) {
     }
   }
 
+  // Fall back to the buyer's saved default template when none was supplied.
+  if (!parsed.data.template && user) {
+    try {
+      const { prisma } = await import("@/lib/db");
+      const saved = await prisma.userTemplate.findUnique({ where: { userId: user.id } });
+      if (saved) parsed.data.template = { base64: saved.data, type: saved.type as "docx" | "pdf", name: saved.name };
+    } catch { /* no saved template */ }
+  }
+
   const jobId = crypto.randomUUID();
   try {
     const artifacts = await generateArtifacts(parsed.data as GenInput, jobId);
@@ -83,6 +92,7 @@ export async function POST(req: Request) {
           guideRef: parsed.data.guideRef || null,
           guideName: parsed.data.guideName || parsed.data.productId || null,
           formats: artifacts.map((a) => a.format).join(","),
+          artifacts: artifacts.map((a) => a.fileName).join(","),
         },
       }).catch(() => {});
     } catch {
