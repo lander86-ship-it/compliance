@@ -6,6 +6,9 @@ import { css } from "@/lib/hub/theme";
 import { TopBar } from "@/components/hub/TopBar";
 import { Sidebar } from "@/components/hub/Sidebar";
 import { Storefront } from "@/components/hub/views/Storefront";
+import { Bundles } from "@/components/hub/views/Bundles";
+import { Frameworks } from "@/components/hub/views/Frameworks";
+import { FreeGuides } from "@/components/hub/views/FreeGuides";
 import { Product } from "@/components/hub/views/Product";
 import { Cart } from "@/components/hub/views/Cart";
 import { Checkout } from "@/components/hub/views/Checkout";
@@ -27,6 +30,9 @@ import { AdminVersioning } from "@/components/hub/views/AdminVersioning";
 
 const VIEWS: Record<string, React.ComponentType> = {
   storefront: Storefront,
+  bundles: Bundles,
+  frameworks: Frameworks,
+  freeguides: FreeGuides,
   product: Product,
   cart: Cart,
   checkout: Checkout,

@@ -9,9 +9,9 @@ import { domainOf } from "./TopBar";
 const navDefs: Record<string, [string, string][]> = {
   store: [
     ["Catalog", "storefront"],
-    ["Bundles", "storefront"],
-    ["Frameworks", "storefront"],
-    ["Free guides", "storefront"],
+    ["Bundles", "bundles"],
+    ["Frameworks", "frameworks"],
+    ["Free guides", "freeguides"],
     ["Cart", "cart"],
   ],
   customer: [
@@ -23,17 +23,15 @@ const navDefs: Record<string, [string, string][]> = {
   ],
   admin: [
     ["Dashboard", "admin-dashboard"],
-    ["Usage & customers", "admin-usage"],
-    ["AI Generator", "admin-ingest"],
-    ["Control editor", "admin-editor"],
     ["Catalog & pricing", "admin-catalog"],
     ["Orders", "admin-orders"],
+    ["Customers", "admin-usage"],
+    ["AI Generator", "admin-ingest"],
     ["Versioning", "admin-versioning"],
-    ["Audit log", "admin-dashboard"],
   ],
 };
 
-const titles: Record<string, string> = { store: "Storefront", customer: "My account", admin: "Back office" };
+const titles: Record<string, string> = { store: "Storefront", customer: "My account", admin: "Admin" };
 
 export function Sidebar() {
   const { s, go } = useHub();

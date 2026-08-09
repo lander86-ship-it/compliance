@@ -7,7 +7,7 @@ import { css } from "@/lib/hub/theme";
 const tabDef: [string, string, string][] = [
   ["store", "Storefront", "storefront"],
   ["customer", "My Library", "library"],
-  ["admin", "Back Office", "admin-dashboard"],
+  ["admin", "Admin", "admin-dashboard"],
 ];
 
 export function domainOf(view: string): string {
@@ -58,11 +58,11 @@ export function TopBar() {
       </button>
       {s.authStatus === "authed" && s.user ? (
         <div style={css("display:flex;align-items:center;gap:10px;flex-shrink:0;")}>
-          {!m && <div style={css("text-align:right;line-height:1.2;")}>
+          {!m && <div onClick={() => go("account")} title="Account settings" style={css("text-align:right;line-height:1.2;cursor:pointer;")}>
             <div style={css("font-size:12.5px;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;")}>{s.user.name || s.user.email}</div>
             <div style={css("font-size:10.5px;color:#79716B;text-transform:uppercase;letter-spacing:.5px;")}>{isAdmin ? "Admin" : "Customer"}</div>
           </div>}
-          <div onClick={() => m && logout()} title={s.user.email} style={css("width:34px;height:34px;border-radius:50%;background:#0f4c9c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Fragment Mono',monospace;flex-shrink:0;")}>{(s.user.name || s.user.email).slice(0, 2).toUpperCase()}</div>
+          <div onClick={() => go("account")} title="Account settings" style={css("width:34px;height:34px;border-radius:50%;background:#0f4c9c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Fragment Mono',monospace;flex-shrink:0;cursor:pointer;")}>{(s.user.name || s.user.email).slice(0, 2).toUpperCase()}</div>
           {!m && <button onClick={() => logout()} style={css("background:#FBFAF9;border:1px solid #E7E6E5;color:#57534E;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;")}>Sign out</button>}
         </div>
       ) : (

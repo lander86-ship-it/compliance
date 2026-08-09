@@ -183,6 +183,7 @@ type HubContextValue = {
   loadEntitlements: () => Promise<void>;
   loadPurchases: () => Promise<void>;
   loadGenerations: () => Promise<void>;
+  updateAccount: (patch: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<{ ok: boolean; error?: string }>;
   purchase: (bundleIds: string[]) => Promise<boolean>;
   setSource: (s: SourceId) => void;
   searchGuides: (q: string) => Promise<void>;
@@ -336,6 +337,18 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const updateAccount = useCallback(async (patch: { name?: string; email?: string; currentPassword?: string; newPassword?: string }): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const r = await fetch("/api/account", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(patch) });
+      const d = await r.json();
+      if (!r.ok) return { ok: false, error: d.error || "Update failed" };
+      setS((p) => ({ ...p, user: d.user }));
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : "Update failed" };
+    }
+  }, []);
+
   const purchase = useCallback(async (bundleIds: string[]): Promise<boolean> => {
     setS((p) => ({ ...p, purchaseBusy: true }));
     try {
@@ -438,7 +451,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const resetAI = useCallback(() => setS((p) => ({ ...p, aiStatus: "idle", aiStage: 0 })), []);
 
-  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, loadEntitlements, loadPurchases, loadGenerations, purchase, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
+  const value: HubContextValue = { s, set, go, open, addToCart, removeFromCart, toggleExclude, setReason, configure, setScope, setOdp, setTemplate, loadMe, login, signup, logout, setAuthMode, loadEntitlements, loadPurchases, loadGenerations, updateAccount, purchase, setSource, searchGuides, selectGuide, previewStandard, generate, runAI, resetAI };
   return <HubContext.Provider value={value}>{children}</HubContext.Provider>;
 }
 
