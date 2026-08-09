@@ -1,15 +1,49 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useHub } from "@/lib/hub/store";
-import { css, sevStyle } from "@/lib/hub/theme";
-import { AI_STAGES, WIZ_CONTROLS } from "@/lib/hub/data";
+import { css } from "@/lib/hub/theme";
+
+type Role = { role: string; responsibilities: string[] };
+type Narrative = {
+  purposeIntro: string; purposeAims: string[];
+  scopeIntro: string; scopeCovers: string[];
+  roles: Role[];
+  complianceIntro: string; complianceEnforcement: string;
+};
+type Draft = { title: string; aiUsed: boolean; platform: string; sections: string[]; narrative: Narrative };
 
 export function AdminIngest() {
-  const { s, set, runAI, resetAI } = useHub();
-  const st = s.aiStatus;
-  const cur = s.aiStage;
-  const ingestRows = WIZ_CONTROLS.slice(0, 7).map((c, i) => ({ ...c, conf: i % 4 === 0 ? "Review" : "AI draft", review: i % 4 === 0 }));
+  const { s, set } = useHub();
+  const [status, setStatus] = useState<"idle" | "gen" | "done" | "err">("idle");
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [err, setErr] = useState("");
+  const [dl, setDl] = useState<string | null>(null);
+  const [dlBusy, setDlBusy] = useState(false);
+
+  const run = async () => {
+    setStatus("gen"); setErr(""); setDraft(null); setDl(null);
+    try {
+      const r = await fetch("/api/admin/ingest", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: s.aiUrl }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Generation failed");
+      setDraft(d); setStatus("done");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Generation failed"); setStatus("err");
+    }
+  };
+  const downloadDocx = async () => {
+    setDlBusy(true);
+    try {
+      const r = await fetch("/api/admin/ingest", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: s.aiUrl, download: true }) });
+      const d = await r.json();
+      if (r.ok && d.url) { setDl(d.url); window.open(d.url, "_blank"); }
+    } finally { setDlBusy(false); }
+  };
+
+  const card = "background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:22px;margin-bottom:18px;";
+  const h = "font-size:14px;font-weight:700;margin:0 0 8px;";
+  const li = "font-size:13px;color:#57534E;line-height:1.6;display:flex;gap:8px;";
 
   return (
     <div style={css("padding:26px 34px 60px;max-width:960px;")}>
@@ -17,79 +51,68 @@ export function AdminIngest() {
         <h1 style={css("margin:0;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>AI Standard Generator</h1>
         <span style={css("font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6a2f6a;background:#f2e9f2;border:1px solid #e2cfe2;padding:3px 8px;border-radius:20px;")}>AI</span>
       </div>
-      <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Paste a link to a benchmark, STIG or standard — the engine fetches it and drafts an original, framework-mapped product for review. Nothing is published automatically.</p>
+      <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Paste a link to a hardening guide or standard — the engine fetches it and drafts an original, framework-mapped standard for review. Nothing is published automatically.</p>
 
-      <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:22px;margin-bottom:22px;")}>
-        <label style={css("font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:7px;")}>Source URL or reference</label>
-        <div style={css("display:flex;gap:10px;margin-bottom:16px;")}>
-          <div style={css("flex:1;display:flex;align-items:center;gap:8px;border:1px solid #E7E6E5;border-radius:8px;padding:0 12px;background:#FBFAF9;")}>
-            <span style={css("font-family:'Fragment Mono',monospace;color:#79716B;font-size:13px;")}>↗</span>
-            <input value={s.aiUrl} onChange={(e) => set({ aiUrl: e.target.value })} placeholder="https://…" style={css("flex:1;border:none;background:transparent;outline:none;padding:11px 0;font-size:13.5px;font-family:'Fragment Mono',monospace;color:#1C1917;")} />
-          </div>
-          <button onClick={() => runAI()} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:8px;padding:0 22px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;")}>Generate with AI</button>
-        </div>
-        <div style={css("display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:#79716B;")}>
-          <span>Also accepts:</span>
-          {["XCCDF/SCAP", "OSCAL/JSON", "Excel/CSV", "PDF (assisted)"].map((f) => (
-            <span key={f} style={css("font-family:'Fragment Mono',monospace;")}>{f}</span>
-          ))}
+      <div style={css(card)}>
+        <label style={css("font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:7px;")}>Source URL</label>
+        <div style={css("display:flex;gap:10px;flex-wrap:wrap;")}>
+          <input value={s.aiUrl} onChange={(e) => set({ aiUrl: e.target.value })} placeholder="https://…" style={css("flex:1;min-width:240px;border:1px solid #E7E6E5;border-radius:8px;padding:11px 12px;font-size:13.5px;font-family:'Fragment Mono',monospace;color:#1C1917;outline:none;")} />
+          <button onClick={run} disabled={status === "gen"} className="hh-primary" style={css(`background:${status === "gen" ? "#7fa4d0" : "#0f4c9c"};color:#fff;border:none;border-radius:8px;padding:0 22px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;`)}>{status === "gen" ? "Generating…" : "Generate with AI"}</button>
         </div>
       </div>
 
-      {st === "idle" && (
-        <div style={css("border:1px dashed #D8D6D3;border-radius:22px;padding:40px;text-align:center;background:repeating-linear-gradient(45deg,#f7f9fc,#f7f9fc 12px,#f3f6fa 12px,#f3f6fa 24px);")}>
-          <div style={css("font-size:15px;font-weight:600;color:#57534E;margin-bottom:6px;")}>Ready to generate</div>
-          <div style={css("font-size:13px;color:#79716B;max-width:460px;margin:0 auto;line-height:1.55;")}>The AI drafts original control text mapped to the source standard — respecting each framework&apos;s reproduction policy (verbatim for public-domain, mapped-only for copyrighted).</div>
+      {status === "gen" && (
+        <div style={css(card + "display:flex;align-items:center;gap:12px;")}>
+          <span style={css("width:20px;height:20px;border:3px solid #cdd8ea;border-top-color:#0f4c9c;border-radius:50%;animation:hh-spin .8s linear infinite;")} />
+          <span style={css("font-size:13.5px;color:#57534E;")}>Fetching the source and drafting the standard…</span>
         </div>
       )}
+      {status === "err" && <div style={css("border:1px solid #e6c9b8;background:#fbf3ec;border-radius:12px;padding:16px;color:#b4381f;font-size:14px;")}>{err}</div>}
 
-      {st === "analyzing" && (
-        <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;padding:24px;")}>
-          <div style={css("font-size:14px;font-weight:600;margin-bottom:18px;")}>Generating standard…</div>
-          <div style={css("display:flex;flex-direction:column;gap:14px;")}>
-            {AI_STAGES.map((label, i) => {
-              const done = i < cur;
-              const activeSpin = i === cur;
-              return (
-                <div key={label} style={css("display:flex;align-items:center;gap:12px;")}>
-                  {activeSpin ? (
-                    <span style={css("width:20px;height:20px;border:3px solid #cdd8ea;border-top-color:#0f4c9c;border-radius:50%;animation:hh-spin .8s linear infinite;flex-shrink:0;")} />
-                  ) : (
-                    <span style={css(`width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Fragment Mono',monospace;background:${done ? "#1f7a4d" : "#E7E6E5"};color:${done ? "#fff" : "#79716B"};`)}>{done ? "✓" : String(i + 1)}</span>
-                  )}
-                  <span style={css(`font-size:13.5px;color:${i <= cur ? "#1C1917" : "#79716B"};font-weight:${i === cur ? 600 : 400};`)}>{label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {st === "done" && (
+      {status === "done" && draft && (
         <>
-          <div style={css("background:#f0f7f3;border:1px solid #cfe0d6;border-radius:20px;padding:16px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;")}>
-            <div style={css("font-size:13.5px;color:#186340;")}>
-              <b>✓ Draft ready.</b> AI generated <b>387 controls</b> from the source, mapped to NIST 800-53 · CSF · ISO 27002. Review before publishing.
-            </div>
-            <button onClick={() => resetAI()} style={css("background:transparent;border:1px solid #b6d2c1;color:#186340;border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;")}>New generation</button>
+          <div style={css("background:#f0f7f3;border:1px solid #cfe0d6;border-radius:16px;padding:16px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;")}>
+            <div style={css("font-size:13.5px;color:#186340;")}>✓ Draft ready — <b>{draft.sections.length}</b> sections detected · {draft.aiUsed ? "AI-drafted narrative" : "structured draft (set ANTHROPIC_API_KEY for AI)"}.</div>
+            <button onClick={downloadDocx} disabled={dlBusy} style={css("background:#1f7a4d;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;")}>{dlBusy ? "Building…" : dl ? "↓ Download again" : "↓ Download DOCX"}</button>
           </div>
-          <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;")}>
-            <div style={css("display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #EFEEEC;background:#FBFAF9;")}>
-              <div style={css("font-size:13.5px;")}><b>Review &amp; reconcile</b> — edit any AI-drafted field before approving</div>
-              <button style={css("background:#1f7a4d;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;")}>Approve &amp; create product</button>
-            </div>
-            <div style={css("display:grid;grid-template-columns:70px 1fr 130px 90px 90px;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:9px 18px;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;")}>
-              <div>ID</div><div>Title</div><div>Family</div><div>Severity</div><div>Status</div>
-            </div>
-            {ingestRows.map((c) => (
-              <div key={c.id} style={css("display:grid;grid-template-columns:70px 1fr 130px 90px 90px;padding:11px 18px;border-bottom:1px solid #EFEEEC;font-size:12.5px;align-items:center;")}>
-                <div style={css("font-family:'Fragment Mono',monospace;font-weight:600;color:#1C1917;")}>{c.id}</div>
-                <div>{c.title}</div>
-                <div style={css("color:#57534E;")}>{c.family}</div>
-                <div><span style={css(sevStyle(c.severity))}>{c.severity}</span></div>
-                <div><span style={css(c.review ? "font-size:11px;font-weight:600;color:#b5721c;background:#f6efe4;padding:2px 9px;border-radius:20px;" : "font-size:11px;font-weight:600;color:#6a2f6a;background:#f2e9f2;padding:2px 9px;border-radius:20px;")}>{c.conf}</span></div>
+
+          <div style={css(card)}>
+            <div style={css("font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#79716B;font-weight:700;margin-bottom:4px;")}>Standard</div>
+            <div style={css("font-size:18px;font-weight:700;margin-bottom:2px;")}>{draft.title}</div>
+            <div style={css("font-size:12px;color:#79716B;")}>Platform: {draft.platform}</div>
+          </div>
+
+          <div style={css(card)}>
+            <h3 style={css(h)}>1. Purpose</h3>
+            <p style={css("font-size:13px;color:#57534E;line-height:1.6;margin:0 0 10px;")}>{draft.narrative.purposeIntro}</p>
+            {draft.narrative.purposeAims.map((a, i) => <div key={i} style={css(li)}><span style={css("color:#1f7a4d;")}>✓</span>{a}</div>)}
+          </div>
+          <div style={css(card)}>
+            <h3 style={css(h)}>2. Scope</h3>
+            <p style={css("font-size:13px;color:#57534E;line-height:1.6;margin:0 0 10px;")}>{draft.narrative.scopeIntro}</p>
+            {draft.narrative.scopeCovers.map((a, i) => <div key={i} style={css(li)}><span style={css("color:#1f7a4d;")}>✓</span>{a}</div>)}
+          </div>
+          <div style={css(card)}>
+            <h3 style={css(h)}>3. Roles &amp; responsibilities</h3>
+            {draft.narrative.roles.map((r, i) => (
+              <div key={i} style={css("margin-bottom:8px;")}>
+                <div style={css("font-size:13px;font-weight:600;")}>{r.role}</div>
+                {r.responsibilities.map((x, j) => <div key={j} style={css(li)}><span style={css("color:#79716B;")}>·</span>{x}</div>)}
               </div>
             ))}
+          </div>
+          {draft.sections.length > 0 && (
+            <div style={css(card)}>
+              <h3 style={css(h)}>4. Control sections detected in the source</h3>
+              <div style={css("display:flex;flex-wrap:wrap;gap:7px;")}>
+                {draft.sections.map((sec, i) => <span key={i} style={css("font-size:12px;background:#F1F2EA;color:#1C1917;padding:4px 10px;border-radius:6px;")}>{sec}</span>)}
+              </div>
+            </div>
+          )}
+          <div style={css(card + "margin-bottom:0;")}>
+            <h3 style={css(h)}>5. Compliance</h3>
+            <p style={css("font-size:13px;color:#57534E;line-height:1.6;margin:0 0 8px;")}>{draft.narrative.complianceIntro}</p>
+            <p style={css("font-size:13px;color:#57534E;line-height:1.6;margin:0;")}>{draft.narrative.complianceEnforcement}</p>
           </div>
         </>
       )}
