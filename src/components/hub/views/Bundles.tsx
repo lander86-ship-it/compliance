@@ -9,6 +9,7 @@ import { BUNDLES } from "@/lib/hub/data";
 export function Bundles() {
   const { s, set } = useHub();
   const m = s.isMobile;
+  const allBundles = s.catalogBundles || BUNDLES;
 
   return (
     <div style={css(`max-width:1180px;${m ? "padding:20px 16px 48px;" : "padding:26px 34px 60px;"}`)}>
@@ -16,7 +17,7 @@ export function Bundles() {
       <p style={css("margin:0 0 22px;color:#57534E;font-size:14px;")}>Every access package. Buy one to generate CIS &amp; DISA guides for its platforms on demand.</p>
 
       <div style={css(`display:grid;grid-template-columns:repeat(${m ? 1 : 3},1fr);gap:18px;`)}>
-        {BUNDLES.map((b) => (
+        {allBundles.map((b) => (
           <div
             key={b.id}
             onClick={() => set({ view: "product", selectedId: b.id })}

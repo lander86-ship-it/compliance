@@ -7,7 +7,9 @@ import { findItem, MAPPINGS, SAMPLE, PRODUCTS, type Bundle } from "@/lib/hub/dat
 
 export function Product() {
   const { s, set, go, addToCart } = useHub();
-  const base = findItem(s.selectedId) || PRODUCTS[0];
+  // Prefer the merged (admin-edited) bundle so name/price/tagline reflect edits.
+  const edited = s.catalogBundles?.find((x) => x.id === s.selectedId);
+  const base = edited || findItem(s.selectedId) || PRODUCTS[0];
   const isBundle = "includes" in base && Array.isArray((base as Bundle).includes);
   const b = base as Bundle;
   const framework = isBundle ? "PACK" : (base as (typeof PRODUCTS)[number]).framework;

@@ -4,7 +4,8 @@ import { getSessionUser } from "@/lib/auth";
 import { grantBundles, entitlementsFor } from "@/lib/entitlements";
 import { recordPurchase } from "@/lib/purchases";
 import { stripeEnabled, getStripe, appBaseUrl } from "@/lib/stripe";
-import { BUNDLES, priceNum } from "@/lib/hub/data";
+import { priceNum } from "@/lib/hub/data";
+import { mergedBundles } from "@/lib/catalog";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
+  const BUNDLES = await mergedBundles();
   const bundleIds = parsed.data.bundleIds.filter((id) => BUNDLES.some((b) => b.id === id));
   if (!bundleIds.length) return NextResponse.json({ error: "No valid bundles selected." }, { status: 400 });
 

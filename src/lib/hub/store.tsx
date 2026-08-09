@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
-import { PRODUCTS, type SourceId } from "./data";
+import { PRODUCTS, BUNDLES, type SourceId, type Bundle } from "./data";
 
 export type GuideRef = { source: SourceId; ref: string; name: string; label: string; controls: number };
 
@@ -97,6 +97,7 @@ export type HubState = {
   generationsStatus: "idle" | "loading" | "done";
   savedTemplate: SavedTemplate | null;
   savedTemplateStatus: "idle" | "loading" | "done";
+  catalogBundles: Bundle[] | null; // merged (admin-edited) bundles; null → use static defaults
 };
 
 const initialState: HubState = {
@@ -165,6 +166,7 @@ const initialState: HubState = {
   generationsStatus: "idle",
   savedTemplate: null,
   savedTemplateStatus: "idle",
+  catalogBundles: null,
 };
 
 type HubContextValue = {
@@ -217,6 +219,14 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Load the merged (admin-editable) catalog once on mount.
+  useEffect(() => {
+    fetch("/api/catalog")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.bundles?.length) setS((p) => ({ ...p, catalogBundles: d.bundles })); })
+      .catch(() => {});
   }, []);
 
   // Load the current session once on mount.

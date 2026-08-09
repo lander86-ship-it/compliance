@@ -3,16 +3,17 @@
 // Hardening Access" bundle grants everything.
 
 import { prisma } from "./db";
-import { BUNDLES, classifyGuide, type SourceId } from "./hub/data";
+import { classifyGuide, type SourceId } from "./hub/data";
+import { bundleMapById } from "./catalog";
 
 export type Entitlements = { bundleIds: string[]; sources: SourceId[]; categories: string[]; all: boolean };
 
-const bundleById = new Map(BUNDLES.map((b) => [b.id, b]));
 const ALL_ACCESS = "pk-stig-all";
 
 export async function entitlementsFor(userId: string): Promise<Entitlements> {
   const rows = await prisma.entitlement.findMany({ where: { userId } }).catch(() => []);
   const bundleIds = rows.map((r) => r.bundleId);
+  const bundleById = await bundleMapById();
   const sources = new Set<SourceId>();
   const categories = new Set<string>();
   for (const id of bundleIds) {
@@ -40,6 +41,7 @@ export function canGenerate(ent: Entitlements, source: SourceId, guideName?: str
 }
 
 export async function grantBundles(userId: string, bundleIds: string[]): Promise<void> {
+  const bundleById = await bundleMapById();
   const valid = bundleIds.filter((id) => bundleById.has(id));
   for (const bundleId of valid) {
     await prisma.entitlement

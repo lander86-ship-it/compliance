@@ -18,7 +18,8 @@ export function Storefront() {
   const m = s.isMobile;
   const family = s.family;
   const af = FAMILIES.find((f) => f.id === family)!;
-  const bundles = BUNDLES.filter((b) => b.family === family);
+  const allBundles = s.catalogBundles || BUNDLES;
+  const bundles = allBundles.filter((b) => b.family === family);
   const flagship = bundles.find((b) => b.featured) || bundles[0];
   const directory = DIRECTORY[family];
 

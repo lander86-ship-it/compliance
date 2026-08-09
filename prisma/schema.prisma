@@ -252,6 +252,23 @@ model GenerationEvent {
   createdAt  DateTime @default(now())
 }
 
+// Admin-editable overrides + custom entries for the sellable bundles. A row
+// keyed by a static bundle id overrides that bundle's fields; a row with
+// custom=true is a brand-new bundle created in the Admin catalog.
+model BundleOverride {
+  id           String   @id // bundle id (static id or an admin-created one)
+  name         String?
+  tagline      String?
+  price        String?
+  family       String?
+  sourcesCsv   String? // e.g. "cis,disa"
+  categoriesCsv String?
+  featured     Boolean?
+  active       Boolean  @default(true)
+  custom       Boolean  @default(false)
+  updatedAt    DateTime @default(now())
+}
+
 // A buyer's saved house-style template, uploaded once and reused for every
 // generation (so they don't re-upload each time).
 model UserTemplate {
