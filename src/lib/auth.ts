@@ -32,13 +32,23 @@ function verifyToken(token: string): string | null {
 }
 
 export const SESSION_COOKIE = COOKIE;
+// 10-minute sliding session: the cookie expires 10 min after the last activity.
+// Each authenticated request re-issues the cookie (see refreshSession), so an
+// active user stays logged in and 10 min of inactivity ends the session.
+export const SESSION_TTL_SECONDS = 60 * 10;
 export const sessionCookieOptions = {
   httpOnly: true,
   sameSite: "lax" as const,
   path: "/",
   secure: process.env.NODE_ENV === "production",
-  maxAge: 60 * 60 * 8, // 8h session expiry (NFR-S-02)
+  maxAge: SESSION_TTL_SECONDS,
 };
+
+// Re-issue the session cookie to slide its 10-minute expiry forward. Call from a
+// route handler on each authenticated request.
+export function refreshSession(res: { cookies: { set: (name: string, value: string, opts: typeof sessionCookieOptions) => void } }, userId: string): void {
+  res.cookies.set(COOKIE, makeToken(userId), sessionCookieOptions);
+}
 
 export type SessionUser = {
   id: string;

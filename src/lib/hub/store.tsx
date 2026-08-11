@@ -111,7 +111,7 @@ const initialState: HubState = {
   selectedId: "cis-win2022",
   variant: "Windows Server 2022",
   profile: "Level 1",
-  cart: ["cis-ubuntu2204"],
+  cart: [],
   wizardStep: 1,
   wizardProductId: "cis-win2022",
   wizName: "CIS Windows Server 2022 Benchmark",
@@ -221,6 +221,44 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // ── URL routing ── Each view maps to a hash path (#/library, #/admin-dashboard…)
+  // so views are deep-linkable and the browser back/forward buttons move between
+  // them instead of leaving the app.
+  const routingRef = useRef(false);
+  useEffect(() => {
+    const applyHash = () => {
+      const h = window.location.hash.replace(/^#\/?/, "").split("?")[0] || "storefront";
+      routingRef.current = true;
+      setS((p) => (p.view === h ? p : { ...p, view: h }));
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
+  useEffect(() => {
+    if (routingRef.current) { routingRef.current = false; return; }
+    const target = `#/${s.view}`;
+    if (typeof window !== "undefined" && window.location.hash !== target) window.location.hash = `/${s.view}`;
+  }, [s.view]);
+
+  // Keep the 10-minute session alive while the user is active: ping /api/auth/me
+  // (which slides the cookie) on activity, throttled, plus a periodic refresh.
+  // Idle for 10 minutes → no pings → the cookie expires and the session ends.
+  useEffect(() => {
+    let last = 0;
+    const ping = () => {
+      if (sRef.current.authStatus !== "authed") return;
+      const now = Date.now();
+      if (now - last < 60_000) return;
+      last = now;
+      fetch("/api/auth/me").catch(() => {});
+    };
+    const evts: (keyof WindowEventMap)[] = ["mousedown", "keydown", "scroll", "touchstart"];
+    evts.forEach((e) => window.addEventListener(e, ping, { passive: true }));
+    const iv = setInterval(ping, 4 * 60_000);
+    return () => { evts.forEach((e) => window.removeEventListener(e, ping)); clearInterval(iv); };
+  }, []);
+
   // Load the merged (admin-editable) catalog once on mount.
   useEffect(() => {
     fetch("/api/catalog")
@@ -246,7 +284,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
           const sid = params.get("session_id");
           if (sid) {
             const cr = await fetch(`/api/checkout/confirm?session_id=${encodeURIComponent(sid)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-            if (cr?.ok) setS((p) => ({ ...p, entitlements: cr.entitlements, cart: [], view: "generator" }));
+            if (cr?.ok) setS((p) => ({ ...p, entitlements: cr.entitlements, cart: [], view: "library" }));
             window.history.replaceState({}, "", window.location.pathname);
           } else if (params.get("checkout") === "cancel") {
             window.history.replaceState({}, "", window.location.pathname);
@@ -307,8 +345,9 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
       const r = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json();
       if (!r.ok) throw new Error(typeof d.error === "string" ? d.error : "Authentication failed");
-      // Return to checkout if a purchase was in progress; else land in the role's home.
-      setS((p) => ({ ...p, user: d.user, authStatus: "authed", authBusy: false, authError: null, view: p.cart.length > 0 ? "checkout" : isAdminRole(d.user.role) ? "admin-dashboard" : "generator" }));
+      // Land in the role's home: admins on the dashboard, buyers on their Library.
+      // (We no longer auto-jump to checkout; the user chooses when to buy.)
+      setS((p) => ({ ...p, user: d.user, authStatus: "authed", authBusy: false, authError: null, view: isAdminRole(d.user.role) ? "admin-dashboard" : "library" }));
       const er = await fetch("/api/entitlements").then((r2) => (r2.ok ? r2.json() : null)).catch(() => null);
       if (er) setS((p) => ({ ...p, entitlements: er.entitlements || null, entAdmin: !!er.admin }));
     } catch (e) {

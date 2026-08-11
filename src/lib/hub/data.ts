@@ -201,12 +201,9 @@ export function classifyGuide(name: string): string {
 }
 
 export const BUNDLES: Bundle[] = [
-  makePack("pk-stig-all", "Complete Hardening Access", "Generate CIS Benchmark and DISA STIG guides on demand across every platform — operating systems, network, databases, web, containers and virtualization.", Object.values(STIG_GROUPS).flat(), 30, true),
-  makePack("pk-stig-os", "Operating Systems Access", "Generate CIS + DISA guides for RHEL, Windows Server/desktop, Ubuntu, SUSE, macOS, Solaris, AIX and z/OS.", STIG_GROUPS["Operating Systems"], 20),
-  makePack("pk-stig-net", "Network & Firewall Access", "Generate CIS + DISA guides for Cisco (Router, Switch, ASA, NX-OS), Palo Alto, F5 BIG-IP and Juniper devices.", STIG_GROUPS["Network & Firewall"], 20),
-  makePack("pk-stig-db", "Database Access", "Generate CIS + DISA guides for PostgreSQL, SQL Server, Oracle, MongoDB, MySQL and MariaDB.", STIG_GROUPS["Databases"], 20),
-  makePack("pk-stig-virt", "Containers & Virtualization Access", "Generate CIS + DISA guides for Kubernetes, Docker, OpenShift, Nutanix and VMware vSphere.", STIG_GROUPS["Containers & Virtualization"], 20),
-  makePack("pk-stig-web", "Web & Endpoint Access", "Generate CIS + DISA guides for Apache, IIS, Tomcat, Exchange, browsers, Office and endpoint tooling.", STIG_GROUPS["Web & Endpoint"], 20),
+  // One hardening bundle: buying it unlocks unlimited on-demand generation of
+  // CIS Benchmark and DISA STIG guides across every platform.
+  makePack("pk-stig-all", "Hardening Access — CIS & DISA", "One bundle, unlimited guides. Generate CIS Benchmark and DISA STIG hardening guides on demand across every platform — operating systems, network, databases, web, containers and virtualization.", Object.values(STIG_GROUPS).flat(), 30, true),
   // Editable standards/policies packs (roadmap — CIS/NIST/PCI content, sold once licensed).
   { id: "pk-std-all", family: "standards", framework: "PACK", name: "Complete Standards Suite", tagline: "Every editable policy, procedure and compliance program we publish.", price: "$7,900", count: 38, savings: "$70k", featured: true, includes: ["Governance Standards Pack", "NIST 800-53 Compliance Pack", "NIST 800-171 / CMMC Pack", "PCI DSS Compliance Pack", "All future additions for 12 months"] },
   { id: "pk-std-gov", family: "standards", framework: "PACK", name: "Governance Standards Pack", tagline: "Policies + procedures for SCF, NIST CSF 2.0 and ISO 27001/27002.", price: "$2,990", count: 14, savings: "$26k", includes: ["Policies & Standards — Secure Controls Framework", "Policies & Standards — NIST CSF 2.0", "Policies & Standards — ISO 27001/27002", "Matching editable procedures", "Cybersecurity Business Plan (CBP)"] },
