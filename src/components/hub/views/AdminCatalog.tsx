@@ -71,6 +71,54 @@ function BundleEditor({ b, onClose, onSaved }: { b: Editing; onClose: () => void
   );
 }
 
+type Std = { id: string; title: string; status: string; hidden: boolean; bundleId: string | null; priceCents: number | null; platform: string | null };
+
+function StandardsSection({ bundles }: { bundles: Bundle[] }) {
+  const [list, setList] = useState<Std[] | null>(null);
+  const load = () => fetch("/api/admin/standards").then((r) => (r.ok ? r.json() : { standards: [] })).then((d) => setList((d.standards || []).filter((x: Std) => x.status === "published"))).catch(() => setList([]));
+  useEffect(() => { load(); }, []);
+  const patch = async (id: string, body: Record<string, unknown>) => { await fetch(`/api/admin/standards/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); load(); };
+  const input = "padding:7px 9px;border:1px solid #E7E6E5;border-radius:7px;font-size:12.5px;background:#fff;outline:none;";
+
+  return (
+    <div style={css("margin-top:34px;")}>
+      <h2 style={css("margin:0 0 4px;font-size:18px;font-weight:700;")}>Published standards &amp; policies</h2>
+      <p style={css("margin:0 0 14px;color:#57534E;font-size:13px;")}>Standards created in the AI Generator. Assign each to a bundle, set a price, edit the title, or hide it from clients.</p>
+      {list === null ? (
+        <div style={css("color:#79716B;font-size:14px;")}>Loading…</div>
+      ) : list.length === 0 ? (
+        <div style={css("background:#FBFAF9;border:1px dashed #D6D3D1;border-radius:18px;padding:30px;text-align:center;color:#79716B;font-size:13.5px;")}>No published standards yet. Publish one from the AI Generator.</div>
+      ) : (
+        <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:22px;overflow:hidden;")}>
+          <div style={css("display:grid;grid-template-columns:1.6fr 1.2fr 90px 110px 90px;background:#F1F2EA;border-bottom:1px solid #E7E6E5;padding:11px 18px;font-size:11px;font-weight:600;color:#79716B;text-transform:uppercase;letter-spacing:.4px;")}>
+            <div>Standard</div><div>Bundle</div><div>Price</div><div>Visibility</div><div></div>
+          </div>
+          {list.map((st) => (
+            <div key={st.id} style={css("display:grid;grid-template-columns:1.6fr 1.2fr 90px 110px 90px;padding:12px 18px;border-bottom:1px solid #EFEEEC;font-size:13px;align-items:center;gap:8px;")}>
+              <div style={css("font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;")}>{st.title}</div>
+              <div>
+                <select value={st.bundleId || ""} onChange={(e) => patch(st.id, { bundleId: e.target.value || null })} style={css(input + "width:100%;")}>
+                  <option value="">— none —</option>
+                  {bundles.filter((b) => b.family === "standards").map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <input defaultValue={st.priceCents != null ? String(st.priceCents / 100) : ""} placeholder="$" onBlur={(e) => { const n = e.target.value.trim() ? Math.round(parseFloat(e.target.value) * 100) : null; patch(st.id, { priceCents: n }); }} style={css(input + "width:70px;")} />
+              </div>
+              <div>
+                <button onClick={() => patch(st.id, { hidden: !st.hidden })} style={css(`font-size:11px;font-weight:600;border:1px solid ${st.hidden ? "#E7E6E5" : "#b6d2c1"};background:${st.hidden ? "#fff" : "#e7f4ee"};color:${st.hidden ? "#79716B" : "#186340"};border-radius:20px;padding:4px 10px;cursor:pointer;`)}>{st.hidden ? "Hidden" : "Visible"}</button>
+              </div>
+              <div style={css("text-align:right;")}>
+                <button onClick={() => { const t = prompt("Edit title", st.title); if (t) patch(st.id, { title: t }); }} style={css("background:#0f4c9c;color:#fff;border:none;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;")}>Edit</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminCatalog() {
   const [bundles, setBundles] = useState<Bundle[] | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
@@ -105,6 +153,8 @@ export function AdminCatalog() {
           ))}
         </div>
       )}
+      {bundles && <StandardsSection bundles={bundles} />}
+
       {editing && <BundleEditor b={editing} onClose={() => setEditing(null)} onSaved={load} />}
     </div>
   );

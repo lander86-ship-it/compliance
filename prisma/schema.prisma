@@ -252,6 +252,24 @@ model GenerationEvent {
   createdAt  DateTime @default(now())
 }
 
+// An AI-drafted standard/policy created in the Admin AI Generator. Draft →
+// reviewed → published (hidden) into the catalog, where the admin assigns it a
+// bundle and price. Distinct from the CIS/DISA hardening guides (live-generated).
+model Standard {
+  id          String   @id @default(cuid())
+  title       String
+  sourceUrl   String?
+  platform    String?
+  summary     String?  // one-line/purpose summary
+  contentJson String   // JSON: { narrative, sections } used to render/download
+  status      String   @default("draft") // draft | published
+  hidden      Boolean  @default(true) // hidden from clients until surfaced
+  bundleId    String? // catalog bundle it belongs to
+  priceCents  Int? // standalone price (optional)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+}
+
 // Admin-editable overrides + custom entries for the sellable bundles. A row
 // keyed by a static bundle id overrides that bundle's fields; a row with
 // custom=true is a brand-new bundle created in the Admin catalog.
