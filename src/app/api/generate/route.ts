@@ -95,6 +95,32 @@ export async function POST(req: Request) {
           artifacts: artifacts.map((a) => a.fileName).join(","),
         },
       }).catch(() => {});
+
+      // Persist the DOCX + PDF into the DB, deduped per guide, with review lifecycle.
+      if (user) {
+        try {
+          const fs = await import("node:fs/promises");
+          const path = await import("node:path");
+          const STORAGE = process.env.STORAGE_DIR || "./storage";
+          const readB64 = async (fmt: string) => {
+            const a = artifacts.find((x) => x.format === fmt);
+            if (!a) return null;
+            return (await fs.readFile(path.join(STORAGE, a.fileName))).toString("base64");
+          };
+          const docx = await readB64("DOCX").catch(() => null);
+          const pdf = await readB64("PDF").catch(() => null);
+          const guideKey = `${parsed.data.source || "baked"}:${parsed.data.guideRef || parsed.data.guideName || parsed.data.productId}`;
+          const guideName = parsed.data.guideName || parsed.data.productId || "Hardening guide";
+          const legal = parsed.data.scope?.legal || null;
+          const nextReview = new Date(Date.now() + 365 * 24 * 3600 * 1000);
+          const existing = await prisma.generatedDoc.findUnique({ where: { userId_guideKey: { userId: user.id, guideKey } } });
+          if (existing) {
+            await prisma.generatedDoc.update({ where: { id: existing.id }, data: { source: parsed.data.source || "baked", guideName, legal, docx, pdf, version: existing.version + 1, createdAt: new Date(), reviewedAt: null, nextReviewAt: nextReview } });
+          } else {
+            await prisma.generatedDoc.create({ data: { userId: user.id, guideKey, source: parsed.data.source || "baked", guideName, legal, docx, pdf, nextReviewAt: nextReview } });
+          }
+        } catch { /* DB not migrated — files still downloadable this session */ }
+      }
     } catch {
       /* DB not migrated — generation still succeeds */
     }

@@ -287,6 +287,28 @@ model BundleOverride {
   updatedAt    DateTime @default(now())
 }
 
+// A buyer's generated guide, stored in the DB (DOCX + PDF bytes) so it survives
+// and is re-downloadable. One row per (user, guide): regenerating replaces the
+// bytes and bumps the version, so we never keep stale copies. Carries the review
+// lifecycle (created, version, next-review reminder, re-signed-as-reviewed).
+model GeneratedDoc {
+  id           String    @id @default(cuid())
+  userId       String
+  guideKey     String // dedupe key per user (source:ref)
+  source       String? // cis | disa | baked
+  guideName    String
+  legal        String? // org / scope the guide was generated for
+  version      Int       @default(1)
+  docx         String? // base64
+  pdf          String? // base64
+  createdAt    DateTime  @default(now())
+  reviewedAt   DateTime?
+  nextReviewAt DateTime?
+
+  @@unique([userId, guideKey])
+  @@index([userId])
+}
+
 // A buyer's saved house-style template, uploaded once and reused for every
 // generation (so they don't re-upload each time).
 model UserTemplate {
