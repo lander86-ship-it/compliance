@@ -27,6 +27,10 @@ import { AdminEditor } from "@/components/hub/views/AdminEditor";
 import { AdminCatalog } from "@/components/hub/views/AdminCatalog";
 import { AdminOrders } from "@/components/hub/views/AdminOrders";
 import { AdminVersioning } from "@/components/hub/views/AdminVersioning";
+import { Organization } from "@/components/hub/views/Organization";
+import { Legal } from "@/components/hub/views/Legal";
+import { CookieConsent } from "@/components/hub/CookieConsent";
+import { Footer } from "@/components/hub/Footer";
 
 const VIEWS: Record<string, React.ComponentType> = {
   storefront: Storefront,
@@ -51,9 +55,12 @@ const VIEWS: Record<string, React.ComponentType> = {
   "admin-catalog": AdminCatalog,
   "admin-orders": AdminOrders,
   "admin-versioning": AdminVersioning,
+  organization: Organization,
+  terms: Legal,
+  privacy: Legal,
 };
 
-const AUTH_REQUIRED = new Set(["generator", "library", "license", "subscriptions", "invoices", "account"]);
+const AUTH_REQUIRED = new Set(["generator", "library", "license", "subscriptions", "invoices", "account", "organization"]);
 const ADMIN_PREFIX = "admin";
 
 function Shell() {
@@ -77,8 +84,10 @@ function Shell() {
           <div key={view} style={css("animation:hh-fade .28s ease;")}>
             <View />
           </div>
+          <Footer />
         </main>
       </div>
+      <CookieConsent />
     </div>
   );
 }

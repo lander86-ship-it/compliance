@@ -17,9 +17,28 @@ export function Account() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  // Fiscal/billing profile (Spain/EU VAT) for invoices.
+  const [taxId, setTaxId] = useState("");
+  const [billingName, setBillingName] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [country, setCountry] = useState("");
+  const [billBusy, setBillBusy] = useState(false);
+  const [billMsg, setBillMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
   useEffect(() => {
     if (s.purchasesStatus === "idle") loadPurchases();
   }, [s.purchasesStatus, loadPurchases]);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/account").then((r) => (r.ok ? r.json() : null)).then((d) => {
+      if (!live || !d?.billing) return;
+      setTaxId(d.billing.taxId || "");
+      setBillingName(d.billing.billingName || "");
+      setBillingAddress(d.billing.billingAddress || "");
+      setCountry(d.billing.country || "");
+    }).catch(() => {});
+    return () => { live = false; };
+  }, []);
   useEffect(() => {
     setName(u?.name || "");
     setEmail(u?.email || "");
@@ -43,6 +62,13 @@ export function Account() {
     setBusy(false);
     setMsg(r.ok ? { ok: true, text: "Profile updated." } : { ok: false, text: r.error || "Update failed." });
     if (r.ok) { setCurPw(""); setNewPw(""); }
+  };
+
+  const saveBilling = async () => {
+    setBillBusy(true); setBillMsg(null);
+    const r = await updateAccount({ taxId, billingName, billingAddress, country });
+    setBillBusy(false);
+    setBillMsg(r.ok ? { ok: true, text: "Billing details saved." } : { ok: false, text: r.error || "Update failed." });
   };
 
   return (
@@ -73,6 +99,33 @@ export function Account() {
         {msg && <div style={css(`margin-top:14px;font-size:13px;color:${msg.ok ? "#186340" : "#8a3b3b"};`)}>{msg.text}</div>}
         <div style={css("margin-top:18px;display:flex;gap:10px;")}>
           <button onClick={save} disabled={busy} className="hh-primary" style={css(`background:${busy ? "#7fa4d0" : "#0f4c9c"};color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:600;cursor:pointer;`)}>{busy ? "Saving…" : "Save changes"}</button>
+        </div>
+      </div>
+
+      <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;padding:22px;margin-bottom:20px;")}>
+        <h3 style={css("margin:0 0 4px;font-size:15px;font-weight:600;")}>Billing details</h3>
+        <p style={css("margin:0 0 16px;font-size:12.5px;color:#79716B;line-height:1.5;")}>Used on your invoices. Spanish/EU businesses: enter your NIF/CIF or VAT number.</p>
+        <div style={css("margin-bottom:14px;")}>
+          <label style={css(label)}>Legal / billing name</label>
+          <input value={billingName} onChange={(e) => setBillingName(e.target.value)} placeholder="Acme, S.L." style={css(input)} />
+        </div>
+        <div style={css("display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;")}>
+          <div>
+            <label style={css(label)}>Tax ID (NIF / CIF / VAT)</label>
+            <input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="ESB12345678" style={css(input)} />
+          </div>
+          <div>
+            <label style={css(label)}>Country (ISO)</label>
+            <input value={country} onChange={(e) => setCountry(e.target.value.toUpperCase().slice(0, 2))} placeholder="ES" style={css(input)} />
+          </div>
+        </div>
+        <div style={css("margin-bottom:4px;")}>
+          <label style={css(label)}>Billing address</label>
+          <input value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)} placeholder="Calle …, 28001 Madrid" style={css(input)} />
+        </div>
+        {billMsg && <div style={css(`margin-top:12px;font-size:13px;color:${billMsg.ok ? "#186340" : "#8a3b3b"};`)}>{billMsg.text}</div>}
+        <div style={css("margin-top:16px;")}>
+          <button onClick={saveBilling} disabled={billBusy} className="hh-primary" style={css(`background:${billBusy ? "#7fa4d0" : "#0f4c9c"};color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:600;cursor:pointer;`)}>{billBusy ? "Saving…" : "Save billing details"}</button>
         </div>
       </div>
 

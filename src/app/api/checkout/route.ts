@@ -43,6 +43,10 @@ export async function POST(req: Request) {
         line_items,
         customer_email: user.email,
         metadata: { userId: user.id, bundleIds: bundleIds.join(",") },
+        // Collect fiscal details for a compliant Spanish/EU invoice.
+        billing_address_collection: "required",
+        tax_id_collection: { enabled: true },
+        invoice_creation: { enabled: true },
         success_url: `${base}/?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${base}/?checkout=cancel`,
       });

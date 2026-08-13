@@ -11,7 +11,7 @@ const tabDef: [string, string, string][] = [
 ];
 
 export function domainOf(view: string): string {
-  if (["generator", "library", "license", "subscriptions", "invoices", "account"].includes(view)) return "customer";
+  if (["generator", "library", "license", "subscriptions", "invoices", "account", "organization"].includes(view)) return "customer";
   if (view.startsWith("admin")) return "admin";
   return "store";
 }

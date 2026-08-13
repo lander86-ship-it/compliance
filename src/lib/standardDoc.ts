@@ -2,6 +2,7 @@
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from "docx";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { Narrative } from "./policyNarrative";
+import type { Block } from "./policyContent";
 
 export type StandardContent = { narrative: Narrative; sections: string[]; sourceUrl?: string; platform?: string };
 
@@ -9,12 +10,51 @@ export function parseContent(json: string): StandardContent {
   try { return JSON.parse(json) as StandardContent; } catch { return { narrative: {} as Narrative, sections: [] }; }
 }
 
-export async function buildStandardDocx(title: string, c: StandardContent): Promise<Buffer> {
+// When a buyer generates a purchased standard, their company name personalises the document.
+export type StandardScope = { org?: string; version?: string; classification?: string; date?: string };
+
+// Block model of a stored standard, so a buyer's house-style template can be filled the same
+// way the hardening policy is (see policyTemplate.injectBlocksIntoDocx/Pdf).
+export function standardBlocks(title: string, c: StandardContent, scope: StandardScope = {}): Block[] {
+  const n = c.narrative;
+  const b: Block[] = [];
+  if (scope.org) b.push({ t: "p", text: `Prepared for ${scope.org}.` });
+  b.push({ t: "h1", text: "1. Purpose" });
+  if (n.purposeIntro) b.push({ t: "p", text: n.purposeIntro });
+  (n.purposeAims || []).forEach((x) => b.push({ t: "li", text: x }));
+  b.push({ t: "h1", text: "2. Scope" });
+  if (n.scopeIntro) b.push({ t: "p", text: scope.org ? n.scopeIntro.replace(/\bthe organization\b/gi, scope.org) : n.scopeIntro });
+  (n.scopeCovers || []).forEach((x) => b.push({ t: "li", text: x }));
+  b.push({ t: "h1", text: "3. Roles & responsibilities" });
+  (n.roles || []).forEach((r) => b.push({ t: "role", role: r.role, resp: r.responsibilities || [] }));
+  if (c.sections && c.sections.length) {
+    b.push({ t: "h1", text: "4. Requirements" });
+    c.sections.forEach((s) => b.push({ t: "li", text: s }));
+  }
+  b.push({ t: "h1", text: "5. Compliance" });
+  if (n.complianceIntro) b.push({ t: "p", text: n.complianceIntro });
+  if (n.complianceEnforcement) b.push({ t: "p", text: n.complianceEnforcement });
+  return b;
+}
+
+// Inline {{PLACEHOLDER}} values for a buyer's DOCX template.
+export function standardInlineMap(title: string, scope: StandardScope): Record<string, string> {
+  return {
+    "{{TITLE}}": title,
+    "{{ORG}}": scope.org || "",
+    "{{VERSION}}": scope.version || "1.0",
+    "{{DATE}}": scope.date || new Date().toISOString().slice(0, 10),
+    "{{CLASSIFICATION}}": scope.classification || "Internal Use",
+  };
+}
+
+export async function buildStandardDocx(title: string, c: StandardContent, scope: StandardScope = {}): Promise<Buffer> {
   const n = c.narrative;
   const doc = new Document({
     sections: [{
       children: [
         new Paragraph({ text: title, heading: HeadingLevel.TITLE }),
+        ...(scope.org ? [new Paragraph({ children: [new TextRun({ text: `Prepared for ${scope.org}`, bold: true, size: 22 })] })] : []),
         ...(c.sourceUrl ? [new Paragraph({ children: [new TextRun({ text: `Source: ${c.sourceUrl}`, italics: true, size: 18, color: "6b6b6b" })] })] : []),
         new Paragraph({ text: "1. Purpose", heading: HeadingLevel.HEADING_1 }),
         new Paragraph(n.purposeIntro || ""),
@@ -38,7 +78,7 @@ function ascii(s: string): string {
   return (s || "").replace(/[—–]/g, "-").replace(/[“”]/g, '"').replace(/[’]/g, "'").replace(/[^\x20-\x7E]/g, "");
 }
 
-export async function buildStandardPdf(title: string, c: StandardContent): Promise<Buffer> {
+export async function buildStandardPdf(title: string, c: StandardContent, scope: StandardScope = {}): Promise<Buffer> {
   const n = c.narrative;
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -58,6 +98,7 @@ export async function buildStandardPdf(title: string, c: StandardContent): Promi
     if (line) { page.drawText(line, { x: M + indent, y, size, font: f, color }); nl(size + 6); }
   };
   page.drawText(ascii(title), { x: M, y, size: 20, font: bold, color: brand }); nl(28);
+  if (scope.org) { wrap(`Prepared for ${scope.org}`, 11, bold, ink); nl(4); }
   if (c.sourceUrl) { wrap(`Source: ${c.sourceUrl}`, 9, font, muted); nl(6); }
   const heading = (t: string) => { nl(8); page.drawText(ascii(t), { x: M, y, size: 13, font: bold, color: ink }); nl(20); };
   const bullets = (arr: string[]) => (arr || []).forEach((a) => wrap("• " + a, 10.5, font, ink, 6));

@@ -135,6 +135,14 @@ function replaceBodyMarker(xml: string, bodyOoxml: string): { xml: string; found
 export async function injectPolicyIntoDocx(
   templateBuffer: Buffer, meta: PolicyMeta, controls: FullControl[], narrative: Narrative,
 ): Promise<Buffer> {
+  return injectBlocksIntoDocx(templateBuffer, inlineMap(meta), policyBlocks(meta, controls, narrative), meta.color);
+}
+
+// Generic block-based DOCX injector: render any Block[] into an uploaded house-style template.
+// Reused by both the hardening policy generator and the published-standard client generator.
+export async function injectBlocksIntoDocx(
+  templateBuffer: Buffer, inline: Record<string, string>, blocks: Block[], colorHex: string,
+): Promise<Buffer> {
   const zip = await JSZip.loadAsync(templateBuffer);
   const docFile = zip.file("word/document.xml");
   if (!docFile) throw new Error("Uploaded file is not a valid .docx (missing word/document.xml).");
@@ -143,12 +151,10 @@ export async function injectPolicyIntoDocx(
   xml = healRuns(xml);
 
   // Inline placeholders (order-independent, literal replace).
-  const brand = meta.color.replace("#", "");
-  const inline = inlineMap(meta);
+  const brand = (colorHex || "#0f4c9c").replace("#", "");
   for (const [k, v] of Object.entries(inline)) xml = xml.split(k).join(xmlEsc(v));
 
   // Body: swap the marker paragraph for the generated content.
-  const blocks = policyBlocks(meta, controls, narrative);
   const bodyOoxml = blocksToOoxml(blocks, brand);
   const res = replaceBodyMarker(xml, bodyOoxml);
   if (res.found) {
@@ -170,6 +176,14 @@ export async function injectPolicyIntoDocx(
 export async function injectPolicyIntoPdf(
   templateBuffer: Buffer, meta: PolicyMeta, controls: FullControl[], narrative: Narrative,
 ): Promise<Buffer> {
+  return injectBlocksIntoPdf(templateBuffer, policyBlocks(meta, controls, narrative), meta.color);
+}
+
+// Generic block-based PDF injector: uploaded PDF pages become a branded cover, then the
+// Block[] content is appended as fresh pages.
+export async function injectBlocksIntoPdf(
+  templateBuffer: Buffer, blocks: Block[], colorHex: string,
+): Promise<Buffer> {
   const out = await PDFDocument.create();
 
   // 1) Copy the uploaded template's pages verbatim as a branded cover/prefix.
@@ -184,7 +198,7 @@ export async function injectPolicyIntoPdf(
   // 2) Append the generated policy content as fresh pages.
   const font = await out.embedFont(StandardFonts.Helvetica);
   const bold = await out.embedFont(StandardFonts.HelveticaBold);
-  const brand = hexToRgb(meta.color);
+  const brand = hexToRgb(colorHex || "#0f4c9c");
   const ink = rgb(0.11, 0.1, 0.09);
   const muted = rgb(0.34, 0.33, 0.31);
   const M = 56, W = 595.28, H = 841.89;
@@ -208,7 +222,7 @@ export async function injectPolicyIntoPdf(
     y -= o.gap ?? 0;
   };
 
-  for (const bl of policyBlocks(meta, controls, narrative)) {
+  for (const bl of blocks) {
     switch (bl.t) {
       case "h1": if (y < M + 60) { page = out.addPage([W, H]); y = H - M; } write(bl.text, { size: 15, font: bold, color: rgb(brand.r, brand.g, brand.b), gap: 8 }); break;
       case "h2": write(bl.text, { size: 12, font: bold, gap: 4 }); break;

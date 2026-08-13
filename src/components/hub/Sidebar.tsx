@@ -19,6 +19,7 @@ const navDefs: Record<string, [string, string][]> = {
     ["Library", "library"],
     ["Subscriptions", "subscriptions"],
     ["Invoices", "invoices"],
+    ["Organization", "organization"],
     ["Account", "account"],
   ],
   admin: [

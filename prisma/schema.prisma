@@ -194,6 +194,20 @@ model Organization {
   users         User[]
   orders        Order[]
   scopeProfiles ScopeProfile[]
+  invites       OrgInvite[]
+}
+
+// Pending invitation to join an organization. Consumed automatically when a user with the
+// invited email signs up or logs in (they join as a member and share the org's entitlements).
+model OrgInvite {
+  id        String   @id @default(cuid())
+  orgId     String
+  email     String
+  createdAt DateTime @default(now())
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, email])
+  @@index([email])
 }
 
 model User {
@@ -203,7 +217,13 @@ model User {
   passwordHash String
   name         String?
   role         String   @default("customer") // customer | author | admin | owner
+  orgRole      String? // within an organization: owner | member (null = personal account)
   mfaEnabled   Boolean  @default(false)
+  // Fiscal/billing profile for invoices (Spain/EU VAT).
+  taxId          String? // NIF/CIF/VAT number
+  billingName    String? // legal name on the invoice
+  billingAddress String?
+  country        String? // ISO country, e.g. ES
   createdAt    DateTime @default(now())
   organization Organization? @relation(fields: [orgId], references: [id])
   entitlements Entitlement[]

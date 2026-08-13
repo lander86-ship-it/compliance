@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { grantBundles, entitlementsFor } from "@/lib/entitlements";
 import { recordPurchase } from "@/lib/purchases";
 import { stripeEnabled, getStripe } from "@/lib/stripe";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +38,20 @@ export async function GET(req: Request) {
         currency: (session.currency || "usd").toUpperCase(),
         stripeSessionId: session.id,
       });
+      // Persist fiscal details Stripe collected, in case the webhook isn't configured.
+      const cd = session.customer_details;
+      if (cd) {
+        const addr = cd.address;
+        const fiscal: Record<string, unknown> = {};
+        const taxId = cd.tax_ids?.[0]?.value;
+        if (taxId) fiscal.taxId = taxId;
+        if (cd.name) fiscal.billingName = cd.name;
+        if (addr) {
+          fiscal.billingAddress = [addr.line1, addr.line2, addr.postal_code, addr.city, addr.state].filter(Boolean).join(", ");
+          if (addr.country) fiscal.country = addr.country;
+        }
+        if (Object.keys(fiscal).length) await prisma.user.update({ where: { id: user.id }, data: fiscal }).catch(() => {});
+      }
     }
     const entitlements = await entitlementsFor(user.id);
     return NextResponse.json({ ok: true, entitlements });

@@ -11,8 +11,14 @@ export type Entitlements = { bundleIds: string[]; sources: SourceId[]; categorie
 const ALL_ACCESS = "pk-stig-all";
 
 export async function entitlementsFor(userId: string): Promise<Entitlements> {
-  const rows = await prisma.entitlement.findMany({ where: { userId } }).catch(() => []);
-  const bundleIds = rows.map((r) => r.bundleId);
+  // Team accounts: a member shares every entitlement held by anyone in their organization
+  // (bundle purchases are org-wide seats). Personal accounts see only their own.
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { orgId: true } }).catch(() => null);
+  const userIds = me?.orgId
+    ? (await prisma.user.findMany({ where: { orgId: me.orgId }, select: { id: true } }).catch(() => [{ id: userId }])).map((u) => u.id)
+    : [userId];
+  const rows = await prisma.entitlement.findMany({ where: { userId: { in: userIds } } }).catch(() => []);
+  const bundleIds = [...new Set(rows.map((r) => r.bundleId))];
   const bundleById = await bundleMapById();
   const sources = new Set<SourceId>();
   const categories = new Set<string>();
@@ -38,6 +44,16 @@ export function canGenerate(ent: Entitlements, source: SourceId, guideName?: str
   const cat = classifyGuide(guideName);
   // Unclassifiable guides ("Other") aren't blocked on a classifier gap; the source gate still applies.
   return cat === "Other" || ent.categories.includes(cat);
+}
+
+// A published Standard is generatable by a buyer who owns its assigned bundle. The
+// "Complete Standards Suite" (pk-std-all) unlocks every published standard; admins ("*") too.
+const ALL_STANDARDS = "pk-std-all";
+export function ownsStandard(ent: Entitlements, bundleId: string | null | undefined): boolean {
+  if (ent.bundleIds.includes("*")) return true;
+  if (!bundleId) return false;
+  if (ent.bundleIds.includes(ALL_STANDARDS)) return true;
+  return ent.bundleIds.includes(bundleId);
 }
 
 export async function grantBundles(userId: string, bundleIds: string[]): Promise<void> {

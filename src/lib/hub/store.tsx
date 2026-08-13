@@ -190,7 +190,7 @@ type HubContextValue = {
   loadEntitlements: () => Promise<void>;
   loadPurchases: () => Promise<void>;
   loadGenerations: () => Promise<void>;
-  updateAccount: (patch: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<{ ok: boolean; error?: string }>;
+  updateAccount: (patch: { name?: string; email?: string; currentPassword?: string; newPassword?: string; taxId?: string; billingName?: string; billingAddress?: string; country?: string }) => Promise<{ ok: boolean; error?: string }>;
   loadSavedTemplate: () => Promise<void>;
   saveTemplate: (t: Template) => Promise<{ ok: boolean; error?: string }>;
   removeSavedTemplate: () => Promise<void>;
@@ -394,7 +394,7 @@ export function HubProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const updateAccount = useCallback(async (patch: { name?: string; email?: string; currentPassword?: string; newPassword?: string }): Promise<{ ok: boolean; error?: string }> => {
+  const updateAccount = useCallback(async (patch: { name?: string; email?: string; currentPassword?: string; newPassword?: string; taxId?: string; billingName?: string; billingAddress?: string; country?: string }): Promise<{ ok: boolean; error?: string }> => {
     try {
       const r = await fetch("/api/account", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(patch) });
       const d = await r.json();

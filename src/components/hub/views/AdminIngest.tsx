@@ -31,6 +31,7 @@ export function AdminIngest() {
   };
   const patch = async (id: string, body: Record<string, unknown>) => { await fetch(`/api/admin/standards/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); load(); };
   const del = async (id: string) => { if (!confirm("Delete this standard?")) return; await fetch(`/api/admin/standards/${id}`, { method: "DELETE" }); load(); };
+  const [editId, setEditId] = useState<string | null>(null);
 
   const card = "background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;padding:22px;margin-bottom:18px;";
   const dl = "font-size:12px;font-family:'Fragment Mono',monospace;background:#F1F2EA;color:#0f4c9c;padding:6px 11px;border-radius:6px;font-weight:600;text-decoration:none;";
@@ -70,15 +71,125 @@ export function AdminIngest() {
               <div style={css("display:flex;gap:8px;flex-wrap:wrap;align-items:center;")}>
                 <a href={`/api/admin/standards/${st.id}/download?fmt=docx`} style={css(dl)}>↓ DOCX</a>
                 <a href={`/api/admin/standards/${st.id}/download?fmt=pdf`} style={css(dl)}>↓ PDF</a>
+                <button onClick={() => setEditId(editId === st.id ? null : st.id)} style={css("background:#fff;color:#0f4c9c;border:1px solid #c3d2ea;border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;")}>{editId === st.id ? "Close editor" : "Edit body"}</button>
                 {st.status === "draft"
                   ? <button onClick={() => patch(st.id, { publish: true })} style={css("background:#1f7a4d;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;")}>Publish to catalog</button>
                   : <span style={css("font-size:12px;color:#57534E;")}>Manage bundle &amp; price in <b style={css("cursor:pointer;color:#0f4c9c;")} onClick={() => set({ view: "admin-catalog" })}>Catalog &amp; pricing</b>.</span>}
                 <button onClick={() => del(st.id)} style={css("background:#fff;color:#8a3b3b;border:1px solid #e3c9c9;border-radius:7px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;margin-left:auto;")}>Delete</button>
               </div>
+              {editId === st.id && <StandardEditor id={st.id} onSaved={() => { setEditId(null); load(); }} />}
             </div>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Inline editor for a drafted standard's body (title, summary, narrative, requirements) ──
+type Role = { role: string; responsibilities: string[] };
+type Content = {
+  narrative: { purposeIntro?: string; purposeAims?: string[]; scopeIntro?: string; scopeCovers?: string[]; roles?: Role[]; complianceIntro?: string; complianceEnforcement?: string };
+  sections?: string[];
+};
+
+const toLines = (a?: string[]) => (a || []).join("\n");
+const fromLines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+const rolesToText = (r?: Role[]) => (r || []).map((x) => `${x.role} :: ${(x.responsibilities || []).join(" | ")}`).join("\n");
+const textToRoles = (s: string): Role[] => fromLines(s).map((line) => {
+  const [role, resp] = line.split("::");
+  return { role: (role || "").trim(), responsibilities: (resp || "").split("|").map((x) => x.trim()).filter(Boolean) };
+}).filter((r) => r.role);
+
+function StandardEditor({ id, onSaved }: { id: string; onSaved: () => void }) {
+  const [loaded, setLoaded] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [purposeIntro, setPurposeIntro] = useState("");
+  const [purposeAims, setPurposeAims] = useState("");
+  const [scopeIntro, setScopeIntro] = useState("");
+  const [scopeCovers, setScopeCovers] = useState("");
+  const [roles, setRoles] = useState("");
+  const [sections, setSections] = useState("");
+  const [complianceIntro, setComplianceIntro] = useState("");
+  const [complianceEnforcement, setComplianceEnforcement] = useState("");
+
+  useEffect(() => {
+    fetch(`/api/admin/standards/${id}`).then((r) => (r.ok ? r.json() : null)).then((d) => {
+      const st = d?.standard;
+      if (!st) { setErr("Could not load standard."); setLoaded(true); return; }
+      const c: Content = st.content || { narrative: {} };
+      const n = c.narrative || {};
+      setTitle(st.title || "");
+      setSummary(st.summary || "");
+      setPurposeIntro(n.purposeIntro || "");
+      setPurposeAims(toLines(n.purposeAims));
+      setScopeIntro(n.scopeIntro || "");
+      setScopeCovers(toLines(n.scopeCovers));
+      setRoles(rolesToText(n.roles));
+      setSections(toLines(c.sections));
+      setComplianceIntro(n.complianceIntro || "");
+      setComplianceEnforcement(n.complianceEnforcement || "");
+      setLoaded(true);
+    }).catch(() => { setErr("Could not load standard."); setLoaded(true); });
+  }, [id]);
+
+  const save = async () => {
+    setBusy(true); setErr(null);
+    const body = {
+      title: title.trim(),
+      summary: summary.trim() || null,
+      content: {
+        purposeIntro,
+        purposeAims: fromLines(purposeAims),
+        scopeIntro,
+        scopeCovers: fromLines(scopeCovers),
+        roles: textToRoles(roles),
+        sections: fromLines(sections),
+        complianceIntro,
+        complianceEnforcement,
+      },
+    };
+    const r = await fetch(`/api/admin/standards/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    setBusy(false);
+    if (!r.ok) { const d = await r.json().catch(() => ({})); setErr(d.error || "Save failed."); return; }
+    onSaved();
+  };
+
+  const ta = "width:100%;box-sizing:border-box;border:1px solid #D6D3D1;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;line-height:1.5;resize:vertical;";
+  const lbl = "display:block;font-size:11.5px;font-weight:600;color:#57534E;margin:12px 0 5px;";
+
+  if (!loaded) return <div style={css("margin-top:14px;color:#79716B;font-size:13px;")}>Loading editor…</div>;
+
+  return (
+    <div style={css("margin-top:14px;border-top:1px dashed #D6D3D1;padding-top:14px;")}>
+      <label style={css(lbl)}>Title</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} style={css(ta.replace("resize:vertical;", ""))} />
+      <label style={css(lbl)}>Summary (storefront blurb)</label>
+      <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={2} style={css(ta)} />
+      <label style={css(lbl)}>Purpose — intro</label>
+      <textarea value={purposeIntro} onChange={(e) => setPurposeIntro(e.target.value)} rows={3} style={css(ta)} />
+      <label style={css(lbl)}>Purpose — aims (one per line)</label>
+      <textarea value={purposeAims} onChange={(e) => setPurposeAims(e.target.value)} rows={3} style={css(ta)} />
+      <label style={css(lbl)}>Scope — intro</label>
+      <textarea value={scopeIntro} onChange={(e) => setScopeIntro(e.target.value)} rows={3} style={css(ta)} />
+      <label style={css(lbl)}>Scope — covers (one per line)</label>
+      <textarea value={scopeCovers} onChange={(e) => setScopeCovers(e.target.value)} rows={3} style={css(ta)} />
+      <label style={css(lbl)}>Roles (one per line — “Role :: responsibility one | responsibility two”)</label>
+      <textarea value={roles} onChange={(e) => setRoles(e.target.value)} rows={3} style={css(ta)} />
+      <label style={css(lbl)}>Requirements (one per line)</label>
+      <textarea value={sections} onChange={(e) => setSections(e.target.value)} rows={4} style={css(ta)} />
+      <label style={css(lbl)}>Compliance — intro</label>
+      <textarea value={complianceIntro} onChange={(e) => setComplianceIntro(e.target.value)} rows={2} style={css(ta)} />
+      <label style={css(lbl)}>Compliance — enforcement</label>
+      <textarea value={complianceEnforcement} onChange={(e) => setComplianceEnforcement(e.target.value)} rows={2} style={css(ta)} />
+      {err && <div style={css("margin-top:10px;font-size:12.5px;color:#8a3b3b;")}>{err}</div>}
+      <div style={css("margin-top:14px;display:flex;gap:8px;")}>
+        <button onClick={save} disabled={busy} className="hh-primary" style={css(`background:${busy ? "#7fa4d0" : "#0f4c9c"};color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;`)}>{busy ? "Saving…" : "Save body"}</button>
+        <span style={css("font-size:11.5px;color:#79716B;align-self:center;")}>Re-download DOCX/PDF after saving to verify.</span>
+      </div>
     </div>
   );
 }
