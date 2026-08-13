@@ -1,8 +1,8 @@
 // Render a stored AI-drafted Standard to DOCX or PDF from its saved narrative.
-import { Document, Packer, Paragraph, HeadingLevel, TextRun } from "docx";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { Narrative } from "./policyNarrative";
-import type { Block } from "./policyContent";
+import type { Block, PolicyMeta } from "./policyContent";
+import { buildBlocksDocx } from "./policy";
 
 // A real requirement group extracted/derived from the source document: a heading, an
 // optional short intro, and enforceable "shall" requirement statements grounded in the source.
@@ -34,7 +34,6 @@ export type StandardScope = { org?: string; version?: string; classification?: s
 export function standardBlocks(title: string, c: StandardContent, scope: StandardScope = {}): Block[] {
   const n = c.narrative;
   const b: Block[] = [];
-  if (scope.org) b.push({ t: "p", text: `Prepared for ${scope.org}.` });
   b.push({ t: "h1", text: "1. Purpose" });
   if (n.purposeIntro) b.push({ t: "p", text: n.purposeIntro });
   (n.purposeAims || []).forEach((x) => b.push({ t: "li", text: x }));
@@ -78,40 +77,27 @@ export function standardInlineMap(title: string, scope: StandardScope): Record<s
   };
 }
 
+// Build the SecureHub-branded PolicyMeta for a standard (cover, version table, house style).
+function standardMeta(title: string, c: StandardContent, scope: StandardScope): PolicyMeta {
+  const org = scope.org || "SecureHub";
+  return {
+    org,
+    title,
+    version: scope.version || "1.0",
+    author: scope.org ? `${scope.org} Security` : "SecureHub",
+    date: scope.date || new Date().toISOString().slice(0, 10),
+    color: "#0f4c9c",
+    classification: scope.classification || "Internal Use",
+    platform: c.platform || "",
+    benchTitle: c.platform || c.sourceUrl || "the referenced source",
+    benchVersion: "",
+  };
+}
+
+// Default standard DOCX uses the SecureHub house template (same as the DISA guides). When a
+// buyer supplies their own template, the generate route injects into it instead (see route).
 export async function buildStandardDocx(title: string, c: StandardContent, scope: StandardScope = {}): Promise<Buffer> {
-  const n = c.narrative;
-  const doc = new Document({
-    sections: [{
-      children: [
-        new Paragraph({ text: title, heading: HeadingLevel.TITLE }),
-        ...(scope.org ? [new Paragraph({ children: [new TextRun({ text: `Prepared for ${scope.org}`, bold: true, size: 22 })] })] : []),
-        ...(c.sourceUrl ? [new Paragraph({ children: [new TextRun({ text: `Source: ${c.sourceUrl}`, italics: true, size: 18, color: "6b6b6b" })] })] : []),
-        new Paragraph({ text: "1. Purpose", heading: HeadingLevel.HEADING_1 }),
-        new Paragraph(n.purposeIntro || ""),
-        ...(n.purposeAims || []).map((a) => new Paragraph({ text: a, bullet: { level: 0 } })),
-        new Paragraph({ text: "2. Scope", heading: HeadingLevel.HEADING_1 }),
-        new Paragraph(n.scopeIntro || ""),
-        ...(n.scopeCovers || []).map((a) => new Paragraph({ text: a, bullet: { level: 0 } })),
-        new Paragraph({ text: "3. Roles & responsibilities", heading: HeadingLevel.HEADING_1 }),
-        ...(n.roles || []).flatMap((r) => [new Paragraph({ children: [new TextRun({ text: r.role, bold: true })] }), ...(r.responsibilities || []).map((x) => new Paragraph({ text: x, bullet: { level: 0 } }))]),
-        new Paragraph({ text: "4. Security requirements", heading: HeadingLevel.HEADING_1 }),
-        ...(hasReqSections(c)
-          ? c.requirementSections!.filter((s) => s && s.requirements?.length).flatMap((sec) => [
-              new Paragraph({ text: sec.heading || "Requirements", heading: HeadingLevel.HEADING_2 }),
-              ...(sec.intro ? [new Paragraph(sec.intro)] : []),
-              ...sec.requirements.map((r) => new Paragraph({ text: r, bullet: { level: 0 } })),
-            ])
-          : (c.sections || []).map((s) => new Paragraph({ text: s, bullet: { level: 0 } }))),
-        new Paragraph({ text: "5. Compliance", heading: HeadingLevel.HEADING_1 }),
-        new Paragraph(n.complianceIntro || ""),
-        new Paragraph(n.complianceEnforcement || ""),
-        ...(c.references && c.references.length
-          ? [new Paragraph({ text: "6. References", heading: HeadingLevel.HEADING_1 }), ...c.references.map((r) => new Paragraph({ text: r, bullet: { level: 0 } }))]
-          : []),
-      ],
-    }],
-  });
-  return Buffer.from(await Packer.toBuffer(doc));
+  return buildBlocksDocx(standardMeta(title, c, scope), standardBlocks(title, c, scope));
 }
 
 function ascii(s: string): string {

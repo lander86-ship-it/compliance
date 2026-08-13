@@ -7,15 +7,21 @@ import {
 } from "docx";
 import type { FullControl } from "./hub/controlContent";
 import type { Narrative } from "./policyNarrative";
-import { policyBlocks, type PolicyMeta } from "./policyContent";
+import { policyBlocks, type PolicyMeta, type Block } from "./policyContent";
 
 export type { PolicyMeta } from "./policyContent";
 
 const HEAD = { 1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2, 3: HeadingLevel.HEADING_3 } as const;
 
 export async function buildPolicyDocx(meta: PolicyMeta, controls: FullControl[], narrative: Narrative): Promise<Buffer> {
+  return buildBlocksDocx(meta, policyBlocks(meta, controls, narrative));
+}
+
+// The SecureHub house style (cover + version-history table + branded headings), rendering an
+// arbitrary Block[] — shared by the hardening policy and the standalone standards so both
+// carry the same default branding.
+export async function buildBlocksDocx(meta: PolicyMeta, blocks: Block[]): Promise<Buffer> {
   const brand = meta.color.replace("#", "");
-  const blocks = policyBlocks(meta, controls, narrative);
 
   const children: (Paragraph | Table)[] = [];
 
