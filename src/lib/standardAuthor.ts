@@ -11,6 +11,11 @@ import type { ReqSection } from "./standardDoc";
 
 const MODEL = process.env.POLICY_LLM_MODEL || "claude-opus-4-8";
 const MAX_SOURCE_CHARS = 48_000; // ~12k tokens of source text — plenty for a benchmark/STIG page
+const MAX_OUTPUT_TOKENS = 16_000; // headroom so a comprehensive standard's JSON isn't truncated
+
+// Raised when the model call itself fails (network/API/parse), so the caller can surface the
+// real reason instead of a generic "unavailable". A missing API key returns null (not this).
+export class AuthorError extends Error {}
 
 export type Authored = {
   title: string;
@@ -83,12 +88,13 @@ function userPrompt(url: string, sourceText: string): string {
     `  "scopeIntro": string,            // one paragraph; refer to "the organization"\n` +
     `  "scopeCovers": string[],         // 3-6 items\n` +
     `  "roles": [{"role": string, "responsibilities": string[]}],  // 4-6 roles\n` +
-    `  "requirementSections": [{"heading": string, "intro": string, "requirements": string[]}],  // THE CORE: 5-14 sections, each with 3-15 concrete "shall" requirements taken from the source\n` +
+    `  "requirementSections": [{"heading": string, "intro": string, "requirements": string[]}],  // THE CORE: up to 12 sections, each with up to 10 concrete "shall" requirements taken from the source\n` +
     `  "complianceIntro": string,\n` +
     `  "complianceEnforcement": string,\n` +
     `  "references": string[]           // the source plus any frameworks it maps to\n` +
     `}\n` +
-    `Make requirementSections the substantial majority of the content and keep it faithful to the source.`
+    `Make requirementSections the substantial majority of the content and keep it faithful to the source. ` +
+    `Keep each requirement to one concise sentence. Prioritise the most important requirements so the whole JSON stays complete and valid.`
   );
 }
 
@@ -96,7 +102,10 @@ const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 const arr = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => str(x)).filter(Boolean) : []);
 
 export async function authorStandard(url: string, fallbackTitle: string, sourceText: string): Promise<Authored | null> {
-  if (!aiAvailable() || !sourceText.trim()) return null;
+  if (!aiAvailable()) return null; // no key → caller decides (HTML falls back, PDF errors)
+  if (!sourceText.trim()) throw new AuthorError("No readable text could be extracted from the source.");
+
+  let data: { content?: { type: string; text?: string }[]; stop_reason?: string };
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -107,28 +116,45 @@ export async function authorStandard(url: string, fallbackTitle: string, sourceT
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 8000,
+        max_tokens: MAX_OUTPUT_TOKENS,
         system: SYSTEM,
         messages: [{ role: "user", content: userPrompt(url, sourceText) }],
       }),
-      signal: AbortSignal.timeout(180_000),
+      signal: AbortSignal.timeout(240_000),
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text: string = (data.content || []).filter((b: { type: string }) => b.type === "text").map((b: { text: string }) => b.text).join("");
-    const jsonStr = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
-    const p = JSON.parse(jsonStr);
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      let msg = `Anthropic API error ${res.status}`;
+      try { const j = JSON.parse(body); if (j?.error?.message) msg += `: ${j.error.message}`; } catch { /* raw */ }
+      throw new AuthorError(msg);
+    }
+    data = await res.json();
+  } catch (e) {
+    if (e instanceof AuthorError) throw e;
+    const m = e instanceof Error ? e.message : "network error";
+    throw new AuthorError(`Could not reach the AI author (${/aborted|timeout/i.test(m) ? "timed out" : m}).`);
+  }
 
+  const text: string = (data.content || []).filter((b) => b.type === "text").map((b) => b.text || "").join("");
+  const jsonStr = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  let p: Record<string, unknown>;
+  try {
+    p = JSON.parse(jsonStr);
+  } catch {
+    if (data.stop_reason === "max_tokens") throw new AuthorError("The document is very large and the draft was cut off. Try a more specific source (a single benchmark/section) rather than a huge combined document.");
+    throw new AuthorError("The AI response could not be parsed. Please try again.");
+  }
+
+  {
     const sections: ReqSection[] = Array.isArray(p.requirementSections)
-      ? p.requirementSections
-          .map((s: { heading?: unknown; intro?: unknown; requirements?: unknown }) => ({ heading: str(s.heading) || "Requirements", intro: str(s.intro) || undefined, requirements: arr(s.requirements) }))
+      ? (p.requirementSections as { heading?: unknown; intro?: unknown; requirements?: unknown }[])
+          .map((s) => ({ heading: str(s.heading) || "Requirements", intro: str(s.intro) || undefined, requirements: arr(s.requirements) }))
           .filter((s: ReqSection) => s.requirements.length > 0)
       : [];
-    // A result with no real requirements isn't an improvement over the fallback.
-    if (sections.length === 0) return null;
+    if (sections.length === 0) throw new AuthorError("No requirements could be extracted — make sure the link points to the actual controls/requirements, not a landing or summary page.");
 
-    const roles: Role[] = Array.isArray(p.roles) && p.roles.length
-      ? p.roles.filter((r: Role) => r && r.role).map((r: Role) => ({ role: str(r.role), responsibilities: arr(r.responsibilities) }))
+    const roles: Role[] = Array.isArray(p.roles) && (p.roles as unknown[]).length
+      ? (p.roles as Role[]).filter((r) => r && r.role).map((r) => ({ role: str(r.role), responsibilities: arr(r.responsibilities) }))
       : staticNarrative({ org: "the organization", platform: str(p.platform), benchTitle: fallbackTitle, benchVersion: "", controlCount: 0, sectionTitles: [] }).roles;
 
     const base = staticNarrative({ org: "the organization", platform: str(p.platform) || "the in-scope technology", benchTitle: str(p.title) || fallbackTitle, benchVersion: "", controlCount: 0, sectionTitles: [] });
@@ -153,7 +179,5 @@ export async function authorStandard(url: string, fallbackTitle: string, sourceT
       requirementSections: sections,
       references: arr(p.references),
     };
-  } catch {
-    return null;
   }
 }
