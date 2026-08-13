@@ -7,15 +7,13 @@ import { Icon } from "../Icon";
 
 type Art = { format: string; url: string; bytes: number };
 
-// Guests may generate one trial document per browser session (no account). The
-// "used" flag lives in sessionStorage, so it resets when the tab session ends —
-// exactly "once without leaving the session". Signing up lifts the limit.
-const TRIAL_KEY = "hh_trial_used";
-
+// Guests may generate one trial document (no account). The limit is enforced
+// server-side by IP + httpOnly cookie (see /api/trial), so it can't be bypassed
+// by clearing browser data. Signing in lifts the limit.
 type Kind = "hardening" | "standard";
-const KINDS: { id: Kind; label: string; desc: string; productId: string; formats: string[] }[] = [
-  { id: "hardening", label: "Hardening guide (CIS sample)", desc: "A full CIS-style hardening baseline with controls, rationale and cross-mappings.", productId: "cis-win2022", formats: ["DOCX", "PDF"] },
-  { id: "standard", label: "Policy standard (sample)", desc: "An editable security policy standard drafted from the same engine as the paid ones.", productId: "cis-win2022", formats: ["POLICY"] },
+const KINDS: { id: Kind; label: string; desc: string }[] = [
+  { id: "hardening", label: "Hardening guide (CIS sample)", desc: "A full CIS-style hardening baseline with controls, rationale and cross-mappings." },
+  { id: "standard", label: "Policy standard (sample)", desc: "An editable security policy standard drafted from the same engine as the paid ones." },
 ];
 
 export function FreeGuides() {
@@ -29,30 +27,25 @@ export function FreeGuides() {
 
   const signedIn = s.authStatus === "authed";
 
+  // Ask the server whether this visitor still has their trial.
   useEffect(() => {
-    try { setUsed(sessionStorage.getItem(TRIAL_KEY) === "1"); } catch { /* ignore */ }
-  }, []);
+    fetch("/api/trial").then((r) => (r.ok ? r.json() : null)).then((d) => { if (d && !d.signedIn) setUsed(!!d.used); }).catch(() => {});
+  }, [signedIn]);
 
   const generate = async () => {
     setStatus("gen"); setErr("");
-    const chosen = KINDS.find((k) => k.id === kind)!;
-    const legal = company.trim() || "Your Company";
     try {
-      const r = await fetch("/api/generate", {
+      const r = await fetch("/api/trial", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          productId: chosen.productId,
-          scope: { legal, trade: legal, owner: `${legal} Security`, profile: "Level 1", classification: "Trial sample" },
-          formats: chosen.formats,
-        }),
+        body: JSON.stringify({ kind, legal: company.trim() || undefined }),
       });
-      if (!r.ok) throw new Error(`Generation failed (${r.status})`);
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 429 || d.limited) { setUsed(true); setStatus("idle"); return; }
+      if (!r.ok) throw new Error(d.error || `Generation failed (${r.status})`);
       setArts(d.artifacts || []);
       setStatus("done");
-      // Guests are limited to one trial per session; signed-in users are not.
-      if (!signedIn) { try { sessionStorage.setItem(TRIAL_KEY, "1"); } catch { /* ignore */ } setUsed(true); }
+      if (!signedIn) setUsed(true);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Generation failed");
       setStatus("err");
