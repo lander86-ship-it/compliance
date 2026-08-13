@@ -4,10 +4,26 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { Narrative } from "./policyNarrative";
 import type { Block } from "./policyContent";
 
-export type StandardContent = { narrative: Narrative; sections: string[]; sourceUrl?: string; platform?: string };
+// A real requirement group extracted/derived from the source document: a heading, an
+// optional short intro, and enforceable "shall" requirement statements grounded in the source.
+export type ReqSection = { heading: string; intro?: string; requirements: string[] };
+export type StandardContent = {
+  narrative: Narrative;
+  sections: string[]; // legacy: scraped headings (kept for back-compat)
+  requirementSections?: ReqSection[]; // preferred: real requirements from the source
+  summary?: string;
+  references?: string[];
+  sourceUrl?: string;
+  platform?: string;
+};
 
 export function parseContent(json: string): StandardContent {
   try { return JSON.parse(json) as StandardContent; } catch { return { narrative: {} as Narrative, sections: [] }; }
+}
+
+// True when the standard carries real, source-derived requirements (not just headings).
+function hasReqSections(c: StandardContent): boolean {
+  return Array.isArray(c.requirementSections) && c.requirementSections.some((s) => s && s.requirements && s.requirements.length > 0);
 }
 
 // When a buyer generates a purchased standard, their company name personalises the document.
@@ -27,13 +43,27 @@ export function standardBlocks(title: string, c: StandardContent, scope: Standar
   (n.scopeCovers || []).forEach((x) => b.push({ t: "li", text: x }));
   b.push({ t: "h1", text: "3. Roles & responsibilities" });
   (n.roles || []).forEach((r) => b.push({ t: "role", role: r.role, resp: r.responsibilities || [] }));
-  if (c.sections && c.sections.length) {
-    b.push({ t: "h1", text: "4. Requirements" });
-    c.sections.forEach((s) => b.push({ t: "li", text: s }));
+
+  b.push({ t: "h1", text: "4. Security requirements" });
+  if (hasReqSections(c)) {
+    c.requirementSections!.forEach((sec) => {
+      if (!sec || !sec.requirements?.length) return;
+      b.push({ t: "h2", text: sec.heading || "Requirements" });
+      if (sec.intro) b.push({ t: "p", text: sec.intro });
+      sec.requirements.forEach((r) => b.push({ t: "li", text: r }));
+    });
+  } else {
+    (c.sections || []).forEach((s) => b.push({ t: "li", text: s }));
   }
+
   b.push({ t: "h1", text: "5. Compliance" });
   if (n.complianceIntro) b.push({ t: "p", text: n.complianceIntro });
   if (n.complianceEnforcement) b.push({ t: "p", text: n.complianceEnforcement });
+
+  if (c.references && c.references.length) {
+    b.push({ t: "h1", text: "6. References" });
+    c.references.forEach((r) => b.push({ t: "li", text: r }));
+  }
   return b;
 }
 
@@ -64,10 +94,20 @@ export async function buildStandardDocx(title: string, c: StandardContent, scope
         ...(n.scopeCovers || []).map((a) => new Paragraph({ text: a, bullet: { level: 0 } })),
         new Paragraph({ text: "3. Roles & responsibilities", heading: HeadingLevel.HEADING_1 }),
         ...(n.roles || []).flatMap((r) => [new Paragraph({ children: [new TextRun({ text: r.role, bold: true })] }), ...(r.responsibilities || []).map((x) => new Paragraph({ text: x, bullet: { level: 0 } }))]),
-        ...(c.sections && c.sections.length ? [new Paragraph({ text: "4. Requirements (from source)", heading: HeadingLevel.HEADING_1 }), ...c.sections.map((s) => new Paragraph({ text: s, bullet: { level: 0 } }))] : []),
+        new Paragraph({ text: "4. Security requirements", heading: HeadingLevel.HEADING_1 }),
+        ...(hasReqSections(c)
+          ? c.requirementSections!.filter((s) => s && s.requirements?.length).flatMap((sec) => [
+              new Paragraph({ text: sec.heading || "Requirements", heading: HeadingLevel.HEADING_2 }),
+              ...(sec.intro ? [new Paragraph(sec.intro)] : []),
+              ...sec.requirements.map((r) => new Paragraph({ text: r, bullet: { level: 0 } })),
+            ])
+          : (c.sections || []).map((s) => new Paragraph({ text: s, bullet: { level: 0 } }))),
         new Paragraph({ text: "5. Compliance", heading: HeadingLevel.HEADING_1 }),
         new Paragraph(n.complianceIntro || ""),
         new Paragraph(n.complianceEnforcement || ""),
+        ...(c.references && c.references.length
+          ? [new Paragraph({ text: "6. References", heading: HeadingLevel.HEADING_1 }), ...c.references.map((r) => new Paragraph({ text: r, bullet: { level: 0 } }))]
+          : []),
       ],
     }],
   });
@@ -101,12 +141,23 @@ export async function buildStandardPdf(title: string, c: StandardContent, scope:
   if (scope.org) { wrap(`Prepared for ${scope.org}`, 11, bold, ink); nl(4); }
   if (c.sourceUrl) { wrap(`Source: ${c.sourceUrl}`, 9, font, muted); nl(6); }
   const heading = (t: string) => { nl(8); page.drawText(ascii(t), { x: M, y, size: 13, font: bold, color: ink }); nl(20); };
-  const bullets = (arr: string[]) => (arr || []).forEach((a) => wrap("• " + a, 10.5, font, ink, 6));
+  const subheading = (t: string) => { nl(4); wrap(t, 11.5, bold, brand); };
+  const bullets = (arr: string[]) => (arr || []).forEach((a) => wrap("- " + a, 10.5, font, ink, 6));
   heading("1. Purpose"); wrap(n.purposeIntro || "", 10.5); bullets(n.purposeAims || []);
   heading("2. Scope"); wrap(n.scopeIntro || "", 10.5); bullets(n.scopeCovers || []);
   heading("3. Roles & responsibilities");
   (n.roles || []).forEach((r) => { wrap(r.role, 11, bold); bullets(r.responsibilities || []); });
-  if (c.sections && c.sections.length) { heading("4. Requirements (from source)"); bullets(c.sections); }
+  heading("4. Security requirements");
+  if (hasReqSections(c)) {
+    c.requirementSections!.filter((sec) => sec && sec.requirements?.length).forEach((sec) => {
+      subheading(sec.heading || "Requirements");
+      if (sec.intro) wrap(sec.intro, 10.5, font, muted);
+      bullets(sec.requirements);
+    });
+  } else {
+    bullets(c.sections || []);
+  }
   heading("5. Compliance"); wrap(n.complianceIntro || "", 10.5); wrap(n.complianceEnforcement || "", 10.5);
+  if (c.references && c.references.length) { heading("6. References"); bullets(c.references); }
   return Buffer.from(await pdf.save());
 }

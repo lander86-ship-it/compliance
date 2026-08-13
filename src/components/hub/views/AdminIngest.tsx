@@ -42,7 +42,7 @@ export function AdminIngest() {
         <h1 style={css("margin:0;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>AI Standard Generator</h1>
         <span style={css("font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6a2f6a;background:#f2e9f2;border:1px solid #e2cfe2;padding:3px 8px;border-radius:20px;")}>AI</span>
       </div>
-      <p style={css("margin:0 0 22px;color:#57534E;font-size:14px;")}>Paste a source link — Claude analyses it and drafts an original standard in English. Review, download to check it, then publish it into the catalog (hidden), where you assign a bundle and price.</p>
+      <p style={css("margin:0 0 22px;color:#57534E;font-size:14px;")}>Paste a link to the source document — an HTML page (benchmark/STIG/framework) or a PDF. Claude reads the actual document, extracts its real requirements and drafts a faithful standard in English. Review, download to check it, then publish it into the catalog (hidden), where you assign a bundle and price. Large documents can take up to a minute.</p>
 
       <div style={css(card)}>
         <label style={css("font-size:12px;font-weight:600;color:#57534E;display:block;margin-bottom:7px;")}>Source URL</label>

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       title: draft.title,
       sourceUrl: parsed.data.url,
       platform: draft.platform,
-      summary: draft.content.narrative.purposeIntro?.slice(0, 300) || null,
+      summary: draft.content.summary?.slice(0, 300) || draft.content.narrative.purposeIntro?.slice(0, 300) || null,
       contentJson: JSON.stringify(draft.content),
       status: "draft",
       hidden: true,
