@@ -67,9 +67,9 @@ export function Library() {
       <div style={css("display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;")}>
         <div>
           <h1 style={css("margin:0;font-size:24px;font-weight:700;letter-spacing:-.3px;")}>Library</h1>
-          <p style={css("margin:6px 0 0;color:#57534E;font-size:14px;")}>Your generated policies — download, track versions, and re-sign as reviewed.</p>
+          <p style={css("margin:6px 0 0;color:#57534E;font-size:14px;")}>Everything you generate — hardening guides and the policy standards you own — download, track versions, and re-sign as reviewed.</p>
         </div>
-        <button onClick={() => go("generator")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer;")}>Generate a guide</button>
+        <button onClick={() => go("generator")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer;")}>＋ Generate a document</button>
       </div>
 
       <TemplateCard />
@@ -78,9 +78,9 @@ export function Library() {
         <div style={css("color:#79716B;font-size:14px;padding:40px 0;")}>Loading your library…</div>
       ) : docs.length === 0 ? (
         <div style={css("background:#FBFAF9;border:1px solid #E7E6E5;border-radius:20px;padding:44px;text-align:center;")}>
-          <div style={css("font-size:15px;font-weight:600;margin-bottom:6px;")}>No guides generated yet</div>
-          <p style={css("margin:0 0 18px;color:#79716B;font-size:13.5px;")}>Pick a benchmark and generate your first hardening guide.</p>
-          <button onClick={() => go("generator")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:600;cursor:pointer;")}>Generate a guide</button>
+          <div style={css("font-size:15px;font-weight:600;margin-bottom:6px;")}>Nothing generated yet</div>
+          <p style={css("margin:0 0 18px;color:#79716B;font-size:13.5px;")}>Generate a hardening guide (CIS/DISA) or a policy standard you own.</p>
+          <button onClick={() => go("generator")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:13.5px;font-weight:600;cursor:pointer;")}>＋ Generate a document</button>
         </div>
       ) : (
         <div style={css("display:flex;flex-direction:column;gap:12px;")}>

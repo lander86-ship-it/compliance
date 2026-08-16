@@ -15,7 +15,7 @@ const navDefs: Record<string, [string, string][]> = {
     ["Cart", "cart"],
   ],
   customer: [
-    ["Generate a guide", "generator"],
+    ["Generate a document", "generator"],
     ["Library", "library"],
     ["Subscriptions", "subscriptions"],
     ["Invoices", "invoices"],

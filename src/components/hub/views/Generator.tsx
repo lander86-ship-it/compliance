@@ -132,32 +132,102 @@ function OrgFields() {
   );
 }
 
+// The published policy standards the buyer owns — generate their own copy into the Library.
+function OwnedStandards() {
+  const { s, go } = useHub();
+  type Std = { id: string; title: string; platform: string | null; summary: string | null; owned: boolean };
+  const [items, setItems] = React.useState<Std[] | null>(null);
+  const [genFor, setGenFor] = React.useState<string | null>(null);
+  const [legal, setLegal] = React.useState(s.scope.legal || "");
+  const [busy, setBusy] = React.useState(false);
+  const [msg, setMsg] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/standards").then((r) => (r.ok ? r.json() : { standards: [] }))
+      .then((d) => setItems((d.standards || []).filter((x: Std) => x.owned)))
+      .catch(() => setItems([]));
+  }, [s.entitlements]);
+
+  const generate = async (id: string) => {
+    if (!legal.trim()) { setMsg("Enter your organization's legal name."); return; }
+    setBusy(true); setMsg(null);
+    try {
+      const r = await fetch(`/api/standards/${id}/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ legal: legal.trim() }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setMsg(d.error || "Generation failed."); setBusy(false); return; }
+      setBusy(false); setGenFor(null); go("library");
+    } catch { setMsg("Generation failed."); setBusy(false); }
+  };
+
+  if (items === null) return <div style={css("color:#79716B;font-size:13px;padding:8px 0;")}>Loading your standards…</div>;
+  if (items.length === 0) {
+    return (
+      <div style={css("border:1px solid #E7E6E5;background:#FBFAF9;border-radius:12px;padding:16px;font-size:13px;color:#57534E;line-height:1.5;")}>
+        You don’t own any policy standards yet. <span onClick={() => go("frameworks")} style={css("color:#0f4c9c;font-weight:600;cursor:pointer;")}>Browse Frameworks</span> to buy NIST, ISO, PCI and other standards.
+      </div>
+    );
+  }
+  return (
+    <div style={css("display:flex;flex-direction:column;gap:10px;")}>
+      {items.map((st) => (
+        <div key={st.id} style={css("border:1px solid #E7E6E5;background:#fff;border-radius:12px;padding:14px 16px;")}>
+          <div style={css("display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;")}>
+            {st.platform ? <span style={css("font-size:11px;font-weight:600;color:#6a2f6a;background:#f2e9f2;padding:2px 8px;border-radius:999px;")}>{st.platform}</span> : null}
+            <span style={css("font-size:14px;font-weight:700;")}>{st.title}</span>
+          </div>
+          {st.summary ? <div style={css("font-size:12.5px;color:#57534E;line-height:1.5;margin-bottom:10px;")}>{st.summary}</div> : null}
+          {genFor === st.id ? (
+            <div>
+              <label style={css("display:block;font-size:12px;font-weight:600;color:#57534E;margin-bottom:5px;")}>Organization legal name</label>
+              <input value={legal} onChange={(e) => setLegal(e.target.value)} placeholder="Acme, S.L." style={css("width:100%;box-sizing:border-box;border:1px solid #D6D3D1;border-radius:8px;padding:9px 11px;font-size:13px;margin-bottom:8px;")} />
+              <p style={css("margin:0 0 10px;font-size:11.5px;color:#79716B;")}>{s.savedTemplate ? `Your saved template “${s.savedTemplate.name}” will be applied.` : "No template uploaded — the SecureHub house style is used. Upload one in My Library to brand it."}</p>
+              <div style={css("display:flex;gap:8px;")}>
+                <button disabled={busy} onClick={() => generate(st.id)} className="hh-primary" style={css("flex:1;background:#1f7a4d;color:#fff;border:none;border-radius:999px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;opacity:" + (busy ? ".6" : "1") + ";")}>{busy ? "Generating…" : "Generate to Library"}</button>
+                <button disabled={busy} onClick={() => { setGenFor(null); setMsg(null); }} style={css("background:#fff;color:#57534E;border:1px solid #E7E6E5;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;")}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => { setGenFor(st.id); setMsg(null); }} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;")}>Generate my copy</button>
+          )}
+          {msg && genFor === st.id ? <div style={css("margin-top:8px;font-size:12px;color:#b4381f;")}>{msg}</div> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function Generator() {
   const { s, previewStandard, generate, go } = useHub();
   const { admin, ent } = useAllowed();
   const g = s.selectedGuide;
-  const hasAccess = admin || (ent && (ent.all || ent.sources.length > 0));
+  const hasHardening = admin || (ent && (ent.all || ent.sources.length > 0));
+
+  const sectionTitle = "font-size:16px;font-weight:800;margin:0 0 2px;letter-spacing:-.2px;";
+  const sectionCard = "border:1px solid #E7E6E5;border-radius:18px;padding:20px;margin-bottom:22px;background:#fff;";
 
   return (
     <div style={css(`max-width:900px;margin:0 auto;${s.isMobile ? "padding:20px 16px;" : "padding:30px 40px;"}`)}>
-      <h2 style={css("margin:0 0 4px;font-size:24px;font-weight:800;")}>Generate a hardening guide</h2>
-      <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Pick a source and choose from the benchmarks your subscription covers — the AI drafts a customised standard in your own template, always the current release.</p>
+      <h2 style={css("margin:0 0 4px;font-size:24px;font-weight:800;")}>Generate a document</h2>
+      <p style={css("margin:0 0 24px;color:#57534E;font-size:14px;")}>Create anything your subscription covers — hardening guides from CIS/DISA, and the policy standards you own — customised in your template and saved to your Library.</p>
 
-      {!hasAccess && (
-        <div style={css("border:1px solid #e6c9b8;background:#fbf3ec;border-radius:14px;padding:20px;margin-bottom:22px;")}>
-          <div style={css("font-size:15px;font-weight:700;color:#8a5a00;margin-bottom:4px;")}>You don’t have generation access yet</div>
-          <div style={css("font-size:13px;color:#57534E;margin-bottom:14px;line-height:1.5;")}>Purchase an access bundle to generate CIS and DISA guides for the platforms you need. Your account unlocks generation for the categories you buy.</div>
-          <button onClick={() => go("storefront")} className="hh-primary" style={css("background:#0f4c9c;color:#fff;border:none;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;")}>Browse access bundles →</button>
-        </div>
-      )}
-      {hasAccess && ent && !ent.all && !admin && (
-        <div style={css("font-size:12px;color:#57534E;margin-bottom:14px;")}>Your plan: <strong>{ent.sources.map((x) => x.toUpperCase()).join(" + ")}</strong>{ent.categories.length ? ` · ${ent.categories.join(", ")}` : ""}.</div>
-      )}
-
-      <SourcePicker />
-      <GuideBrowse />
-
-      {g && (
+      {/* ── Hardening guides (CIS & DISA) ── */}
+      <div style={css(sectionCard)}>
+        <h3 style={css(sectionTitle)}>Hardening guides · CIS &amp; DISA</h3>
+        <p style={css("margin:0 0 16px;color:#79716B;font-size:12.5px;")}>Live from the current CIS Benchmark and DISA STIG releases.</p>
+        {!hasHardening ? (
+          <div style={css("border:1px solid #e6c9b8;background:#fbf3ec;border-radius:12px;padding:16px;")}>
+            <div style={css("font-size:13.5px;font-weight:700;color:#8a5a00;margin-bottom:4px;")}>Not in your plan</div>
+            <div style={css("font-size:12.5px;color:#57534E;margin-bottom:12px;line-height:1.5;")}>Buy the Hardening Access bundle to generate CIS and DISA guides.</div>
+            <button onClick={() => go("bundles")} style={css("background:#fff;color:#0f4c9c;border:1px solid #c3d2ea;border-radius:999px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;")}>See bundles →</button>
+          </div>
+        ) : (
+          <>
+            {ent && !ent.all && !admin && (
+              <div style={css("font-size:12px;color:#57534E;margin-bottom:14px;")}>Your plan: <strong>{ent.sources.map((x) => x.toUpperCase()).join(" + ")}</strong>{ent.categories.length ? ` · ${ent.categories.join(", ")}` : ""}.</div>
+            )}
+            <SourcePicker />
+            <GuideBrowse />
+            {g && (
         <div style={css("margin-top:26px;border-top:1px solid #E7E6E5;padding-top:24px;")}>
           <div style={css("border:1px solid #cfe0d6;background:#f0f7f3;border-radius:12px;padding:14px 16px;margin-bottom:20px;")}>
             <div style={css("font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#186340;font-weight:700;margin-bottom:3px;")}>Selected benchmark</div>
@@ -200,7 +270,17 @@ export function Generator() {
             </div>
           )}
         </div>
-      )}
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Security standards & policies (NIST, ISO, PCI…) ── */}
+      <div style={css(sectionCard)}>
+        <h3 style={css(sectionTitle)}>Security standards &amp; policies</h3>
+        <p style={css("margin:0 0 16px;color:#79716B;font-size:12.5px;")}>NIST, ISO, PCI and other standards you’ve purchased. Generate your branded copy into the Library.</p>
+        <OwnedStandards />
+      </div>
     </div>
   );
 }
