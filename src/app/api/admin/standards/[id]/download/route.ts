@@ -19,6 +19,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   if (fmt !== "docx" && fmt !== "pdf") return NextResponse.json({ error: "Unsupported format" }, { status: 400 });
   const s = await prisma.standard.findUnique({ where: { id: params.id } });
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // Ready-made master documents are served as-is (DOCX is the authoritative artifact).
+  if (s.masterDocx) {
+    if (fmt !== "docx") return NextResponse.json({ error: "This library document is delivered as DOCX." }, { status: 400 });
+    const safeM = s.title.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 60) || "standard";
+    return new NextResponse(new Uint8Array(Buffer.from(s.masterDocx, "base64")), {
+      headers: { "Content-Type": MIME.docx, "Content-Disposition": `attachment; filename="${safeM}.docx"`, "Cache-Control": "no-store" },
+    });
+  }
   const content = parseContent(s.contentJson);
   const buf = fmt === "docx" ? await buildStandardDocx(s.title, content) : await buildStandardPdf(s.title, content);
   const safe = s.title.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 60) || "standard";

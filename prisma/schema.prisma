@@ -282,6 +282,7 @@ model Standard {
   platform    String?
   summary     String?  // one-line/purpose summary
   contentJson String   // JSON: { narrative, sections } used to render/download
+  masterDocx  String?  // base64 master DOCX (library documents imported ready-made)
   status      String   @default("draft") // draft | published
   hidden      Boolean  @default(true) // hidden from clients until surfaced
   bundleId    String? // catalog bundle it belongs to

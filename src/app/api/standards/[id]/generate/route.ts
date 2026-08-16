@@ -49,7 +49,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   let docx: string | null = null;
   let pdf: string | null = null;
-  try {
+  if (std.masterDocx) {
+    // Ready-made master document: personalize the authoritative DOCX with the buyer's organization.
+    try {
+      const { personalizeMasterDocx, masterFields } = await import("@/lib/masterDoc");
+      docx = (await personalizeMasterDocx(std.masterDocx, masterFields(parsed.data.legal))).toString("base64");
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : "Generation failed" }, { status: 500 });
+    }
+  } else try {
     const blocks = standardBlocks(std.title, content, scope);
     if (template?.type === "docx") {
       const buf = Buffer.from(template.base64, "base64");
